@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://automation-softwaresolutions.github.io/sitemap.xml
+Sitemap: https://automation-softwaresolutions.github.io/.github/sitemap.xml
