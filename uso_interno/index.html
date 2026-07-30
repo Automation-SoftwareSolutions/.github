@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generatore Documenti Fiscali | Offerte & Ricevute (Occasionale)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0f1a;
+      --surface: #161827;
+      --surface2: #1e2035;
+      --border: #2a2d45;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(108, 99, 255, 0.25);
+      --green: #10b981;
+      --red: #f43f5e;
+      --yellow: #f59e0b;
+      --text: #e8eaf0;
+      --text-muted: #8b91b0;
+      --text-dim: #555c7a;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --font: 'Inter', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0d0f1a 0%, #1a1040 50%, #0d0f1a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo .icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .header-logo h1 {
+      font-size: 17px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fff, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+    }
+
+    .tab {
+      padding: 8px 22px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      font-family: var(--font);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      min-height: calc(100vh - 78px);
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent2);
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .form-group {
+      margin-bottom: 11px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 5px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 68px;
+      line-height: 1.5;
+    }
+
+    select option {
+      background: var(--surface2);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 9px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .checkbox-group:hover {
+      border-color: var(--accent);
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .checkbox-group span {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .line-item {
+      display: grid;
+      gap: 6px;
+      align-items: center;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 7px;
+      grid-template-columns: 3fr 70px 95px auto;
+    }
+
+    .line-item input {
+      margin: 0;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .totals-box {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.08), rgba(167, 139, 250, 0.05));
+      border: 1px solid rgba(108, 99, 255, 0.3);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 12px;
+    }
+
+    .total-row.divider {
+      border-top: 1px solid var(--border);
+      margin-top: 5px;
+      padding-top: 9px;
+    }
+
+    .total-row .label {
+      color: var(--text-muted);
+    }
+
+    .total-row .value {
+      font-weight: 600;
+    }
+
+    .total-row.grand-total .value {
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent2), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .total-row.ritenuta .value {
+      color: var(--red);
+    }
+
+    .total-row.netto .value {
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--green), #059669);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.1);
+    }
+
+    .preview-panel {
+      background: #e8e8f0;
+      overflow-y: auto;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      max-width: 794px;
+    }
+
+    .preview-toolbar span {
+      font-size: 12px;
+      color: #555;
+      margin-right: auto;
+    }
+
+    #document-preview {
+      width: 794px;
+      min-height: 1100px;
+      background: #fff;
+      border-radius: 3px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px 48px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #1a1a2e;
+      box-sizing: border-box;
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 36px;
+      padding-bottom: 22px;
+      border-bottom: 2px solid #6c63ff;
+    }
+
+    .doc-company h2 {
+      font-size: 21px;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 5px;
+    }
+
+    .doc-company p {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.7;
+    }
+
+    .doc-badge {
+      text-align: right;
+    }
+
+    .doc-badge .doc-type {
+      font-size: 24px;
+      font-weight: 800;
+      color: #6c63ff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .doc-badge .doc-number {
+      font-size: 13px;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    .doc-badge .doc-date {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .doc-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .doc-meta-box {
+      background: #f7f7fd;
+      border: 1px solid #e0e0f0;
+      border-radius: 8px;
+      padding: 13px 15px;
+    }
+
+    .doc-meta-box .meta-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6c63ff;
+      margin-bottom: 7px;
+    }
+
+    .doc-meta-box p {
+      font-size: 12px;
+      color: #333;
+      line-height: 1.7;
+    }
+
+    .doc-meta-box strong {
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      table-layout: fixed;
+    }
+
+    .doc-table thead th {
+      background: #6c63ff;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 9px 11px;
+      text-align: left;
+    }
+
+    .doc-table thead th.right {
+      text-align: right;
+    }
+
+    .doc-table thead th.center {
+      text-align: center;
+    }
+
+    .doc-table tbody tr:nth-child(even) {
+      background: #f7f7fd;
+    }
+
+    .doc-table tbody td {
+      padding: 9px 11px;
+      font-size: 12px;
+      color: #333;
+      border-bottom: 1px solid #e8e8f8;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .doc-table tbody td.right {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .doc-table tbody td.center {
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .doc-totals {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 28px;
+    }
+
+    .doc-totals-inner {
+      width: 290px;
+    }
+
+    .doc-total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .doc-total-row .tl {
+      color: #555;
+    }
+
+    .doc-total-row .tr {
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .doc-total-row.ritenuta .tr {
+      color: #e11d48;
+    }
+
+    .doc-total-row.netto .tr {
+      color: #059669;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .doc-total-row.grand {
+      border-top: 2px solid #6c63ff;
+      border-bottom: none;
+      margin-top: 4px;
+      padding-top: 9px;
+    }
+
+    .doc-total-row.grand .tl {
+      font-weight: 700;
+      color: #1a1a2e;
+      font-size: 14px;
+    }
+
+    .doc-total-row.grand .tr {
+      font-weight: 800;
+      color: #6c63ff;
+      font-size: 17px;
+    }
+
+    .doc-notes {
+      background: #f7f7fd;
+      border-left: 3px solid #6c63ff;
+      border-radius: 3px;
+      padding: 11px 14px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #444;
+      line-height: 1.6;
+    }
+
+    .doc-notes strong {
+      color: #1a1a2e;
+      display: inline;
+      margin-bottom: 3px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .doc-payment {
+      background: #1a1a2e;
+      color: #fff;
+      border-radius: 8px;
+      padding: 13px 15px;
+      margin-bottom: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .doc-payment .pay-label {
+      font-size: 10px;
+      color: #a78bfa;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .doc-payment .pay-value {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .doc-payment .pay-amount {
+      font-size: 19px;
+      font-weight: 800;
+      color: #10b981;
+    }
+
+    .doc-signature {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 36px;
+    }
+
+    .doc-signature .sig-box {
+      text-align: center;
+      width: 190px;
+    }
+
+    .doc-signature .sig-line {
+      border-top: 1px solid #aaa;
+      margin-bottom: 5px;
+      height: 40px;
+    }
+
+    .doc-signature .sig-label {
+      font-size: 10px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .doc-legal {
+      font-size: 10px;
+      color: #999;
+      line-height: 1.6;
+      border-top: 1px solid #eee;
+      padding-top: 14px;
+      margin-top: 20px;
+    }
+
+    .validity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #d97706;
+      border-radius: 20px;
+      padding: 3px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-purple {
+      background: rgba(108, 99, 255, 0.12);
+      color: #a78bfa;
+      border: 1px solid rgba(108, 99, 255, 0.3);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--green);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(.175, .885, .32, 1.275);
+      z-index: 9999;
+      box-shadow: var(--shadow);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--surface);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media print {
+
+      html,
+      body {
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+
+      .header,
+      .sidebar,
+      .preview-toolbar {
+        display: none !important;
+      }
+
+      .main {
+        height: auto !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+
+      .preview-panel {
+        padding: 0 !important;
+        background: #fff !important;
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+
+      #document-preview {
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: auto !important;
+        width: 100% !important;
+      }
+    }
+
+    body.export-mode {
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    body.export-mode .main,
+    body.export-mode .preview-panel {
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+
+    body.export-mode .header,
+    body.export-mode .sidebar,
+    body.export-mode .preview-toolbar {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="header-logo">
+      <div class="icon">&#128196;</div>
+      <div>
+        <h1>DocumentiFiscali</h1>
+        <p>Lavoro Autonomo Occasionale (Offerte &amp; Ricevute)</p>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-offerta" onclick="switchTab('offerta')">&#128203; Offerta</button>
+      <button class="tab" id="tab-ricevuta" onclick="switchTab('ricevuta')">&#12968 Ricevuta</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+
+      <!-- ===== OFFERTA ===== -->
+      <div id="form-offerta" style="display:contents;">
+
+        <div>
+          <div class="section-title">Dati Documento</div>
+          <div class="card">
+            <div class="form-row">
+              <div class="form-group"><label>N&deg; Offerta</label><input type="text" id="o-numero"
+                  placeholder="OFF-2026-001" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Data</label><input type="date" id="o-data" oninput="updatePreview()" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Valida fino al</label><input type="date" id="o-validita"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Valuta</label><select id="o-valuta" onchange="updatePreview()">
+                  <option value="&euro;">&#8364; EUR</option>
+                  <option value="$">$ USD</option>
+                  <option value="&pound;">&#163; GBP</option>
+                </select></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Il Tuo Studio / Contatti</div>
+          <div class="card">
+            <div class="form-group"><label>Nome / Cognome</label><input type="text" id="o-mittente-nome"
+                placeholder="Mario Rossi" oninput="updatePreview()" /></div>
+            <div class="form-group"><label>Codice Fiscale</label><input type="text" id="o-mittente-cf"
+                placeholder="RSSMRA80A01H501Z" oninput="updatePreview()" /></div>
+            <div class="form-group"><label>Indirizzo</label><input type="text" id="o-mittente-indirizzo"
+                placeholder="Via Roma 1, 20100 Milano (MI)" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Email</label><input type="email" id="o-mittente-email"
+                  placeholder="info@studio.it" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Telefono</label><input type="text" id="o-mittente-tel"
+                  placeholder="+39 02 1234567" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>PEC</label><input type="email" id="o-mittente-pec" placeholder="pec@pec.it"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice SDI</label><input type="text" id="o-mittente-sdi"
+                  placeholder="0000000" oninput="updatePreview()" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Destinatario / Cliente</div>
+          <div class="card">
+            <div class="form-group"><label>Nome / Ragione Sociale</label><input type="text" id="o-dest-nome"
+                placeholder="Azienda Cliente SRL" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>P.IVA</label><input type="text" id="o-dest-piva"
+                  placeholder="IT09876543210" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice Fiscale</label><input type="text" id="o-dest-cf"
+                  placeholder="01234567890" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-group"><label>Indirizzo</label><input type="text" id="o-dest-indirizzo"
+                placeholder="Via Milano 5, 00100 Roma (RM)" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Email</label><input type="email" id="o-dest-email"
+                  placeholder="acquisti@cliente.it" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Telefono</label><input type="text" id="o-dest-tel"
+                  placeholder="+39 02 9876543" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>PEC</label><input type="email" id="o-dest-pec" placeholder="pec@pec.it"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice SDI</label><input type="text" id="o-dest-sdi" placeholder="0000000"
+                  oninput="updatePreview()" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Voci / Servizi</div>
+          <div class="card">
+            <div
+              style="display:grid;grid-template-columns:3fr 70px 95px 32px;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#555c7a;padding:0 2px;margin-bottom:7px;">
+              <span>Descrizione</span><span style="text-align:center;">Qty</span><span>Prezzo</span><span></span>
+            </div>
+            <div id="o-line-items"></div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;justify-content:center;"
+              onclick="addOffertaItem()">+ Aggiungi Voce</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Opzioni e Fiscalit&agrave;</div>
+          <div class="card">
+            <div class="form-group"><label>Condizioni di Pagamento</label><select id="o-pagamento"
+                onchange="updatePreview()">
+                <option value="30 gg data documento">30 gg data documento</option>
+                <option value="60 gg data documento">60 gg data documento</option>
+                <option value="Pagamento immediato">Pagamento immediato</option>
+                <option value="Acconto 50% + saldo alla consegna">Acconto 50% + saldo alla consegna</option>
+              </select></div>
+            <div class="form-group"><label>Ritenuta d&apos;Acconto</label>
+              <div class="checkbox-group"><input type="checkbox" id="o-ritenuta-check" checked
+                  onchange="updatePreview()" /><span>Soggetto a Ritenuta d&apos;Acconto (20%)</span></div>
+            </div>
+            <div class="form-group"><label>Gestione Separata INPS</label>
+              <div class="checkbox-group"><input type="checkbox" id="o-inps-check"
+                  onchange="toggleInps('o'); updatePreview()" /><span>Applica INPS (superati i 5.000&euro; annui)</span>
+              </div>
+            </div>
+            <div id="o-inps-section" class="form-group" style="display:none;"><label>Aliquota INPS (a carico
+                collaboratore 1/3)</label><select id="o-inps-rate" onchange="updatePreview()">
+                <option value="33.72">33,72% (Senza altra tutela)</option>
+                <option value="35.03">35,03% (Con diritto DIS-COLL)</option>
+                <option value="24">24,00% (Altra tutela/Pensionati)</option>
+              </select></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Note &amp; Condizioni</div>
+          <div class="card">
+            <textarea id="o-note" placeholder="Note, condizioni speciali, osservazioni..."
+              oninput="updatePreview()"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Riepilogo</div>
+          <div class="totals-box">
+            <div class="total-row"><span class="label">Importo Lordo</span><span class="value" id="o-tot-lordo">&euro;
+                0,00</span></div>
+            <div class="total-row" id="o-row-inps-tot" style="display:none;color:#888;"><span class="label">Contributo
+                INPS (100%)</span><span class="value" id="o-tot-inps-tot">&euro; 0,00</span></div>
+            <div class="total-row" id="o-row-inps" style="display:none;"><span class="label">(-) Ritenuta INPS
+                (1/3)</span><span class="value" id="o-tot-inps">&euro; 0,00</span></div>
+            <div class="total-row ritenuta" id="o-row-ritenuta"><span class="label">(-) Ritenuta d&apos;acconto
+                (20%)</span><span class="value" id="o-tot-ritenuta">&euro; 0,00</span></div>
+            <div class="total-row divider grand-total"><span class="label">Netto Stimato</span><span class="value"
+                id="o-tot-netto">&euro; 0,00</span></div>
+          </div>
+        </div>
+
+        <button class="btn btn-success" onclick="exportPDF('offerta')"
+          style="width:100%;justify-content:center;padding:13px;">&#11015;&#65039; Scarica PDF Offerta</button>
+      </div>
+
+      <!-- ===== RICEVUTA ===== -->
+      <div id="form-ricevuta" style="display:none;">
+
+        <div>
+          <div class="section-title">Dati Documento</div>
+          <div class="card">
+            <div class="form-row">
+              <div class="form-group"><label>N&deg; Ricevuta</label><input type="text" id="r-numero"
+                  placeholder="RIC-2026-001" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Data</label><input type="date" id="r-data" oninput="updatePreview()" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Cedente / Prestatore</div>
+          <div class="card">
+            <div class="form-group"><label>Nome e Cognome</label><input type="text" id="r-ced-nome"
+                placeholder="Mario Rossi" oninput="updatePreview()" /></div>
+            <div class="form-group"><label>Codice Fiscale</label><input type="text" id="r-ced-cf"
+                placeholder="RSSMRA80A01H501Z" oninput="updatePreview()" /></div>
+            <div class="form-group"><label>Indirizzo</label><input type="text" id="r-ced-indirizzo"
+                placeholder="Via Roma 1, 20100 Milano (MI)" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Email</label><input type="email" id="r-ced-email"
+                  placeholder="info@studio.it" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Telefono</label><input type="text" id="r-ced-tel"
+                  placeholder="+39 02 1234567" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>PEC</label><input type="email" id="r-ced-pec" placeholder="pec@pec.it"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice SDI</label><input type="text" id="r-ced-sdi" placeholder="0000000"
+                  oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>IBAN</label><input type="text" id="r-iban"
+                  placeholder="IT60 X054 2811 1010 0000 0123 456" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Banca</label><input type="text" id="r-banca" placeholder="Intesa Sanpaolo"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Condizioni di Pagamento</label><select id="opaga"
+                  onchange="updatePreview()">
+                  <option value="30 gg data documento">30 gg data documento</option>
+                  <option value="60 gg data documento">60 gg data documento</option>
+                  <option value="Pagamento immediato">Pagamento immediato</option>
+                  <option value="Acconto 50% + saldo alla consegna">Acconto 50% + saldo alla consegna</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Committente / Sostituto d&apos;Imposta</div>
+          <div class="card">
+            <div class="form-group"><label>Ragione Sociale</label><input type="text" id="r-comm-nome"
+                placeholder="Azienda SRL" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>P.IVA</label><input type="text" id="r-comm-piva"
+                  placeholder="IT01234567890" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice Fiscale</label><input type="text" id="r-comm-cf"
+                  placeholder="01234567890" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-group"><label>Indirizzo</label><input type="text" id="r-comm-indirizzo"
+                placeholder="Corso Italia 10, 00100 Roma (RM)" oninput="updatePreview()" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Email</label><input type="email" id="r-comm-email"
+                  placeholder="acquisti@azienda.it" oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Telefono</label><input type="text" id="r-comm-tel"
+                  placeholder="+39 02 9876543" oninput="updatePreview()" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>PEC</label><input type="email" id="r-comm-pec" placeholder="pec@azienda.it"
+                  oninput="updatePreview()" /></div>
+              <div class="form-group"><label>Codice SDI</label><input type="text" id="r-comm-sdi" placeholder="0000000"
+                  oninput="updatePreview()" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Descrizioni
+            Prestazione <button class="btn btn-ghost" onclick="addRicevutaItem()"
+              style="padding:4px 10px;font-size:12px;">+ Aggiungi riga</button></div>
+          <div class="card" id="r-desc-list"></div>
+        </div>
+
+        <div>
+          <div class="section-title">Calcolo Importi</div>
+          <div class="card">
+            <div class="form-group"><label>Ritenuta d&apos;Acconto</label>
+              <div class="checkbox-group"><input type="checkbox" id="r-ritenuta-check" checked
+                  onchange="updatePreview()" /><span>Soggetto a Ritenuta d&apos;Acconto (20%)</span></div>
+            </div>
+            <div class="form-group"><label>Gestione Separata INPS</label>
+              <div class="checkbox-group"><input type="checkbox" id="r-inps-check"
+                  onchange="toggleInps('r'); updatePreview()" /><span>Applica INPS (superati i 5.000&euro; annui)</span>
+              </div>
+            </div>
+            <div id="r-inps-section" class="form-group" style="display:none;"><label>Aliquota INPS (a carico
+                collaboratore 1/3)</label><select id="r-inps-rate" onchange="updatePreview()">
+                <option value="33.72">33,72% (Senza altra tutela)</option>
+                <option value="35.03">35,03% (Con diritto DIS-COLL)</option>
+                <option value="24">24,00% (Altra tutela/Pensionati)</option>
+              </select></div>
+            <div class="form-group"><label>Marca da Bollo</label>
+              <div class="checkbox-group"><input type="checkbox" id="r-marca"
+                  onchange="toggleBollo('r'); updatePreview()" /><span>Marca da bollo (&euro; 2,00) &mdash; se
+                  dovuta</span></div>
+            </div>
+            <div id="r-bollo-section" class="form-group" style="display:none;"><label>ID / Numero Identificativo Marca
+                da Bollo</label><input type="text" id="r-bollo-id" placeholder="Es. 01234567890123"
+                oninput="updatePreview()" /></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Note Aggiuntive</div>
+          <div class="card"><textarea id="r-note" placeholder="Eventuali note o riferimenti..."
+              oninput="updatePreview()"></textarea></div>
+        </div>
+
+        <div>
+          <div class="section-title">Riepilogo Importi</div>
+          <div class="totals-box">
+            <div class="total-row"><span class="label">Compenso lordo (somma voci)</span><span class="value"
+                id="r-tot-lordo">&euro; 0,00</span></div>
+            <div class="total-row" id="r-row-inps-tot" style="display:none;color:#888;"><span class="label">Contributo
+                INPS (100%)</span><span class="value" id="r-tot-inps-tot">&euro; 0,00</span></div>
+            <div class="total-row" id="r-row-inps" style="display:none;"><span class="label">(-) Ritenuta INPS
+                (1/3)</span><span class="value" id="r-tot-inps">&euro; 0,00</span></div>
+            <div class="total-row ritenuta" id="r-row-ritenuta"><span class="label">(-) Ritenuta d&apos;acconto
+                (20%)</span><span class="value" id="r-tot-ritenuta">&euro; 0,00</span></div>
+            <div class="total-row"><span class="label">Marca da bollo</span><span class="value"
+                id="r-tot-bollo">&mdash;</span></div>
+            <div class="total-row divider netto"><span class="label">Netto a pagare</span><span class="value"
+                id="r-tot-netto">&euro; 0,00</span></div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" onclick="window.print()"
+          style="width:100%;justify-content:center;padding:13px;">&#128424;&#65039; Stampa Ricevuta</button>
+      </div>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-toolbar">
+        <span>&#128196; Anteprima documento &mdash; aggiornata in tempo reale</span>
+        <button class="btn btn-ghost" onclick="window.print()" title="Stampa">&#128424;&#65039; Stampa</button>
+      </div>
+      <div id="document-preview"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">PDF generato!</div>
+
+  <script>
+    let currentTab = 'offerta';
+    let offertaItems = [];
+    let ricevutaDescItems = [];
+    var ricevutaDescId = 0;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var today = new Date().toISOString().split('T')[0];
+      var in30 = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+      document.getElementById('o-data').value = today;
+      document.getElementById('o-validita').value = in30;
+      document.getElementById('r-data').value = today;
+      document.getElementById('o-numero').value = 'OFF-' + new Date().getFullYear() + '-001';
+      document.getElementById('r-numero').value = 'RIC-' + new Date().getFullYear() + '-001';
+      addOffertaItem();
+      addRicevutaItem();
+      updatePreview();
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-offerta').classList.toggle('active', tab === 'offerta');
+      document.getElementById('tab-ricevuta').classList.toggle('active', tab === 'ricevuta');
+      document.getElementById('form-offerta').style.display = tab === 'offerta' ? 'contents' : 'none';
+      document.getElementById('form-ricevuta').style.display = tab === 'ricevuta' ? 'contents' : 'none';
+      updatePreview();
+    }
+
+    function fmt(n, sym) {
+      sym = sym || 'EUR';
+      var s = sym === 'EUR' ? '\u20ac' : sym;
+      return s + ' ' + Number(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function fmtE(n) { return '\u20ac ' + Number(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function v(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+    function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+    function fmtDate(s) { if (!s) return '\u2014'; var p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function addOffertaItem() {
+      var id = Date.now();
+      offertaItems.push({ id: id, desc: '', qty: 1, price: 0 });
+      renderOffertaItems();
+    }
+    function removeOffertaItem(id) {
+      offertaItems = offertaItems.filter(function (i) { return i.id !== id; });
+      renderOffertaItems();
+      updatePreview();
+    }
+    function renderOffertaItems() {
+      var c = document.getElementById('o-line-items');
+      c.innerHTML = '';
+      offertaItems.forEach(function (item) {
+        var el = document.createElement('div');
+        el.className = 'line-item';
+        el.innerHTML = '<input type="text" placeholder="Descrizione..." value="' + esc(item.desc) + '" oninput="updItem(' + item.id + ',\'desc\',this.value)" />'
+          + '<input type="number" placeholder="1" min="0" step="0.01" value="' + item.qty + '" oninput="updItem(' + item.id + ',\'qty\',this.value)" style="text-align:center;" />'
+          + '<input type="number" placeholder="0.00" min="0" step="0.01" value="' + (item.price || '') + '" oninput="updItem(' + item.id + ',\'price\',this.value)" />'
+          + '<button class="btn btn-danger" style="border-radius:8px;width:32px;height:32px;padding:0;justify-content:center;" onclick="removeOffertaItem(' + item.id + ')">\u2715</button>';
+        c.appendChild(el);
+      });
+    }
+    function updItem(id, field, val) {
+      var item = offertaItems.find(function (i) { return i.id === id; });
+      if (!item) return;
+      if (field === 'qty' || field === 'price') item[field] = parseFloat(val) || 0;
+      else item[field] = val;
+      updatePreview();
+    }
+
+    function addRicevutaItem() {
+      var id = ++ricevutaDescId;
+      ricevutaDescItems.push({ id: id, desc: '', periodo: '', importo: 0 });
+      var list = document.getElementById('r-desc-list');
+      var div = document.createElement('div');
+      div.id = 'r-desc-row-' + id;
+      div.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;';
+      div.innerHTML = '<div class="form-group" style="margin-bottom:6px;">'
+        + '<label>Descrizione</label>'
+        + '<textarea placeholder="Es. Consulenza informatica Giugno 2026" oninput="updRicevutaItem(' + id + ',\'desc\',this.value)"></textarea>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;align-items:flex-end;">'
+        + '<div class="form-group" style="flex:2;margin-bottom:0;"><label>Periodo</label><input type="text" placeholder="Es. 01/06-30/06/2026" oninput="updRicevutaItem(' + id + ',\'periodo\',this.value)" /></div>'
+        + '<div class="form-group" style="flex:1;margin-bottom:0;"><label>Importo (&euro;)</label><input type="number" step="0.01" min="0" placeholder="0.00" oninput="updRicevutaItem(' + id + ',\'importo\',this.value)" /></div>'
+        + '<button class="btn btn-danger" onclick="removeRicevutaItem(' + id + ')" style="margin-bottom:0;height:36px;">&#10005;</button>'
+        + '</div>';
+      list.appendChild(div);
+      updatePreview();
+    }
+
+    function removeRicevutaItem(id) {
+      ricevutaDescItems = ricevutaDescItems.filter(function (i) { return i.id !== id; });
+      var el = document.getElementById('r-desc-row-' + id);
+      if (el) el.remove();
+      updatePreview();
+    }
+
+    function updRicevutaItem(id, field, val) {
+      var item = ricevutaDescItems.find(function (i) { return i.id === id; });
+      if (!item) return;
+      if (field === 'importo') item[field] = parseFloat(val) || 0;
+      else item[field] = val;
+      updatePreview();
+    }
+
+    function toggleInps(prefix) {
+      document.getElementById(prefix + '-inps-section').style.display = chk(prefix + '-inps-check') ? '' : 'none';
+    }
+
+    function toggleBollo(prefix) {
+      var sec = document.getElementById(prefix + '-bollo-section');
+      if (sec) sec.style.display = chk(prefix + '-marca') ? '' : 'none';
+    }
+
+    function calcOfferta() {
+      var lordo = 0;
+      offertaItems.forEach(function (item) {
+        lordo += (item.qty || 0) * (item.price || 0);
+      });
+      var hasRitenuta = chk('o-ritenuta-check');
+      var hasInps = chk('o-inps-check');
+      var inpsRate = parseFloat(v('o-inps-rate')) || 0;
+
+      var inpsTotale = hasInps ? lordo * (inpsRate / 100) : 0;
+      var inpsTrattenuta = hasInps ? inpsTotale / 3 : 0;
+      var ritenuta = hasRitenuta ? lordo * 0.20 : 0;
+      var netto = lordo - inpsTrattenuta - ritenuta;
+
+      document.getElementById('o-tot-lordo').textContent = fmtE(lordo);
+
+      var rowInpsTot = document.getElementById('o-row-inps-tot');
+      var rowInps = document.getElementById('o-row-inps');
+      if (hasInps) {
+        rowInpsTot.style.display = 'flex';
+        rowInpsTot.querySelector('.label').textContent = 'Contributo INPS (' + inpsRate.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)';
+        document.getElementById('o-tot-inps-tot').textContent = fmtE(inpsTotale);
+
+        rowInps.style.display = 'flex';
+        var pct = Number(inpsRate / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        rowInps.querySelector('.label').textContent = '(-) Ritenuta INPS (1/3 - ' + pct + '%)';
+        document.getElementById('o-tot-inps').textContent = '- ' + fmtE(inpsTrattenuta);
+      } else {
+        rowInpsTot.style.display = 'none';
+        rowInps.style.display = 'none';
+      }
+
+      var rowRitenuta = document.getElementById('o-row-ritenuta');
+      if (hasRitenuta) {
+        rowRitenuta.style.display = 'flex';
+        document.getElementById('o-tot-ritenuta').textContent = '- ' + fmtE(ritenuta);
+      } else {
+        rowRitenuta.style.display = 'none';
+      }
+
+      document.getElementById('o-tot-netto').textContent = fmtE(netto);
+      return { lordo: lordo, inpsTrattenuta: inpsTrattenuta, ritenuta: ritenuta, netto: netto, hasRitenuta: hasRitenuta, hasInps: hasInps, inpsRate: inpsRate, inpsTotale: inpsTotale };
+    }
+
+    function calcRicevuta() {
+      // lordo = somma degli importi di tutte le voci descrizione
+      var lordo = 0;
+      ricevutaDescItems.forEach(function (item) { lordo += item.importo || 0; });
+      var hasRitenuta = chk('r-ritenuta-check');
+      var hasInps = chk('r-inps-check');
+      var inpsRate = parseFloat(v('r-inps-rate')) || 0;
+      var hasBollo = chk('r-marca');
+
+      var inpsTotale = hasInps ? lordo * (inpsRate / 100) : 0;
+      var inpsTrattenuta = hasInps ? inpsTotale / 3 : 0;
+      var ritenuta = hasRitenuta ? lordo * 0.20 : 0;
+      var bollo = hasBollo ? 2.00 : 0;
+      var netto = lordo - inpsTrattenuta - ritenuta + bollo;
+
+      document.getElementById('r-tot-lordo').textContent = fmtE(lordo);
+
+      var rowInpsTot = document.getElementById('r-row-inps-tot');
+      var rowInps = document.getElementById('r-row-inps');
+      if (hasInps) {
+        rowInpsTot.style.display = 'flex';
+        rowInpsTot.querySelector('.label').textContent = 'Contributo INPS (' + inpsRate.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)';
+        document.getElementById('r-tot-inps-tot').textContent = fmtE(inpsTotale);
+
+        rowInps.style.display = 'flex';
+        var pct = Number(inpsRate / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        rowInps.querySelector('.label').textContent = '(-) Ritenuta INPS (1/3 - ' + pct + '%)';
+        document.getElementById('r-tot-inps').textContent = '- ' + fmtE(inpsTrattenuta);
+      } else {
+        rowInpsTot.style.display = 'none';
+        rowInps.style.display = 'none';
+      }
+
+      var rowRitenuta = document.getElementById('r-row-ritenuta');
+      if (hasRitenuta) {
+        rowRitenuta.style.display = 'flex';
+        document.getElementById('r-tot-ritenuta').textContent = '- ' + fmtE(ritenuta);
+      } else {
+        rowRitenuta.style.display = 'none';
+      }
+
+      document.getElementById('r-tot-bollo').textContent = hasBollo ? fmtE(bollo) : '\u2014';
+      document.getElementById('r-tot-netto').textContent = fmtE(netto);
+      return { lordo: lordo, inpsTrattenuta: inpsTrattenuta, ritenuta: ritenuta, bollo: bollo, netto: netto, hasRitenuta: hasRitenuta, hasBollo: hasBollo, hasInps: hasInps, inpsRate: inpsRate, inpsTotale: inpsTotale };
+    }
+
+    function updatePreview() {
+      if (currentTab === 'offerta') renderOffertaDoc();
+      else renderRicevutaDoc();
+    }
+
+    function renderOffertaDoc() {
+      var calc = calcOfferta();
+      var valuta = v('o-valuta') || '\u20ac';
+      var rows = offertaItems.map(function (item) {
+        var line = (item.qty || 0) * (item.price || 0);
+        return '<tr>'
+          + '<td>' + (item.desc || '<em style="color:#aaa">&mdash;</em>') + '</td>'
+          + '<td class="center">' + item.qty + '</td>'
+          + '<td class="right">' + valuta + ' ' + Number(item.price || 0).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</td>'
+          + '<td class="right"><strong>' + valuta + ' ' + Number(line).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</strong></td>'
+          + '</tr>';
+      }).join('');
+
+      document.getElementById('document-preview').innerHTML =
+        '<div class="doc-header">'
+        + '<div class="doc-company"><h2>' + (v('o-mittente-nome') || 'Nome') + '</h2>'
+        + '<p>' + (v('o-mittente-indirizzo') ? v('o-mittente-indirizzo') + '<br>' : '')
+        + (v('o-mittente-cf') ? 'C.F.: ' + v('o-mittente-cf') + '<br>' : '')
+        + (v('o-mittente-email') ? v('o-mittente-email') : '')
+        + (v('o-mittente-tel') ? ' &nbsp;|&nbsp; ' + v('o-mittente-tel') : '')
+        + (v('o-mittente-pec') ? '<br>PEC: ' + v('o-mittente-pec') : '')
+        + (v('o-mittente-sdi') ? ' &nbsp;|&nbsp; SDI: ' + v('o-mittente-sdi') : '')
+        + '</p></div>'
+        + '<div class="doc-badge">'
+        + '<div class="doc-type">Offerta</div>'
+        + '<div class="doc-number">N&deg; ' + (v('o-numero') || '&mdash;') + '</div>'
+        + '<div class="doc-date">&#128197; ' + fmtDate(v('o-data')) + '</div>'
+        + (v('o-validita') ? '<div><span class="validity-badge">&#9203; Valida fino al ' + fmtDate(v('o-validita')) + '</span></div>' : '')
+        + '</div></div>'
+
+        + '<div class="doc-meta">'
+        + '<div class="doc-meta-box"><div class="meta-title">&#127962; Mittente</div>'
+        + '<p><strong>' + (v('o-mittente-nome') || '&mdash;') + '</strong><br>' + (v('o-mittente-indirizzo') || '') + '<br>' + (v('o-mittente-cf') ? 'C.F.: ' + v('o-mittente-cf') : '') + '</p></div>'
+        + '<div class="doc-meta-box"><div class="meta-title">&#128100; Destinatario</div>'
+        + '<p><strong>' + (v('o-dest-nome') || '&mdash;') + '</strong><br>' + (v('o-dest-indirizzo') || '') + (v('o-dest-piva') ? '<br>P.IVA: ' + v('o-dest-piva') : '') + (v('o-dest-cf') ? '<br>C.F.: ' + v('o-dest-cf') : '') + (v('o-dest-email') ? '<br>Email: ' + v('o-dest-email') : '') + (v('o-dest-tel') ? ' &nbsp;|&nbsp; Tel: ' + v('o-dest-tel') : '') + (v('o-dest-pec') ? '<br>PEC: ' + v('o-dest-pec') : '') + (v('o-dest-sdi') ? ' &nbsp;|&nbsp; SDI: ' + v('o-dest-sdi') : '') + '</p></div>'
+        + '</div>'
+
+        + '<table class="doc-table"><thead><tr>'
+        + '<th>Descrizione</th><th class="center">Qt&agrave;</th><th class="right">Prezzo Unit.</th><th class="right">Importo</th>'
+        + '</tr></thead><tbody>' + (rows || '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:18px;">Nessuna voce aggiunta</td></tr>') + '</tbody></table>'
+
+        + '<div class="doc-totals"><div class="doc-totals-inner">'
+        + '<div class="doc-total-row"><span class="tl">Importo lordo</span><span class="tr">' + valuta + ' ' + Number(calc.lordo).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</span></div>'
+        + (calc.hasInps ? '<div class="doc-total-row" style="color:#666;font-size:12px;"><span class="tl">Contributo INPS (' + Number(calc.inpsRate).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)</span><span class="tr">' + valuta + ' ' + Number(calc.inpsTotale).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</span></div>' : '')
+        + (calc.hasInps ? '<div class="doc-total-row"><span class="tl">(-) Trattenuta INPS (1/3 &mdash; ' + Number(calc.inpsRate / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)</span><span class="tr">- ' + valuta + ' ' + Number(calc.inpsTrattenuta).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</span></div>' : '')
+        + (calc.hasRitenuta ? '<div class="doc-total-row ritenuta"><span class="tl">(-) Ritenuta d\'acconto 20%</span><span class="tr">- ' + valuta + ' ' + Number(calc.ritenuta).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</span></div>' : '')
+        + '<div class="doc-total-row grand"><span class="tl">Netto Stimato</span><span class="tr" style="color:#059669;">' + valuta + ' ' + Number(calc.netto).toLocaleString('it-IT', { minimumFractionDigits: 2 }) + '</span></div>'
+        + '</div></div>'
+
+        + (v('o-note') ? '<div class="doc-notes"><strong>&#128221; Note</strong>' + v('o-note').replace(/\n/g, '<br>') + '</div>' : '')
+        + '<div class="doc-notes"><strong>&#128179; Condizioni di Pagamento </strong>' + v('o-pagamento') + '</div>'
+
+        + '<div class="doc-signature">'
+        + '<div><p style="font-size:11px;color:#888;">Prestazione di lavoro autonomo occasionale</p></div>'
+        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Firma Responsabile</div></div>'
+        + '</div>'
+        + '<div class="doc-legal">Prestazione di lavoro autonomo occasionale ai sensi dell\'art. 67, lett. l), e art. 71, comma 2, del D.P.R. n. 917/1986. Operazione fuori campo IVA ai sensi dell\'art. 5 del D.P.R. n. 633/1972. Questo documento non costituisce fattura.</div>';
+    }
+
+    function renderRicevutaDoc() {
+      var c = calcRicevuta();
+      document.getElementById('document-preview').innerHTML =
+        '<div class="doc-header">'
+        + '<div class="doc-company"><h2>' + (v('r-ced-nome') || 'Nome Prestatore') + '</h2>'
+        + '<p>' + (v('r-ced-indirizzo') ? v('r-ced-indirizzo') + '<br>' : '')
+        + (v('r-ced-cf') ? 'C.F.: ' + v('r-ced-cf') + '<br>' : '')
+        + (v('r-ced-email') ? v('r-ced-email') : '')
+        + (v('r-ced-tel') ? ' &nbsp;|&nbsp; ' + v('r-ced-tel') : '')
+        + (v('r-ced-pec') ? '<br>PEC: ' + v('r-ced-pec') : '')
+        + (v('r-ced-sdi') ? ' &nbsp;|&nbsp; SDI: ' + v('r-ced-sdi') : '')
+        + '</p></div>'
+        + '<div class="doc-badge">'
+        + '<div class="doc-type">Ricevuta</div>'
+        + '<div class="doc-number">N&deg; ' + (v('r-numero') || '&mdash;') + '</div>'
+        + '<div class="doc-date">&#128197; ' + fmtDate(v('r-data')) + '</div>'
+        + (c.hasRitenuta ? '<div style="margin-top:7px;"><span class="badge badge-purple">Ritenuta d\'acconto</span></div>' : '')
+        + '</div></div>'
+
+        + '<div class="doc-meta">'
+        + '<div class="doc-meta-box"><div class="meta-title">&#129497; Cedente / Prestatore</div>'
+        + '<p><strong>' + (v('r-ced-nome') || '&mdash;') + '</strong><br>' + (v('r-ced-indirizzo') || '')
+        + (v('r-ced-cf') ? '<br>C.F.: ' + v('r-ced-cf') : '') + (v('r-ced-email') ? '<br>Email: ' + v('r-ced-email') : '') + (v('r-ced-tel') ? ' &nbsp;|&nbsp; Tel: ' + v('r-ced-tel') : '') + (v('r-ced-pec') ? '<br>PEC: ' + v('r-ced-pec') : '') + (v('r-ced-sdi') ? ' &nbsp;|&nbsp; SDI: ' + v('r-ced-sdi') : '') + '</p></div>'
+        + '<div class="doc-meta-box"><div class="meta-title">&#127962; Committente / Sostituto d\'Imposta</div>'
+        + '<p><strong>' + (v('r-comm-nome') || '&mdash;') + '</strong><br>' + (v('r-comm-indirizzo') || '')
+        + (v('r-comm-piva') ? '<br>P.IVA: ' + v('r-comm-piva') : '') + (v('r-comm-cf') ? '<br>C.F.: ' + v('r-comm-cf') : '') + (v('r-comm-email') ? '<br>Email: ' + v('r-comm-email') : '') + (v('r-comm-tel') ? ' &nbsp;|&nbsp; Tel: ' + v('r-comm-tel') : '') + (v('r-comm-pec') ? '<br>PEC: ' + v('r-comm-pec') : '') + (v('r-comm-sdi') ? ' &nbsp;|&nbsp; SDI: ' + v('r-comm-sdi') : '') + '</p></div>'
+        + '</div>'
+
+        + '<table class="doc-table" style="margin-bottom:20px;"><thead><tr>'
+        + '<th style="width:5%;text-align:center;">#</th><th style="width:50%;">Descrizione Prestazione</th><th style="width:20%;">Periodo</th><th class="right" style="width:25%;">Importo</th>'
+        + '</tr></thead><tbody>'
+        + (function () {
+          if (!ricevutaDescItems.length) return '<tr><td colspan="4"><em style="color:#aaa">Nessuna descrizione inserita</em></td></tr>';
+          var rows = ricevutaDescItems.map(function (item, idx) {
+            return '<tr>'
+              + '<td style="text-align:center;font-weight:700;color:#6c63ff;">' + (idx + 1) + '</td>'
+              + '<td>' + (item.desc ? item.desc.replace(/\n/g, '<br>') : '<em style="color:#aaa">&mdash;</em>') + '</td>'
+              + '<td style="font-size:11px;color:#888;">' + (item.periodo || '&mdash;') + '</td>'
+              + '<td class="right" style="font-weight:700;">' + fmtE(item.importo || 0) + '</td>'
+              + '</tr>';
+          }).join('');
+          rows += '<tr style="background:#f0f0fa;">'
+            + '<td colspan="3" style="font-weight:700;text-align:right;">Totale compenso lordo</td>'
+            + '<td class="right" style="font-size:15px;font-weight:800;color:#6c63ff;">' + fmtE(c.lordo) + '</td>'
+            + '</tr>';
+          return rows;
+        })()
+        + '</tbody></table>'
+
+        + '<div class="doc-totals"><div class="doc-totals-inner">'
+        + '<div class="doc-total-row"><span class="tl">Compenso lordo</span><span class="tr">' + fmtE(c.lordo) + '</span></div>'
+        + (c.hasInps ? '<div class="doc-total-row" style="color:#666;font-size:12px;"><span class="tl">Contributo INPS (' + Number(c.inpsRate).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)</span><span class="tr">' + fmtE(c.inpsTotale) + '</span></div>' : '')
+        + (c.hasInps ? '<div class="doc-total-row"><span class="tl">(-) Trattenuta INPS (1/3 &mdash; ' + Number(c.inpsRate / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%)</span><span class="tr">- ' + fmtE(c.inpsTrattenuta) + '</span></div>' : '')
+        + (c.hasRitenuta ? '<div class="doc-total-row ritenuta"><span class="tl">(-) Ritenuta d\'acconto 20%</span><span class="tr">- ' + fmtE(c.ritenuta) + '</span></div>' : '')
+        + (c.hasBollo ? '<div class="doc-total-row"><span class="tl">(+) Marca da bollo</span><span class="tr">' + fmtE(c.bollo) + '</span></div>' : '')
+        + '<div class="doc-total-row grand netto"><span class="tl">Netto a pagare</span><span class="tr" style="color:#059669;">' + fmtE(c.netto) + '</span></div>'
+        + '</div></div>'
+        + '<div class="doc-notes"><strong>&#128179; Condizioni di Pagamento </strong>' + v('opaga') + '</div>'
+        + ((v('r-iban') || v('r-banca'))
+          ? '<div class="doc-payment"><div><div class="pay-label">&#128179; Dati per il pagamento</div>'
+          + '<div class="pay-value">' + (v('r-banca') || '') + '</div>'
+          + '<div class="pay-value" style="font-size:11px;color:#a78bfa;font-family:monospace;">' + (v('r-iban') || '') + '</div></div>'
+          + '<div class="pay-amount">' + fmtE(c.netto) + '</div></div>'
+          : '')
+
+        + (v('r-note') ? '<div class="doc-notes"><strong>&#128221; Note</strong>' + v('r-note').replace(/\n/g, '<br>') + '</div>' : '')
+
+
+        + '<div class="doc-notes">'
+        + '<strong>&#128203; Dichiarazione</strong>'
+        + '<p style="margin-top:6px;line-height:1.7;">Il sottoscritto <strong>' + (v('r-ced-nome') || '___________') + '</strong>, C.F. <strong>' + (v('r-ced-cf') || '___________') + '</strong>, '
+        + 'dichiara di aver percepito da <strong>' + (v('r-comm-nome') || '___________') + '</strong> il compenso complessivo lordo di <strong>' + fmtE(c.lordo) + '</strong>'
+        + (c.hasInps ? ', dal quale viene dedotta la trattenuta INPS (Gestione Separata) pari a <strong>' + fmtE(c.inpsTrattenuta) + '</strong>' : '')
+        + (c.hasRitenuta ? ' e la ritenuta d\'acconto del 20% pari a <strong>' + fmtE(c.ritenuta) + '</strong>,' : ',')
+        + ' per un netto da ricevere di <strong>' + fmtE(c.netto) + '</strong>'
+        + (ricevutaDescItems.length ? ', come da prestazioni indicate alle righe <strong>' + ricevutaDescItems.map(function (_, i) { return i + 1; }).join(', ') + '</strong> della tabella.' : '.')
+        + '</p>'
+        + '</div>'
+
+        + '<div class="doc-signature">'
+        + '<div><p style="font-size:11px;color:#888;line-height:1.6;">Prestazione occasionale' + (c.hasBollo ? '<br>&#9989; Marca da bollo applicata' : '') + ' </p></div>'
+        + '<div class="sig-box"><div class="sig-line"></div><div class="sig-label">Firma Cedente / Prestatore</div></div>'
+        + '</div>'
+        + '<div class="doc-legal">'
+        + '<strong style="display:block;margin-bottom:6px;">Dichiarazioni ai sensi di legge</strong>'
+        + 'Il sottoscritto dichiara inoltre, sotto la propria responsabilit&agrave;, che tale compenso:'
+        + '<ul style="margin:5px 0 10px 16px;line-height:1.8;">'
+        + '<li>ha carattere del tutto <strong>occasionale</strong>, non svolgendo il sottoscritto prestazioni di lavoro autonomo con carattere di abitualit&agrave; (ai sensi dell\'art. 67, lett. l), e art. 71, comma 2, del D.P.R. n. 917/1986);</li>'
+        + '<li><strong>non &egrave; soggetto al regime IVA</strong> a norma dell\'art. 5 del D.P.R. n. 633/1972 e successive modificazioni;</li>'
+        + (c.hasRitenuta
+          ? '<li>&egrave; soggetto a <strong>ritenuta d\'acconto del 20%</strong> ai sensi dell\'art. 25 del D.P.R. n. 600/1973; la ritenuta &egrave; trattenuta e versata dal committente, in qualit&agrave; di sostituto d\'imposta, mediante modello F24 (codice tributo 1040);</li>'
+          : '<li><strong>non &egrave; soggetto a ritenuta d\'acconto</strong>;</li>'
+        )
+        + (c.hasInps
+          ? '<li><strong>&egrave; assoggettato a contributo previdenziale</strong> (Gestione Separata INPS) ai sensi dell\'art. 44, comma 2, D.L. 269/2003 (aliquota ' + c.inpsRate + '%), in quanto nel corso dell\'anno solare il totale dei compensi ricevuti a titolo di collaborazione occasionale <strong>supera i &euro; 5.000,00</strong>; l\'onere contributivo totale di ' + fmtE(c.inpsTotale) + ' &egrave; ripartito per 1/3 (' + Number(c.inpsRate / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%) a carico del prestatore e per 2/3 (' + Number(c.inpsRate * 2 / 3).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%) a carico del committente, che provvede al versamento del totale.</li>'
+          : '<li><strong>non &egrave; assoggettato a contributo previdenziale</strong>, in quanto nel corso dell\'anno solare il totale dei compensi ricevuti a titolo di collaborazione occasionale <strong>non supera i &euro; 5.000,00</strong>.</li>'
+        )
+        + '</ul>'
+        + (c.hasBollo ? 'Marca da bollo da &euro; 2,00' + (v('r-bollo-id') ? ' (ID: ' + v('r-bollo-id') + ')' : '') + ' applicata sull\'originale ai sensi del D.P.R. n. 642/1972.' : '')
+        + '</div>';
+    }
+
+    function exportPDF(type) {
+      var element = document.getElementById('document-preview');
+      var nome = type === 'offerta'
+        ? 'Offerta_' + (v('o-numero') || 'doc') + '_' + (v('o-data') || 'data') + '.pdf'
+        : 'Ricevuta_' + (v('r-numero') || 'doc') + '_' + (v('r-data') || 'data') + '.pdf';
+
+      // Snapshot element dimensions before any class change
+      var origStyle = element.getAttribute('style') || '';
+      element.style.position = 'relative';
+      element.style.left = '0';
+      element.style.top = '0';
+      element.style.boxShadow = 'none';
+
+      var options = {
+        margin: [10, 10, 10, 10],
+        filename: nome.replace(/\//g, '-'),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(options).from(element).save().then(function () {
+        element.setAttribute('style', origStyle);
+        showToast('PDF scaricato correttamente!');
+      }).catch(function (err) {
+        element.setAttribute('style', origStyle);
+        console.error(err);
+      });
+    }
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = '\u2705 ' + (msg || 'Completato!');
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+  </script>
+</body>
+
+</html>
