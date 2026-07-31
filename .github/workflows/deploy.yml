@@ -1,0 +1,64 @@
+# ================================================================
+#  Automation & Software Solutions — GitHub Pages Deploy Workflow
+#  Repo: Automation-SoftwareSolutions/.github
+#  URL:  https://automation-softwaresolutions.github.io/.github/
+#
+#  Trigger: push su branch "main"
+#  Nessun build step — sito statico puro (HTML + CSS + JS)
+# ================================================================
+
+name: 🚀 Deploy to GitHub Pages
+
+on:
+  # Avvia su ogni push al branch principale
+  push:
+    branches:
+      - main
+
+  # Permette di avviare il workflow manualmente dalla tab Actions
+  workflow_dispatch:
+
+# Permessi necessari per il deploy su GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploy paralleli: se un deploy è in corso, quello nuovo
+# attende; quello eventualmente in coda viene cancellato
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # ─────────────────────────────────────────
+  #  JOB: Build & Deploy (statico — no build)
+  # ─────────────────────────────────────────
+  deploy:
+    name: Deploy sito statico
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # 1. Checkout del codice
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura GitHub Pages
+      - name: ⚙️ Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # 3. Carica tutti i file statici come artefatto
+      #    path '.' = root del repo (tutti i file HTML/CSS/JS/PNG)
+      - name: 📦 Upload static files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      # 4. Deploy effettivo su GitHub Pages
+      - name: 🌐 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,4 +1,10 @@
+# robots.txt — Automation & Software Solutions
+# https://automation-softwaresolutions.github.io/.github/
+
 User-agent: *
 Allow: /
+Disallow: /assets/
+Disallow: /*.json$
 
+# Sitemap
 Sitemap: https://automation-softwaresolutions.github.io/.github/sitemap.xml
