@@ -22,19 +22,29 @@
       </span>
     </a>
     <ul class="nav-links" role="list">
-      <li><a href="index.html#servizi">Servizi</a></li>
-      <li><a href="index.html#chi-siamo">Chi Siamo</a></li>
-      <li><a href="index.html#contatti" class="nav-cta">Richiedi Preventivo</a></li>
+      <li><a href="index.html#servizi" data-i18n="nav.services">Servizi</a></li>
+      <li><a href="index.html#chi-siamo" data-i18n="nav.about">Chi Siamo</a></li>
+      <li><a href="index.html#contatti" class="nav-cta" data-i18n="nav.cta">Richiedi Preventivo</a></li>
     </ul>
+        <div class="lang-switcher" id="lang-switcher" aria-label="Seleziona lingua">
+      <button class="lang-current" id="lang-toggle" aria-haspopup="listbox" aria-expanded="false" title="Language / Lingua / Sprache">
+        <span class="lang-flag" id="lang-flag">🇮🇹</span>
+        <span class="lang-code" id="lang-code">IT</span>
+        <span class="lang-arrow" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown" role="listbox">
+        <!-- Populated dynamically by buildSwitcher() in i18n.js -->
+      </div>
+    </div>
     <button class="nav-burger" id="nav-burger" aria-label="Apri menu" aria-expanded="false" aria-controls="nav-mobile">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 <nav class="nav-mobile" id="nav-mobile" aria-label="Menu mobile">
-  <a href="index.html#servizi"   onclick="closeMobileMenu()">Servizi</a>
-  <a href="index.html#chi-siamo" onclick="closeMobileMenu()">Chi Siamo</a>
-  <a href="index.html#contatti"  onclick="closeMobileMenu()" style="color:var(--cyan);font-weight:600">Richiedi Preventivo</a>
+  <a href="index.html#servizi" onclick="closeMobileMenu()" data-i18n="nav.services">Servizi</a>
+  <a href="index.html#chi-siamo" onclick="closeMobileMenu()" data-i18n="nav.about">Chi Siamo</a>
+  <a href="index.html#contatti" onclick="closeMobileMenu()" style="color:var(--cyan);font-weight:600" data-i18n="nav.cta">Richiedi Preventivo</a>
 </nav>
 
 
@@ -42,6 +52,7 @@
 <main class="legal-page">
   <div class="legal-content">
 
+    <div class="legal-lang-note" aria-live="polite"></div>
     <h1>Cookie Policy</h1>
     <span class="legal-date">Ultimo aggiornamento: 30 luglio 2026</span>
 
@@ -231,32 +242,32 @@
             <img src="logo.png" alt="Automation &amp; Software Solutions" class="footer-logo-img">
           </a>
         </div>
-        <p>Sviluppo software per l'automazione industriale. PLC, HMI, SCADA, Python, Java, C. Consulenza IT e OT in provincia di Rovigo, Italia.</p>
+        <p data-i18n="footer.brand">Sviluppo software per l'automazione industriale. PLC, HMI, SCADA, Python, Java, C. Consulenza IT e OT in provincia di Rovigo, Italia.</p>
       </div>
       <div class="footer-col">
-        <h4>Navigazione</h4>
+        <h4 data-i18n="nav.about">Navigazione</h4>
         <ul class="footer-links">
           <li><a href="index.html">Home</a></li>
-          <li><a href="index.html#servizi">Servizi</a></li>
-          <li><a href="index.html#chi-siamo">Chi Siamo</a></li>
+          <li><a href="index.html#servizi" data-i18n="nav.services">Servizi</a></li>
+          <li><a href="index.html#chi-siamo" data-i18n="nav.about">Chi Siamo</a></li>
           <li><a href="index.html#contatti">Contatti</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Contatti</h4>
+        <h4 data-i18n="footer.contacts">Contatti</h4>
         <ul class="footer-links">
           <li><a href="tel:+393401208750">+39 340 120 8750</a></li>
           <li><a href="mailto:info.automationsoftware@gmail.com">info.automationsoftware@gmail.com</a></li>
-          <li><span>Provincia di Rovigo, Veneto</span></li>
+          <li><span data-i18n="footer.loc">Provincia di Rovigo, Veneto</span></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 Automation &amp; Software Solutions. Tutti i diritti riservati.</p>
+      <p data-i18n="footer.copy">© 2025 Automation &amp; Software Solutions. Tutti i diritti riservati.</p>
       <div class="footer-legal">
-        <a href="privacy-policy.html">Privacy Policy</a>
-        <a href="cookie-policy.html">Cookie Policy</a>
-        <a href="#" id="cookie-settings-link">Impostazioni Cookie</a>
+        <a href="privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="cookie-policy.html" data-i18n="footer.cookie">Cookie Policy</a>
+        <a href="#" id="cookie-settings-link" data-i18n="footer.settings">Impostazioni Cookie</a>
       </div>
     </div>
   </div>
@@ -267,14 +278,13 @@
 <div id="cookie-banner" role="dialog" aria-live="polite" aria-label="Consenso cookie" aria-hidden="true">
   <div class="cookie-banner-inner">
     <div class="cookie-banner-text">
-      <p><strong>🍪 Utilizziamo i cookie</strong></p>
-      <p>Usiamo cookie tecnici necessari e, con il tuo consenso, cookie analitici e di marketing.
-         Puoi gestire le preferenze o leggere la <a href="cookie-policy.html">Cookie Policy</a>.</p>
+      <p><strong data-i18n="ck.title">🍪 Utilizziamo i cookie</strong></p>
+      <p data-i18n="ck.desc">Usiamo cookie tecnici necessari e, con il tuo consenso, cookie analitici e di marketing. Puoi gestire le preferenze o leggere la <a href="cookie-policy.html">Cookie Policy</a>.</p>
     </div>
     <div class="cookie-banner-actions">
-      <button class="cookie-btn cookie-btn-reject" id="cookie-reject">Rifiuta</button>
-      <button class="cookie-btn cookie-btn-manage" id="cookie-manage">Gestisci Preferenze</button>
-      <button class="cookie-btn cookie-btn-accept" id="cookie-accept">Accetta Tutti</button>
+      <button class="cookie-btn cookie-btn-reject" id="cookie-reject" data-i18n="ck.reject">Rifiuta</button>
+      <button class="cookie-btn cookie-btn-manage" id="cookie-manage" data-i18n="ck.manage">Gestisci Preferenze</button>
+      <button class="cookie-btn cookie-btn-accept" id="cookie-accept" data-i18n="ck.accept">Accetta Tutti</button>
     </div>
   </div>
 </div>
@@ -283,39 +293,39 @@
 <div class="modal-overlay" id="cookie-modal-overlay" role="dialog" aria-modal="true" aria-label="Impostazioni cookie">
   <div class="cookie-modal">
     <div class="modal-header">
-      <h3>⚙️ Preferenze Cookie</h3>
+      <h3 data-i18n="cm.title">⚙️ Preferenze Cookie</h3>
       <button class="modal-close" id="cookie-modal-close" aria-label="Chiudi">×</button>
     </div>
     <div class="modal-body">
-      <p>Seleziona quali tipologie di cookie abilitare. I cookie necessari non possono essere disabilitati.</p>
+      <p data-i18n="cm.desc">Seleziona quali tipologie di cookie abilitare. I cookie necessari non possono essere disabilitati.</p>
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>🔒 Cookie Necessari</strong>
+          <strong data-i18n="cm.nec">🔒 Cookie Necessari</strong>
           <div style="display:flex;align-items:center;gap:8px">
-            <span class="toggle-always">Sempre attivi</span>
+            <span class="toggle-always" data-i18n="cm.always">Sempre attivi</span>
             <label class="toggle"><input type="checkbox" id="cookie-necessary" checked disabled><span class="toggle-slider"></span></label>
           </div>
         </div>
-        <p>Indispensabili per il funzionamento del sito. Non raccolgono dati identificabili.</p>
+        <p data-i18n="cm.nec.p">Indispensabili per il funzionamento del sito. Non raccolgono dati identificabili.</p>
       </div>
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>📊 Cookie Analytics</strong>
+          <strong data-i18n="cm.ana">📊 Cookie Analytics</strong>
           <label class="toggle"><input type="checkbox" id="cookie-analytics"><span class="toggle-slider"></span></label>
         </div>
-        <p>Raccolgono dati aggregati e anonimi sull'uso del sito (es. Google Analytics 4).</p>
+        <p data-i18n="cm.ana.p">Raccolgono dati aggregati e anonimi sull'uso del sito (es. Google Analytics 4).</p>
       </div>
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>📣 Cookie Marketing</strong>
+          <strong data-i18n="cm.mkt">📣 Cookie Marketing</strong>
           <label class="toggle"><input type="checkbox" id="cookie-marketing"><span class="toggle-slider"></span></label>
         </div>
-        <p>Utilizzati per annunci personalizzati su piattaforme esterne.</p>
+        <p data-i18n="cm.mkt.p">Utilizzati per annunci personalizzati su piattaforme esterne.</p>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="cookie-btn cookie-btn-reject" id="cookie-modal-reject">Rifiuta Opzionali</button>
-      <button class="cookie-btn cookie-btn-accept" id="cookie-modal-save">Salva Preferenze</button>
+      <button class="cookie-btn cookie-btn-reject" id="cookie-modal-reject" data-i18n="cm.rejectOpt">Rifiuta Opzionali</button>
+      <button class="cookie-btn cookie-btn-accept" id="cookie-modal-save" data-i18n="cm.save">Salva Preferenze</button>
     </div>
   </div>
 </div>
@@ -335,5 +345,7 @@ function closeMobileMenu() {
 }
 </script>
 <script src="cookie.js"></script>
+<!-- Internazionalizzazione -->
+<script src="i18n.js"></script>
 </body>
 </html>

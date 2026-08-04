@@ -511,11 +511,21 @@
       </span>
     </a>
     <ul class="nav-links" role="list">
-      <li><a href="#servizi">Servizi</a></li>
-      <li><a href="#tecnologie">Tecnologie</a></li>
-      <li><a href="#chi-siamo">Chi Siamo</a></li>
-      <li><a href="#contatti" class="nav-cta">Richiedi Preventivo</a></li>
+      <li><a href="#servizi" data-i18n="nav.services">Servizi</a></li>
+      <li><a href="#tecnologie" data-i18n="nav.tech">Tecnologie</a></li>
+      <li><a href="#chi-siamo" data-i18n="nav.about">Chi Siamo</a></li>
+      <li><a href="#contatti" class="nav-cta" data-i18n="nav.cta">Richiedi Preventivo</a></li>
     </ul>
+    <div class="lang-switcher" id="lang-switcher" aria-label="Seleziona lingua">
+      <button class="lang-current" id="lang-toggle" aria-haspopup="listbox" aria-expanded="false" title="Language / Lingua / Sprache">
+        <span class="lang-flag" id="lang-flag">🇮🇹</span>
+        <span class="lang-code" id="lang-code">IT</span>
+        <span class="lang-arrow" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown" role="listbox">
+        <!-- Populated dynamically by buildSwitcher() in i18n.js -->
+      </div>
+    </div>
     <button class="nav-burger" id="nav-burger" aria-label="Apri menu" aria-expanded="false" aria-controls="nav-mobile">
       <span></span><span></span><span></span>
     </button>
@@ -524,10 +534,10 @@
 
 <!-- Mobile nav -->
 <nav class="nav-mobile" id="nav-mobile" aria-label="Menu mobile">
-  <a href="#servizi"    onclick="closeMobileMenu()">Servizi</a>
-  <a href="#tecnologie" onclick="closeMobileMenu()">Tecnologie</a>
-  <a href="#chi-siamo"  onclick="closeMobileMenu()">Chi Siamo</a>
-  <a href="#contatti"   onclick="closeMobileMenu()" style="color:var(--cyan);font-weight:600">Richiedi Preventivo</a>
+  <a href="#servizi" onclick="closeMobileMenu()" data-i18n="nav.services">Servizi</a>
+  <a href="#tecnologie" onclick="closeMobileMenu()" data-i18n="nav.tech">Tecnologie</a>
+  <a href="#chi-siamo" onclick="closeMobileMenu()" data-i18n="nav.about">Chi Siamo</a>
+  <a href="#contatti" onclick="closeMobileMenu()" style="color:var(--cyan);font-weight:600" data-i18n="nav.cta">Richiedi Preventivo</a>
 </nav>
 
 
@@ -546,23 +556,23 @@
 
   <div class="container">
     <div class="hero-content">
-      <div class="hero-badge">Software · Web · Automazione Industriale</div>
+      <div class="hero-badge" data-i18n="hero.badge">Software · Web · Automazione Industriale</div>
 
       <p class="hero-company-name">
         Automation <span class="hero-amp">&amp;</span> Software Solutions
       </p>
 
-      <h1>Sviluppo Software<br><em>Su Misura</em> per Ogni Esigenza</h1>
+      <h1 data-i18n="hero.h1">Sviluppo Software<br><em>Su Misura</em> per Ogni Esigenza</h1>
 
-      <p class="hero-desc">
+      <p class="hero-desc" data-i18n="hero.desc">
         Realizziamo <strong>applicazioni web, gestionali e software su misura</strong>
         per qualsiasi settore, e siamo specialisti in <strong>PLC, HMI, SCADA e Robotica</strong>
         per l'industria. Un solo partner per ogni progetto software.
       </p>
 
       <div class="hero-actions">
-        <a href="#contatti" class="btn btn-primary">Richiedi un Preventivo</a>
-        <a href="#servizi"  class="btn btn-outline">Scopri i Servizi</a>
+        <a href="#contatti" class="btn btn-primary" data-i18n="hero.cta1">Richiedi un Preventivo</a>
+        <a href="#servizi"  class="btn btn-outline" data-i18n="hero.cta2">Scopri i Servizi</a>
       </div>
 
       <div class="hero-stats" aria-label="Aree di competenza">
@@ -583,9 +593,9 @@
 <section id="servizi" aria-labelledby="h-servizi">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Cosa Facciamo</span>
-      <h2 id="h-servizi">Sviluppo Software, Web &amp; Automazione</h2>
-      <p>Applicazioni web, gestionali e software su misura per qualsiasi settore — e soluzioni complete per l'automazione industriale: PLC, HMI, SCADA, Robotica e Consulenza IT/OT.</p>
+      <span class="section-label" data-i18n="services.label">Cosa Facciamo</span>
+      <h2 id="h-servizi" data-i18n="services.h2">Sviluppo Software, Web &amp; Automazione</h2>
+      <p data-i18n="services.desc">Applicazioni web, gestionali e software su misura per qualsiasi settore — e soluzioni complete per l'automazione industriale: PLC, HMI, SCADA, Robotica e Consulenza IT/OT.</p>
     </div>
 
     <div class="services-grid">
@@ -703,7 +713,7 @@
 ════════════════════════════════════════ -->
 <section id="tecnologie" aria-label="Stack tecnologico">
   <div class="container">
-    <p class="tech-label">Tecnologie &amp; Piattaforme</p>
+    <p class="tech-label" data-i18n="tech.label">Tecnologie &amp; Piattaforme</p>
     <div class="tech-list" role="list">
       <!-- PLC -->
       <span class="tech-badge" role="listitem">Siemens S7-1200</span>
@@ -764,16 +774,16 @@
     <div class="about-grid">
 
       <div class="about-content">
-        <span class="section-label">Chi Siamo</span>
-        <h2 id="h-about">Un solo partner per software, web e automazione</h2>
-        <p>Sviluppiamo software su misura per aziende di ogni settore: dai siti web e applicazioni gestionali alle soluzioni di automazione industriale più complesse, con la stessa cura e competenza tecnica.</p>
-        <p>Non siamo solo specialisti di automazione: realizziamo qualsiasi tipo di software — web app, e-commerce, API, programmi desktop, database — per clienti che non hanno nulla a che fare con l'industria. E per chi invece è nel manifatturiero, integriamo entrambi i mondi.</p>
+        <span class="section-label" data-i18n="about.label">Chi Siamo</span>
+        <h2 id="h-about" data-i18n="about.h2">Un solo partner per software, web e automazione</h2>
+        <p data-i18n="about.p1">Sviluppiamo software su misura per aziende di ogni settore: dai siti web e applicazioni gestionali alle soluzioni di automazione industriale più complesse, con la stessa cura e competenza tecnica.</p>
+        <p data-i18n="about.p2">Non siamo solo specialisti di automazione: realizziamo qualsiasi tipo di software — web app, e-commerce, API, programmi desktop, database — per clienti che non hanno nulla a che fare con l'industria. E per chi invece è nel manifatturiero, integriamo entrambi i mondi.</p>
         <ul class="about-list">
-          <li>Sviluppo web, gestionali, e-commerce e app su misura per ogni settore</li>
-          <li>Programmazione PLC, HMI, SCADA e Robotica per l'industria</li>
-          <li>Integrazione tra sistemi ERP/MES e reti OT di produzione</li>
-          <li>Database MS SQL, MySQL, PostgreSQL e infrastruttura IT/OS</li>
-          <li>Consulenza tecnica, formazione e supporto continuativo</li>
+          <li data-i18n="about.li1">Sviluppo web, gestionali, e-commerce e app su misura per ogni settore</li>
+          <li data-i18n="about.li2">Programmazione PLC, HMI, SCADA e Robotica per l'industria</li>
+          <li data-i18n="about.li3">Integrazione tra sistemi ERP/MES e reti OT di produzione</li>
+          <li data-i18n="about.li4">Database MS SQL, MySQL, PostgreSQL e infrastruttura IT/OS</li>
+          <li data-i18n="about.li5">Consulenza tecnica, formazione e supporto continuativo</li>
         </ul>
       </div>
 
@@ -840,9 +850,9 @@
 <section id="cta" aria-label="Contatti rapidi">
   <div class="container">
     <div class="cta-inner">
-      <span class="section-label">Inizia il tuo Progetto</span>
-      <h2>Hai un progetto software, web<br>o di automazione industriale?</h2>
-      <p>Che si tratti di un sito web, un gestionale, un'app, un PLC o un sistema SCADA — contattaci per una consulenza tecnica gratuita senza impegno.</p>
+      <span class="section-label" data-i18n="cta.label">Inizia il tuo Progetto</span>
+      <h2 data-i18n="cta.h2">Hai un progetto software, web<br>o di automazione industriale?</h2>
+      <p data-i18n="cta.p">Che si tratti di un sito web, un gestionale, un'app, un PLC o un sistema SCADA — contattaci per una consulenza tecnica gratuita senza impegno.</p>
 
       <div class="cta-contacts">
         <div class="cta-contact-item">
@@ -855,11 +865,11 @@
         </div>
         <div class="cta-contact-item">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>Provincia di Rovigo, Veneto – Italia</span>
+          <span data-i18n="cta.loc">Provincia di Rovigo, Veneto – Italia</span>
         </div>
       </div>
 
-      <a href="#contatti" class="btn btn-primary">Richiedi Preventivo Gratuito</a>
+      <a href="#contatti" class="btn btn-primary" data-i18n="cta.btn">Richiedi Preventivo Gratuito</a>
     </div>
   </div>
 </section>
@@ -874,43 +884,43 @@
 
       <!-- Info -->
       <div class="contact-info">
-        <span class="section-label">Contatti</span>
-        <h2 id="h-contatti">Parliamo del tuo progetto</h2>
-        <p>Che sia un sito web, un gestionale, un'app mobile o un sistema PLC — compila il modulo per ricevere un preventivo su misura. Ti risponderemo entro 24 ore lavorative.</p>
+        <span class="section-label" data-i18n="contact.label">Contatti</span>
+        <h2 id="h-contatti" data-i18n="contact.h2">Parliamo del tuo progetto</h2>
+        <p data-i18n="contact.p">Che sia un sito web, un gestionale, un'app mobile o un sistema PLC — compila il modulo per ricevere un preventivo su misura. Ti risponderemo entro 24 ore lavorative.</p>
 
         <div class="contact-detail">
           <div class="contact-detail-icon">📞</div>
           <div class="contact-detail-text">
-            <strong>Telefono</strong>
+            <strong data-i18n="contact.tel">Telefono</strong>
             <a href="tel:+393401208750">+39 340 120 8750</a>
           </div>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">✉️</div>
           <div class="contact-detail-text">
-            <strong>Email</strong>
+            <strong data-i18n="contact.email">Email</strong>
             <a href="mailto:info.automationsoftware@gmail.com">info.automationsoftware@gmail.com</a>
           </div>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">📍</div>
           <div class="contact-detail-text">
-            <strong>Sede</strong>
-            <span>Provincia di Rovigo, Veneto – Italia</span>
+            <strong data-i18n="contact.addr">Sede</strong>
+            <span data-i18n="contact.addr.v">Provincia di Rovigo, Veneto – Italia</span>
           </div>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">🕐</div>
           <div class="contact-detail-text">
-            <strong>Orari</strong>
-            <span>Lun–Ven&nbsp;&nbsp;08:30 – 18:00</span>
+            <strong data-i18n="contact.hours">Orari</strong>
+            <span data-i18n="contact.hours.v">Lun–Ven&nbsp;&nbsp;08:30 – 18:00</span>
           </div>
         </div>
       </div>
 
       <!-- Form -->
       <div class="form-card">
-        <h3>Richiedi un preventivo</h3>
+        <h3 data-i18n="form.h3">Richiedi un preventivo</h3>
 
         <!--
           ╔══════════════════════════════════════════════════╗
@@ -925,36 +935,36 @@
 
           <div class="form-row">
             <div class="form-group" id="g-nome">
-              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span></label>
-              <input type="text" id="f-nome" name="nome" placeholder="Mario" required autocomplete="given-name">
+              <label data-i18n="form.nome" for="f-nome" data-i18n="form.nome">Nome <span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="f-nome" name="nome" data-i18n-ph="ph.nome"   placeholder="Mario" required autocomplete="given-name">
               <span class="err" role="alert">Inserisci il tuo nome</span>
             </div>
             <div class="form-group" id="g-cognome">
-              <label for="f-cognome">Cognome <span class="req" aria-hidden="true">*</span></label>
-              <input type="text" id="f-cognome" name="cognome" placeholder="Rossi" required autocomplete="family-name">
+              <label data-i18n="form.cognome" for="f-cognome" data-i18n="form.cognome">Cognome <span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="f-cognome" name="cognome" data-i18n-ph="ph.cognome" placeholder="Rossi" required autocomplete="family-name">
               <span class="err" role="alert">Inserisci il cognome</span>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group" id="g-email">
-              <label for="f-email">Email <span class="req" aria-hidden="true">*</span></label>
-              <input type="email" id="f-email" name="email" placeholder="mario@azienda.it" required autocomplete="email">
+              <label data-i18n="form.email" for="f-email" data-i18n="form.email">Email <span class="req" aria-hidden="true">*</span></label>
+              <input type="email" id="f-email" name="email" data-i18n-ph="ph.email" placeholder="mario@azienda.it" required autocomplete="email">
               <span class="err" role="alert">Inserisci un'email valida</span>
             </div>
             <div class="form-group" id="g-tel">
-              <label for="f-tel">Telefono</label>
-              <input type="tel" id="f-tel" name="telefono" placeholder="+39 …" autocomplete="tel">
+              <label data-i18n="form.tel" for="f-tel" data-i18n="form.tel">Telefono</label>
+              <input type="tel" id="f-tel" name="telefono" data-i18n-ph="ph.tel"    placeholder="+39 …" autocomplete="tel">
             </div>
           </div>
 
           <div class="form-group" id="g-azienda">
-            <label for="f-azienda">Azienda</label>
-            <input type="text" id="f-azienda" name="azienda" placeholder="Nome Azienda S.r.l." autocomplete="organization">
+            <label data-i18n="form.azienda" for="f-azienda" data-i18n="form.azienda">Azienda</label>
+            <input type="text" id="f-azienda" name="azienda" data-i18n-ph="ph.azienda" placeholder="Nome Azienda S.r.l." autocomplete="organization">
           </div>
 
           <div class="form-group" id="g-servizio">
-            <label for="f-servizio">Tipo di Servizio <span class="req" aria-hidden="true">*</span></label>
+            <label for="f-servizio" data-i18n="form.servizio">Tipo di Servizio <span class="req" aria-hidden="true">*</span></label>
             <select id="f-servizio" name="servizio" required>
               <option value="">– Seleziona un servizio –</option>
               <optgroup label="Automazione Industriale">
@@ -980,29 +990,29 @@
           </div>
 
           <div class="form-group" id="g-msg">
-            <label for="f-msg">Descrizione del Progetto <span class="req" aria-hidden="true">*</span></label>
+            <label for="f-msg" data-i18n="form.msg">Descrizione del Progetto <span class="req" aria-hidden="true">*</span></label>
             <textarea id="f-msg" name="messaggio" rows="5"
-              placeholder="Descrivi il tuo progetto: tecnologie coinvolte, obiettivi, tempistiche…" required></textarea>
+              data-i18n-ph="ph.msg" placeholder="Descrivi il tuo progetto: tecnologie coinvolte, obiettivi, tempistiche…" required></textarea>
             <span class="err" role="alert">Inserisci una descrizione del progetto</span>
           </div>
 
           <div class="form-checkbox" id="g-privacy">
             <input type="checkbox" id="f-privacy" name="privacy_consent" required>
-            <span>Ho letto e accetto la <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>. Acconsento al trattamento dei dati personali per la gestione della mia richiesta. <span class="req" aria-hidden="true">*</span></span>
+            <span data-i18n="form.privacy">Ho letto e accetto la <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>. Acconsento al trattamento dei dati personali per la gestione della mia richiesta. <span class="req" aria-hidden="true">*</span></span>
           </div>
 
-          <p class="form-note">* Campi obbligatori</p>
+          <p class="form-note" data-i18n="form.required">* Campi obbligatori</p>
 
           <div class="form-submit-wrap">
-            <button type="submit" class="btn btn-primary" id="submit-btn">
+            <button type="submit" class="btn btn-primary" id="submit-btn" data-i18n="form.submit">
               Invia Richiesta di Preventivo
             </button>
           </div>
 
-          <div id="form-success" role="status">
+          <div id="form-success" role="status" data-i18n="form.success">
             ✅ Messaggio inviato! Ti risponderemo entro 24 ore lavorative.
           </div>
-          <div id="form-error" role="alert">
+          <div id="form-error" role="alert" data-i18n="form.error">
             ❌ Errore nell'invio. Riprova o scrivici a
             <a href="mailto:info.automationsoftware@gmail.com">info.automationsoftware@gmail.com</a>
           </div>
@@ -1028,11 +1038,11 @@
             <img src="logo.png" alt="Automation &amp; Software Solutions" class="footer-logo-img">
           </a>
         </div>
-        <p>Sviluppo software su misura per qualsiasi settore: applicazioni web, gestionali, e-commerce, PLC, HMI, SCADA, robotica industriale. Python, PHP, Java, C, MS SQL. Consulenza IT e OT. Provincia di Rovigo – Italia.</p>
+        <p data-i18n="footer.brand">Sviluppo software su misura per qualsiasi settore: applicazioni web, gestionali, e-commerce, PLC, HMI, SCADA, robotica industriale. Python, PHP, Java, C, MS SQL. Consulenza IT e OT. Provincia di Rovigo – Italia.</p>
       </div>
 
       <div class="footer-col">
-        <h4>Servizi</h4>
+        <h4 data-i18n="footer.services">Servizi</h4>
         <ul class="footer-links">
           <li><a href="#servizi">Sviluppo PLC</a></li>
           <li><a href="#servizi">Progettazione HMI</a></li>
@@ -1044,23 +1054,23 @@
       </div>
 
       <div class="footer-col">
-        <h4>Contatti</h4>
+        <h4 data-i18n="footer.contacts">Contatti</h4>
         <ul class="footer-links">
           <li><a href="tel:+393401208750">+39 340 120 8750</a></li>
           <li><a href="mailto:info.automationsoftware@gmail.com">info.automationsoftware@gmail.com</a></li>
-          <li><span>Provincia di Rovigo, Veneto</span></li>
-          <li><span>Lun–Ven &nbsp;08:30 – 18:00</span></li>
+          <li><span data-i18n="footer.loc">Provincia di Rovigo, Veneto</span></li>
+          <li><span data-i18n="footer.hours">Lun–Ven&nbsp;08:30 – 18:00</span></li>
         </ul>
       </div>
 
     </div>
 
     <div class="footer-bottom">
-      <p>© 2025 Automation &amp; Software Solutions. Tutti i diritti riservati.</p>
+      <p data-i18n="footer.copy">© 2025 Automation &amp; Software Solutions. Tutti i diritti riservati.</p>
       <div class="footer-legal">
-        <a href="privacy-policy.html">Privacy Policy</a>
-        <a href="cookie-policy.html">Cookie Policy</a>
-        <a href="#" id="cookie-settings-link">Impostazioni Cookie</a>
+        <a href="privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="cookie-policy.html" data-i18n="footer.cookie">Cookie Policy</a>
+        <a href="#" id="cookie-settings-link" data-i18n="footer.settings">Impostazioni Cookie</a>
       </div>
     </div>
   </div>
@@ -1073,14 +1083,13 @@
 <div id="cookie-banner" role="dialog" aria-live="polite" aria-label="Consenso cookie" aria-hidden="true">
   <div class="cookie-banner-inner">
     <div class="cookie-banner-text">
-      <p><strong>🍪 Utilizziamo i cookie</strong></p>
-      <p>Usiamo cookie tecnici necessari e, con il tuo consenso, cookie analitici e di marketing.
-         Puoi gestire le tue preferenze o leggere la <a href="cookie-policy.html">Cookie Policy</a>.</p>
+      <p><strong data-i18n="ck.title">🍪 Utilizziamo i cookie</strong></p>
+      <p data-i18n="ck.desc">Usiamo cookie tecnici necessari e, con il tuo consenso, cookie analitici e di marketing. Puoi gestire le tue preferenze o leggere la <a href="cookie-policy.html">Cookie Policy</a>.</p>
     </div>
     <div class="cookie-banner-actions">
-      <button class="cookie-btn cookie-btn-reject" id="cookie-reject">Rifiuta</button>
-      <button class="cookie-btn cookie-btn-manage" id="cookie-manage">Gestisci Preferenze</button>
-      <button class="cookie-btn cookie-btn-accept" id="cookie-accept">Accetta Tutti</button>
+      <button class="cookie-btn cookie-btn-reject" id="cookie-reject" data-i18n="ck.reject">Rifiuta</button>
+      <button class="cookie-btn cookie-btn-manage" id="cookie-manage" data-i18n="ck.manage">Gestisci Preferenze</button>
+      <button class="cookie-btn cookie-btn-accept" id="cookie-accept" data-i18n="ck.accept">Accetta Tutti</button>
     </div>
   </div>
 </div>
@@ -1092,29 +1101,29 @@
 <div class="modal-overlay" id="cookie-modal-overlay" role="dialog" aria-modal="true" aria-label="Impostazioni cookie">
   <div class="cookie-modal">
     <div class="modal-header">
-      <h3>⚙️ Preferenze Cookie</h3>
+      <h3 data-i18n="cm.title">⚙️ Preferenze Cookie</h3>
       <button class="modal-close" id="cookie-modal-close" aria-label="Chiudi">×</button>
     </div>
     <div class="modal-body">
-      <p>Seleziona quali tipologie di cookie abilitare. I cookie necessari non possono essere disabilitati: sono indispensabili per il funzionamento del sito.</p>
+      <p data-i18n="cm.desc">Seleziona quali tipologie di cookie abilitare. I cookie necessari non possono essere disabilitati: sono indispensabili per il funzionamento del sito.</p>
 
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>🔒 Cookie Necessari</strong>
+          <strong data-i18n="cm.nec">🔒 Cookie Necessari</strong>
           <div style="display:flex;align-items:center;gap:8px">
-            <span class="toggle-always">Sempre attivi</span>
+            <span class="toggle-always" data-i18n="cm.always">Sempre attivi</span>
             <label class="toggle" aria-label="Cookie necessari – sempre attivi">
               <input type="checkbox" id="cookie-necessary" checked disabled>
               <span class="toggle-slider"></span>
             </label>
           </div>
         </div>
-        <p>Essenziali per il funzionamento del sito (sessione, sicurezza, preferenze cookie). Non raccolgono dati personali identificabili.</p>
+        <p data-i18n="cm.nec.p">Essenziali per il funzionamento del sito (sessione, sicurezza, preferenze cookie). Non raccolgono dati personali identificabili.</p>
       </div>
 
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>📊 Cookie Analytics</strong>
+          <strong data-i18n="cm.ana">📊 Cookie Analytics</strong>
           <label class="toggle" aria-label="Abilita cookie analytics">
             <input type="checkbox" id="cookie-analytics">
             <span class="toggle-slider"></span>
@@ -1125,18 +1134,18 @@
 
       <div class="cookie-category">
         <div class="cookie-category-header">
-          <strong>📣 Cookie Marketing</strong>
+          <strong data-i18n="cm.mkt">📣 Cookie Marketing</strong>
           <label class="toggle" aria-label="Abilita cookie marketing">
             <input type="checkbox" id="cookie-marketing">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <p>Utilizzati per mostrare annunci personalizzati e misurare l'efficacia delle campagne pubblicitarie su piattaforme esterne (es. Google Ads, Meta Pixel).</p>
+        <p data-i18n="cm.mkt.p">Utilizzati per mostrare annunci personalizzati e misurare l'efficacia delle campagne pubblicitarie su piattaforme esterne (es. Google Ads, Meta Pixel).</p>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="cookie-btn cookie-btn-reject" id="cookie-modal-reject">Rifiuta Opzionali</button>
-      <button class="cookie-btn cookie-btn-accept" id="cookie-modal-save">Salva Preferenze</button>
+      <button class="cookie-btn cookie-btn-reject" id="cookie-modal-reject" data-i18n="cm.rejectOpt">Rifiuta Opzionali</button>
+      <button class="cookie-btn cookie-btn-accept" id="cookie-modal-save" data-i18n="cm.save">Salva Preferenze</button>
     </div>
   </div>
 </div>
@@ -1214,8 +1223,10 @@ form.addEventListener('submit', async function(e) {
   }
   if (!allOk) { form.querySelector('.form-group.invalid, .form-checkbox.invalid')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
 
+  var lang = document.documentElement.lang || 'it';
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Invio in corso…';
+  submitBtn.innerHTML = (typeof I18N !== 'undefined' && I18N[lang])
+    ? I18N[lang]['form.sending'] : 'Invio in corso…';
   fSuccess.style.display = 'none';
   fError.style.display   = 'none';
 
@@ -1229,18 +1240,28 @@ form.addEventListener('submit', async function(e) {
       form.reset();
       form.querySelectorAll('.form-group,.form-checkbox').forEach(function(g){ g.classList.remove('invalid'); });
       fSuccess.style.display = 'block';
+      // Aggiorna testo successo nella lingua corrente
+      if (typeof I18N !== 'undefined' && I18N[lang]) {
+        fSuccess.innerHTML = I18N[lang]['form.success'];
+      }
     } else { throw new Error('server'); }
   } catch(_) {
     fError.style.display = 'block';
+    if (typeof I18N !== 'undefined' && I18N[lang]) {
+      fError.innerHTML = I18N[lang]['form.error'];
+    }
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Invia Richiesta di Preventivo';
+    submitBtn.innerHTML = (typeof I18N !== 'undefined' && I18N[lang])
+      ? I18N[lang]['form.submit'] : 'Invia Richiesta di Preventivo';
   }
 });
 </script>
 
 <!-- Cookie consent (condiviso) -->
 <script src="cookie.js"></script>
+<!-- Internazionalizzazione -->
+<script src="i18n.js"></script>
 
 </body>
 </html>
