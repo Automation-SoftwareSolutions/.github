@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codifica Carpenterie – Quadri Elettrici</title>
+  <style>
+    :root {
+      --blue:    #1a56db;
+      --blue-dk: #1041a3;
+      --gray-50: #f9fafb;
+      --gray-100:#f3f4f6;
+      --gray-200:#e5e7eb;
+      --gray-400:#9ca3af;
+      --gray-600:#4b5563;
+      --gray-800:#1f2937;
+      --green:   #16a34a;
+      --red:     #dc2626;
+      --yellow:  #d97706;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #1041a3 0%, #1a56db 100%);
+      color: #fff;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+    header p  { font-size: .85rem; opacity: .8; margin-top: 4px; }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media(max-width:700px){ .container{ grid-template-columns:1fr; } }
+
+    /* ── CARD ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .card-title {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    /* ── FORM ── */
+    .field { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+    input[type=number], select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 7px;
+      font-size: .92rem;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      transition: border .2s, box-shadow .2s;
+      appearance: auto;
+    }
+    input[type=number]:focus, select:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+      background: #fff;
+    }
+
+    /* Door widths grid */
+    #porte-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .porta-field label { color: var(--blue-dk); }
+
+    /* Total width badge */
+    #larghezza-totale-box {
+      background: var(--gray-100);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 7px;
+      padding: 9px 14px;
+      font-size: .92rem;
+      color: var(--gray-600);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #larghezza-totale-box span { font-weight: 700; color: var(--gray-800); font-size: 1rem; }
+
+    /* ── MATERIALI TABLE ── */
+    .mat-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .mat-btn {
+      padding: 8px 10px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 7px;
+      background: var(--gray-50);
+      font-size: .8rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+    }
+    .mat-btn:hover { border-color: var(--blue); background: #eff6ff; }
+    .mat-btn.selected {
+      border-color: var(--blue);
+      background: #dbeafe;
+      color: var(--blue-dk);
+      font-weight: 600;
+    }
+    .mat-btn .code { font-family: monospace; font-weight: 700; color: var(--blue); margin-right: 6px; }
+
+    /* IP/NEMA chips */
+    .ip-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ip-chip {
+      padding: 5px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      font-size: .8rem;
+      cursor: pointer;
+      background: var(--gray-50);
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .ip-chip:hover { border-color: var(--blue); background: #eff6ff; }
+    .ip-chip.selected { border-color: var(--blue); background: #dbeafe; color: var(--blue-dk); }
+
+    /* ── CODICE OUTPUT ── */
+    .code-card { grid-column: 1 / -1; }
+    .code-display {
+      background: var(--gray-800);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f9fafb;
+      letter-spacing: .05em;
+      text-align: center;
+      position: relative;
+      word-break: break-all;
+    }
+    .code-display .segment { color: #93c5fd; }
+    .code-display .seg-alt-0 { color: #93c5fd; }
+    .code-display .seg-alt-1 { color: #fbbf24; }
+    .code-display .sep     { color: var(--gray-400); margin: 0 2px; }
+
+    .code-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 9px 20px;
+      border-radius: 7px;
+      border: none;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-dk); }
+    .btn-secondary { background: var(--gray-200); color: var(--gray-800); }
+    .btn-secondary:hover { background: var(--gray-400); color: #fff; }
+
+    /* ── BREAKDOWN TABLE ── */
+    .breakdown { margin-top: 20px; }
+    .breakdown table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+    .breakdown th {
+      background: var(--gray-100);
+      padding: 7px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--gray-600);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .breakdown td { padding: 7px 12px; border-bottom: 1px solid var(--gray-100); }
+    .breakdown tr:last-child td { border-bottom: none; }
+    .breakdown .seg-code {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--blue);
+      background: #dbeafe;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* ── DESCRIZIONI ── */
+    .desc-box {
+      margin-top: 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .desc-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--gray-100);
+      padding: 7px 14px;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-600);
+    }
+    .copy-small {
+      background: none;
+      border: 1px solid var(--gray-400);
+      border-radius: 5px;
+      padding: 2px 9px;
+      font-size: .7rem;
+      cursor: pointer;
+      color: var(--gray-600);
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .copy-small:hover { background: var(--gray-200); border-color: var(--gray-600); }
+    .desc-box-body {
+      padding: 12px 14px;
+      font-size: .88rem;
+      color: var(--gray-800);
+      line-height: 1.6;
+      background: #fff;
+      min-height: 38px;
+    }
+    .desc-placeholder { color: var(--gray-400); font-style: italic; }
+    .char-counter {
+      font-size: .72rem;
+      text-align: right;
+      margin-top: 5px;
+      font-weight: 600;
+    }
+    .char-ok   { color: var(--green); }
+    .char-warn { color: var(--yellow); }
+    .char-err  { color: var(--red); }
+
+    /* ── SPESSORE CHIPS ── */
+    .sp-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+    .sp-chip {
+      padding: 5px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      font-size: .8rem;
+      cursor: pointer;
+      background: var(--gray-50);
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .sp-chip:hover { border-color: var(--blue); background: #eff6ff; }
+    .sp-chip.selected { border-color: var(--blue); background: #dbeafe; color: var(--blue-dk); }
+
+    /* ── SOVRAPORTA VETRO CHIPS ── */
+    .sv-chip {
+      padding: 5px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      font-size: .8rem;
+      cursor: pointer;
+      background: var(--gray-50);
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .sv-chip:hover { border-color: var(--blue); background: #eff6ff; }
+    .sv-chip.selected { border-color: var(--blue); background: #dbeafe; color: var(--blue-dk); }
+
+    /* ── STORICO ── */
+    .history-list { list-style: none; }
+    .history-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 7px;
+      background: var(--gray-50);
+      margin-bottom: 6px;
+      font-family: monospace;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    .history-list li .del-btn {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 4px;
+    }
+    .history-list li .del-btn:hover { color: var(--red); }
+    #no-history { color: var(--gray-400); font-size: .82rem; font-style: italic; }
+
+    /* ── LEGENDA ── */
+    .legend-card { grid-column: 1 / -1; }
+    details summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: .85rem;
+      color: var(--blue);
+      padding: 8px 0;
+      user-select: none;
+    }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .legend-block h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-600); margin-bottom: 6px; }
+    .legend-block table { width: 100%; font-size: .78rem; border-collapse: collapse; }
+    .legend-block td { padding: 3px 6px; border-bottom: 1px solid var(--gray-100); }
+    .legend-block td:first-child { font-family: monospace; font-weight: 700; color: var(--blue); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--green);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all .3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    .error-msg { color: var(--red); font-size: .75rem; margin-top: 4px; display: none; }
+    input.invalid, select.invalid { border-color: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+    <rect width="40" height="40" rx="8" fill="rgba(255,255,255,.15)"/>
+    <rect x="8" y="6" width="24" height="28" rx="2" stroke="#fff" stroke-width="2"/>
+    <rect x="8" y="6" width="24" height="4" rx="2" fill="rgba(255,255,255,.3)"/>
+    <line x1="20" y1="10" x2="20" y2="34" stroke="#fff" stroke-width="2"/>
+    <circle cx="16" cy="22" r="2" fill="#fff"/>
+    <circle cx="24" cy="22" r="2" fill="#fff"/>
+  </svg>
+  <div>
+    <h1>Codifica Carpenterie – Quadri Elettrici</h1>
+    <p>Generatore di codici strutturati per armadi e carpenterie industriali</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── CONFIGURAZIONE ── -->
+  <div class="card">
+    <div class="card-title">⚙️ Configurazione</div>
+
+    <div class="field">
+      <label for="n-porte">Numero di porte</label>
+      <input type="number" id="n-porte" min="1" max="6" value="1" placeholder="es. 2" />
+    </div>
+
+    <div id="porte-grid"></div>
+
+    <div id="larghezza-totale-box">
+      <span style="font-size:.82rem;color:var(--gray-600);">Larghezza totale (Σ porte)</span>
+      <span id="ltot-val">—</span>
+    </div>
+
+    <div class="field">
+      <label for="altezza">Altezza quadro senza zoccolo (mm)</label>
+      <input type="number" id="altezza" min="100" max="4000" placeholder="es. 2000" />
+    </div>
+
+    <div class="field">
+      <label for="zoccolo">Altezza zoccolo (mm) – 0 se assente</label>
+      <input type="number" id="zoccolo" min="0" max="500" value="0" placeholder="es. 200" />
+    </div>
+
+    <div class="field">
+      <label for="profondita">Profondità del quadro (mm)</label>
+      <input type="number" id="profondita" min="50" max="2000" placeholder="es. 600" />
+    </div>
+
+    <div class="field">
+      <label>Spessore lamiera (mm)</label>
+      <div class="sp-chips" id="sp-chips">
+        <div class="sp-chip" data-sp="10">1,0 mm</div>
+        <div class="sp-chip" data-sp="15">1,5 mm</div>
+        <div class="sp-chip" data-sp="20">2,0 mm</div>
+        <div class="sp-chip" data-sp="25">2,5 mm</div>
+        <div class="sp-chip" data-sp="30">3,0 mm</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Sovraporta vetro</label>
+      <div class="sp-chips" id="sv-chips">
+        <div class="sv-chip" data-sv="SV">Sì</div>
+        <div class="sv-chip" data-sv="SN">No</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MATERIALE + IP ── -->
+  <div class="card">
+    <div class="card-title">🔩 Materiale e Protezione</div>
+
+    <label style="margin-bottom:10px;">Materiale / Finitura</label>
+    <div class="mat-options" id="mat-options">
+      <button class="mat-btn" data-mat="AC"><span class="code">AC</span>Acciaio grezzo</button>
+      <button class="mat-btn" data-mat="ZN"><span class="code">ZN</span>Zincato</button>
+      <button class="mat-btn" data-mat="VG"><span class="code">VG</span>Vern. grigio RAL7035</button>
+      <button class="mat-btn" data-mat="VB"><span class="code">VB</span>Vern. bianco RAL9016</button>
+      <button class="mat-btn" data-mat="VA"><span class="code">VA</span>Vern. antracite RAL7021</button>
+      <button class="mat-btn" data-mat="VR"><span class="code">VR</span>Vern. altro RAL</button>
+      <button class="mat-btn" data-mat="I4"><span class="code">I4</span>Inox AISI 304</button>
+      <button class="mat-btn" data-mat="I6"><span class="code">I6</span>Inox AISI 316</button>
+    </div>
+
+    <div style="height:20px;"></div>
+
+    <label style="margin-bottom:10px;">Grado di protezione IP / NEMA</label>
+    <div class="ip-chips" id="ip-chips">
+      <div class="ip-chip" data-ip="IP20">IP20</div>
+      <div class="ip-chip" data-ip="IP31">IP31</div>
+      <div class="ip-chip" data-ip="IP44">IP44</div>
+      <div class="ip-chip" data-ip="IP54">IP54</div>
+      <div class="ip-chip" data-ip="IP55">IP55</div>
+      <div class="ip-chip" data-ip="IP65">IP65</div>
+      <div class="ip-chip" data-ip="IP66">IP66</div>
+      <div class="ip-chip" data-ip="IP67">IP67</div>
+      <div class="ip-chip" data-ip="NM1">NEMA 1</div>
+      <div class="ip-chip" data-ip="NM3">NEMA 3</div>
+      <div class="ip-chip" data-ip="NM4">NEMA 4</div>
+      <div class="ip-chip" data-ip="NM4X">NEMA 4X</div>
+      <div class="ip-chip" data-ip="NM12">NEMA 12</div>
+    </div>
+  </div>
+
+  <!-- ── CODICE GENERATO ── -->
+  <div class="card code-card">
+    <div class="card-title">🏷️ Output</div>
+
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-600);margin-bottom:6px;">Codice (max 35 caratteri)</div>
+    <div class="code-display" id="code-display">
+      <span style="color:var(--gray-400);font-size:1rem;font-weight:400;">Compila i campi per generare il codice</span>
+    </div>
+    <div class="char-counter" id="char-counter"></div>
+
+    <div class="desc-box" id="desc-breve-box" style="display:none;">
+      <div class="desc-box-header">
+        📝 Descrizione Breve
+        <button class="copy-small" id="btn-copy-breve">📋 Copia</button>
+      </div>
+      <div class="desc-box-body" id="desc-breve-body"></div>
+    </div>
+
+    <div class="desc-box" id="desc-estesa-box" style="display:none;">
+      <div class="desc-box-header">
+        📄 Descrizione Estesa
+        <button class="copy-small" id="btn-copy-estesa">📋 Copia</button>
+      </div>
+      <div class="desc-box-body" id="desc-estesa-body"></div>
+    </div>
+
+    <div class="code-actions">
+      <button class="btn btn-secondary" id="btn-reset">↺ Reset</button>
+      <button class="btn btn-primary" id="btn-copy">📋 Copia codice</button>
+      <button class="btn btn-primary" id="btn-save" style="background:var(--green);">💾 Salva in storico</button>
+    </div>
+
+    <div class="breakdown" id="breakdown" style="display:none;">
+      <hr style="margin:16px 0;border-color:var(--gray-200);">
+      <table>
+        <thead><tr><th>Segmento</th><th>Campo</th><th>Valore</th></tr></thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── STORICO ── -->
+  <div class="card">
+    <div class="card-title">📂 Storico codici</div>
+    <p id="no-history">Nessun codice salvato.</p>
+    <ul class="history-list" id="history-list"></ul>
+    <div class="code-actions" id="history-actions" style="display:none;">
+      <button class="btn btn-secondary" id="btn-export">⬇️ Esporta CSV</button>
+      <button class="btn btn-secondary" id="btn-clear-all" style="color:var(--red);">🗑 Cancella tutti</button>
+    </div>
+  </div>
+
+  <!-- ── LEGENDA ── -->
+  <div class="card legend-card">
+    <details>
+      <summary>📖 Legenda – Struttura del codice</summary>
+      <div class="legend-grid">
+        <div class="legend-block">
+          <h4>Struttura</h4>
+          <table>
+            <tr><td>{N}P</td><td>Numero porte</td></tr>
+            <tr><td>L{mmm}</td><td>Larghezza totale (mm)</td></tr>
+            <tr><td>H{mmm}</td><td>Altezza senza zoccolo (mm)</td></tr>
+            <tr><td>Z{mmm}</td><td>Altezza zoccolo (mm)</td></tr>
+            <tr><td>P{mmm}</td><td>Profondità (mm)</td></tr>
+            <tr><td>S{mm}</td><td>Spessore lamiera (×10)</td></tr>
+            <tr><td>{MAT}</td><td>Materiale/finitura</td></tr>
+            <tr><td>{IP}</td><td>Grado protezione</td></tr>
+            <tr><td>SV/SN</td><td>Sovraporta vetro (Sì/No)</td></tr>
+          </table>
+        </div>
+        <div class="legend-block">
+          <h4>Materiali</h4>
+          <table>
+            <tr><td>AC</td><td>Acciaio grezzo</td></tr>
+            <tr><td>ZN</td><td>Zincato</td></tr>
+            <tr><td>VG</td><td>Vern. grigio RAL7035</td></tr>
+            <tr><td>VB</td><td>Vern. bianco RAL9016</td></tr>
+            <tr><td>VA</td><td>Vern. antracite RAL7021</td></tr>
+            <tr><td>VR</td><td>Vern. altro RAL</td></tr>
+            <tr><td>I4</td><td>Inox AISI 304</td></tr>
+            <tr><td>I6</td><td>Inox AISI 316</td></tr>
+          </table>
+        </div>
+        <div class="legend-block">
+          <h4>IP / NEMA</h4>
+          <table>
+            <tr><td>IP20</td><td>Protezione dita</td></tr>
+            <tr><td>IP31</td><td>Gocce verticali</td></tr>
+            <tr><td>IP44</td><td>Spruzzi</td></tr>
+            <tr><td>IP54</td><td>Polvere + spruzzi</td></tr>
+            <tr><td>IP55</td><td>Polvere + getti</td></tr>
+            <tr><td>IP65</td><td>Stagno alla polvere + getti</td></tr>
+            <tr><td>IP66</td><td>Potenti getti d'acqua</td></tr>
+            <tr><td>IP67</td><td>Immersione temporanea</td></tr>
+            <tr><td>NM1</td><td>NEMA 1 – uso interno</td></tr>
+            <tr><td>NM3</td><td>NEMA 3 – uso esterno</td></tr>
+            <tr><td>NM4</td><td>NEMA 4 – impermeabile</td></tr>
+            <tr><td>NM4X</td><td>NEMA 4X – antiruggine</td></tr>
+            <tr><td>NM12</td><td>NEMA 12 – uso industriale</td></tr>
+          </table>
+        </div>
+        <div class="legend-block">
+          <h4>Spessori</h4>
+          <table>
+            <tr><td>S10</td><td>1,0 mm</td></tr>
+            <tr><td>S15</td><td>1,5 mm</td></tr>
+            <tr><td>S20</td><td>2,0 mm</td></tr>
+            <tr><td>S25</td><td>2,5 mm</td></tr>
+            <tr><td>S30</td><td>3,0 mm</td></tr>
+          </table>
+        </div>
+        <div class="legend-block">
+          <h4>Sovraporta vetro</h4>
+          <table>
+            <tr><td>SV</td><td>Con sovraporta in vetro</td></tr>
+            <tr><td>SN</td><td>Senza sovraporta in vetro</td></tr>
+          </table>
+        </div>
+        <div class="legend-block">
+          <h4>Esempio</h4>
+          <table>
+            <tr><td colspan="2" style="font-family:monospace;font-weight:700;color:var(--blue);padding-bottom:6px;">2PL1200H2000Z200P600S15VGIP65SV</td></tr>
+            <tr><td>2P</td><td>2 porte</td></tr>
+            <tr><td>L1200</td><td>Larg. totale 1200 mm</td></tr>
+            <tr><td>H2000</td><td>Altezza 2000 mm</td></tr>
+            <tr><td>Z200</td><td>Zoccolo 200 mm</td></tr>
+            <tr><td>P600</td><td>Profondità 600 mm</td></tr>
+            <tr><td>S15</td><td>Sp. lamiera 1,5 mm</td></tr>
+            <tr><td>VG</td><td>Verniciato grigio</td></tr>
+            <tr><td>IP65</td><td>Grado IP65</td></tr>
+            <tr><td>SV</td><td>Con sovraporta vetro</td></tr>
+          </table>
+        </div>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<div id="toast">✅ Codice copiato!</div>
+
+<script>
+  let selectedMat = null, selectedIp = null, selectedSp = null, selectedSv = null;
+  const history = [];
+  const $ = id => document.getElementById(id);
+
+  const matLabels = { AC:'Acciaio grezzo', ZN:'Zincato', VG:'Verniciato grigio RAL 7035', VB:'Verniciato bianco RAL 9016', VA:'Verniciato antracite RAL 7021', VR:'Verniciato (altro RAL)', I4:'Inox AISI 304', I6:'Inox AISI 316' };
+  const ipLabels  = { IP20:'IP20', IP31:'IP31', IP44:'IP44', IP54:'IP54', IP55:'IP55', IP65:'IP65', IP66:'IP66', IP67:'IP67', NM1:'NEMA 1', NM3:'NEMA 3', NM4:'NEMA 4', NM4X:'NEMA 4X', NM12:'NEMA 12' };
+  const matBreve  = { AC:'acciaio grezzo', ZN:'zincato', VG:'vern. grigio RAL 7035', VB:'vern. bianco RAL 9016', VA:'vern. antracite RAL 7021', VR:'verniciato (RAL a scelta)', I4:'inox AISI 304', I6:'inox AISI 316' };
+  const matEsteso = { AC:'acciaio laminato a freddo non trattato (grezzo)', ZN:'acciaio zincato a caldo', VG:'acciaio verniciato, colore grigio chiaro RAL 7035', VB:'acciaio verniciato, colore bianco traffico RAL 9016', VA:'acciaio verniciato, colore antracite RAL 7021', VR:'acciaio verniciato in tinta RAL a scelta del cliente', I4:'acciaio inossidabile AISI 304', I6:'acciaio inossidabile AISI 316 (alta resistenza alla corrosione)' };
+  const ipEsteso  = { IP20:'grado di protezione IP20, protezione contro il contatto accidentale con le dita; nessuna protezione contro i liquidi', IP31:"grado di protezione IP31, protezione contro la caduta verticale di gocce d'acqua", IP44:"grado di protezione IP44, protezione contro corpi solidi superiori a 1 mm e spruzzi d'acqua provenienti da qualsiasi direzione", IP54:"grado di protezione IP54, protezione parziale contro la polvere e spruzzi d'acqua da qualsiasi direzione", IP55:"grado di protezione IP55, protezione parziale contro la polvere e getti d'acqua da qualsiasi direzione", IP65:"grado di protezione IP65, protezione totale contro la polvere e getti d'acqua a bassa pressione da qualsiasi direzione", IP66:"grado di protezione IP66, protezione totale contro la polvere e potenti getti d'acqua diretti", IP67:"grado di protezione IP67, protezione totale contro la polvere e immersione temporanea in acqua fino a 1 metro di profondità", NM1:'classe NEMA 1, per uso interno, protezione contro contatti accidentali con parti in tensione', NM3:'classe NEMA 3, per uso esterno, protezione contro pioggia, neve e polvere', NM4:"classe NEMA 4, per uso interno ed esterno, resistente a getti d'acqua e pioggia battente", NM4X:'classe NEMA 4X, come NEMA 4 con protezione aggiuntiva contro la corrosione', NM12:'classe NEMA 12, per uso industriale interno, protezione contro polvere, sporco e gocciolamenti' };
+  const spLabels  = { '10':'1,0 mm', '15':'1,5 mm', '20':'2,0 mm', '25':'2,5 mm', '30':'3,0 mm' };
+  const svLabels  = { SV:'Sì', SN:'No' };
+  const svBreve   = { SV:'con sovraporta vetro', SN:'senza sovraporta vetro' };
+  const svEsteso  = { SV:'Il quadro è dotato di sovraporta in vetro.', SN:'Il quadro non è dotato di sovraporta in vetro.' };
+
+  function buildDescBreve(n, ltot, h, z, p, sp, mat, ip, sv) {
+    const htot = h + z;
+    const nStr = n === 1 ? '1 anta' : `${n} ante`;
+    const spStr = sp ? `, sp. ${spLabels[sp] || sp}` : '';
+    const svStr = sv ? `, ${svBreve[sv] || sv}` : '';
+    return `Armadio ${nStr}, ${ltot}×${htot}×${p} mm${spStr}, ${matBreve[mat] || mat}, ${ipLabels[ip] || ip}${svStr}`;
+  }
+
+  function buildDescEstesa(n, doorWidths, ltot, h, z, p, sp, mat, ip, sv) {
+    const htot = h + z;
+    let porteStr = n === 1 ? `un'anta di larghezza ${doorWidths[0]} mm` : `${n} ante (${doorWidths.map((w,i)=>`porta ${i+1}: ${w} mm`).join(', ')})`;
+    const zoccoloStr = z > 0 ? ` Lo zoccolo ha un'altezza di ${z} mm, portando l'altezza totale installata a ${htot} mm.` : ' Il quadro è privo di zoccolo.';
+    return `Carpenteria metallica per quadro elettrico con ${porteStr}, per una larghezza totale di ${ltot} mm. `
+         + `Altezza della struttura ${h} mm (misurata senza zoccolo).${zoccoloStr} `
+         + `Profondità del quadro ${p} mm. `
+         + (sp ? `Spessore della lamiera: ${spLabels[sp] || sp}. ` : '')
+         + `La struttura è realizzata in ${matEsteso[mat] || mat}. `
+         + `Protezione: ${ipEsteso[ip] || ip}. `
+         + (svEsteso[sv] || '');
+  }
+
+  function buildPorteGrid() {
+    const n = parseInt($('n-porte').value) || 1;
+    const grid = $('porte-grid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      const div = document.createElement('div');
+      div.className = 'porta-field field';
+      div.innerHTML = `<label for="porta-${i}">Larghezza porta ${i} (mm)</label><input type="number" id="porta-${i}" min="100" max="2000" placeholder="es. 600" />`;
+      grid.appendChild(div);
+      div.querySelector('input').addEventListener('input', updateTotale);
+    }
+    updateTotale();
+  }
+
+  function updateTotale() {
+    const n = parseInt($('n-porte').value) || 1;
+    let tot = 0;
+    for (let i = 1; i <= n; i++) tot += parseInt($(`porta-${i}`)?.value) || 0;
+    $('ltot-val').textContent = tot > 0 ? tot + ' mm' : '—';
+    generateCode();
+  }
+
+  document.querySelectorAll('.mat-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); selectedMat = btn.dataset.mat; generateCode();
+  }));
+  document.querySelectorAll('.ip-chip').forEach(chip => chip.addEventListener('click', () => {
+    document.querySelectorAll('.ip-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected'); selectedIp = chip.dataset.ip; generateCode();
+  }));
+  document.querySelectorAll('.sp-chip').forEach(chip => chip.addEventListener('click', () => {
+    document.querySelectorAll('.sp-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected'); selectedSp = chip.dataset.sp; generateCode();
+  }));
+  document.querySelectorAll('.sv-chip').forEach(chip => chip.addEventListener('click', () => {
+    document.querySelectorAll('.sv-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected'); selectedSv = chip.dataset.sv; generateCode();
+  }));
+
+  ['n-porte','altezza','zoccolo','profondita'].forEach(id => {
+    $(id).addEventListener('input', () => { if (id === 'n-porte') buildPorteGrid(); generateCode(); });
+  });
+
+  function generateCode() {
+    const n = parseInt($('n-porte').value) || 1;
+    const h = parseInt($('altezza').value) || 0;
+    const z = parseInt($('zoccolo').value) || 0;
+    const p = parseInt($('profondita').value) || 0;
+    let ltot = 0, doorWidths = [];
+    for (let i = 1; i <= n; i++) { const v = parseInt($(`porta-${i}`)?.value) || 0; ltot += v; doorWidths.push(v); }
+
+    const allOk = ltot > 0 && h > 0 && p > 0 && selectedMat && selectedIp && selectedSp && selectedSv;
+    const display = $('code-display'), breakdown = $('breakdown'), counter = $('char-counter');
+    $('desc-breve-box').style.display = 'none'; $('desc-estesa-box').style.display = 'none'; counter.textContent = '';
+
+    if (!allOk) {
+      display.innerHTML = `<span style="color:var(--gray-400);font-size:1rem;font-weight:400;">Compila tutti i campi per generare il codice</span>`;
+      delete display.dataset.code; breakdown.style.display = 'none';
+      ['btn-copy','btn-save'].forEach(id => { $(id).disabled=false; $(id).style.opacity='1'; $(id).style.cursor='pointer'; });
+      return;
+    }
+
+    const seg1=`${n}P`, seg2=`L${ltot}`, seg3=`H${h}`, seg4=`Z${z}`, seg5ps=`P${p}S${selectedSp}`, seg6=selectedMat, seg7=selectedIp, seg8=selectedSv;
+    const segments = [seg1,seg2,seg3,seg4,seg5ps,seg6,seg7,seg8];
+    const code = segments.join('');
+
+    display.innerHTML = segments.map((s,i) => `<span class="segment seg-alt-${i%2}">${s}</span>`).join('');
+    display.dataset.code = code;
+
+    const len = code.length, overLimit = len > 35;
+    let cls = len > 30 ? (overLimit ? 'char-err' : 'char-warn') : 'char-ok';
+    counter.innerHTML = `<span class="${cls}">${len}/35 caratteri${overLimit ? ' ⚠️ SUPERA IL LIMITE' : ''}</span>`;
+    ['btn-copy','btn-save'].forEach(id => { $(id).disabled=overLimit; $(id).style.opacity=overLimit?'.35':'1'; $(id).style.cursor=overLimit?'not-allowed':'pointer'; });
+
+    const breve = buildDescBreve(n,ltot,h,z,p,selectedSp,selectedMat,selectedIp,selectedSv);
+    $('desc-breve-body').textContent = breve; $('desc-breve-box').style.display='block'; $('desc-breve-box').dataset.text=breve;
+
+    const estesa = buildDescEstesa(n,doorWidths,ltot,h,z,p,selectedSp,selectedMat,selectedIp,selectedSv);
+    $('desc-estesa-body').textContent = estesa; $('desc-estesa-box').style.display='block'; $('desc-estesa-box').dataset.text=estesa;
+
+    let rows = [[seg1,'Numero porte',`${n} porta/e`]];
+    doorWidths.forEach((w,i) => rows.push(['',`Larghezza porta ${i+1}`,`${w} mm`]));
+    rows = rows.concat([[seg2,'Larghezza totale',`${ltot} mm`],[seg3,'Altezza (senza zoccolo)',`${h} mm`],[seg4,'Altezza zoccolo',z>0?`${z} mm`:'Assente (0 mm)'],[seg5ps,'Profondità + Spessore',`${p} mm – lamiera ${spLabels[selectedSp]||selectedSp}`],[seg6,'Materiale / finitura',matLabels[selectedMat]||selectedMat],[seg7,'Grado di protezione',ipLabels[selectedIp]||selectedIp],[seg8,'Sovraporta vetro',svLabels[selectedSv]||selectedSv]]);
+    $('breakdown-body').innerHTML = rows.map(([c,field,val]) => `<tr><td>${c?`<span class="seg-code">${c}</span>`:''}</td><td>${field}</td><td>${val}</td></tr>`).join('');
+    breakdown.style.display = 'block';
+  }
+
+  $('btn-copy').addEventListener('click', () => { const code=$('code-display').dataset.code; if(code) navigator.clipboard.writeText(code).then(()=>showToast('✅ Codice copiato!')); });
+  $('btn-copy-breve').addEventListener('click', () => { const t=$('desc-breve-box').dataset.text; if(t) navigator.clipboard.writeText(t).then(()=>showToast('✅ Descrizione breve copiata!')); });
+  $('btn-copy-estesa').addEventListener('click', () => { const t=$('desc-estesa-box').dataset.text; if(t) navigator.clipboard.writeText(t).then(()=>showToast('✅ Descrizione estesa copiata!')); });
+
+  $('btn-save').addEventListener('click', () => {
+    const code=$('code-display').dataset.code, breve=$('desc-breve-box').dataset.text, estesa=$('desc-estesa-box').dataset.text;
+    if (!code) return;
+    if (history.find(h=>h.code===code)) { showToast('⚠️ Codice già in storico'); return; }
+    history.push({code,breve,estesa}); renderHistory(); showToast('💾 Salvato nello storico!');
+  });
+
+  function renderHistory() {
+    const ul=$('history-list'), noH=$('no-history'), actions=$('history-actions');
+    ul.innerHTML = '';
+    if (!history.length) { noH.style.display='block'; actions.style.display='none'; return; }
+    noH.style.display='none'; actions.style.display='flex';
+    history.forEach((item,idx) => {
+      const li=document.createElement('li');
+      li.style.cssText='flex-direction:column;align-items:flex-start;gap:4px;font-family:inherit;';
+      li.innerHTML=`<div style="display:flex;width:100%;justify-content:space-between;align-items:center;"><span style="font-family:monospace;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--blue);" title="Copia codice" onclick="copyText('${item.code}')">${item.code}</span><button class="del-btn" onclick="deleteHistory(${idx})">✕</button></div><div style="font-size:.78rem;color:var(--gray-600);cursor:pointer;" title="Copia descrizione breve" onclick="copyText(\`${item.breve.replace(/`/g,"'")}\`)">${item.breve}</div>`;
+      ul.appendChild(li);
+    });
+  }
+
+  window.copyText = t => navigator.clipboard.writeText(t).then(()=>showToast('✅ Copiato!'));
+  window.deleteHistory = idx => { history.splice(idx,1); renderHistory(); };
+
+  $('btn-export').addEventListener('click', () => {
+    if (!history.length) return;
+    const csv=['"Codice","Descrizione Breve","Descrizione Estesa"',...history.map(h=>`"${h.code}","${h.breve}","${h.estesa.replace(/"/g,'""')}"`)].join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'})); a.download='codici-carpenterie.csv'; a.click();
+  });
+
+  $('btn-clear-all').addEventListener('click', () => { if(confirm('Cancellare tutti i codici salvati?')) { history.length=0; renderHistory(); } });
+
+  $('btn-reset').addEventListener('click', () => {
+    $('n-porte').value=1; $('altezza').value=''; $('zoccolo').value=0; $('profondita').value='';
+    selectedMat=null; selectedIp=null; selectedSp=null; selectedSv=null;
+    document.querySelectorAll('.mat-btn,.ip-chip,.sp-chip,.sv-chip').forEach(el=>el.classList.remove('selected'));
+    buildPorteGrid(); generateCode();
+  });
+
+  function showToast(msg) { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+  buildPorteGrid();
+</script>
+</body>
+</html>

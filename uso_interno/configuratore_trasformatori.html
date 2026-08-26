@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codifica Trasformatori Elettrici</title>
+<style>
+  :root {
+    --navy:   #1F3864;
+    --blue:   #2E75B6;
+    --lblue:  #D6E4F7;
+    --xblue:  #EBF3FB;
+    --green:  #2E7D32;
+    --lgreen: #E2EFDA;
+    --amber:  #7F4C00;
+    --lamber: #FFF2CC;
+    --grey:   #F4F4F4;
+    --border: #9DC3E6;
+    --inactive-bg: #F2F2F2;
+    --inactive-fg: #ADADAD;
+    --red:    #C00000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 13px; background: #f0f4f8; color: #222; }
+
+  /* ── header ── */
+  .page-header {
+    background: var(--navy); color: #fff; padding: 18px 28px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .page-header h1 { font-size: 20px; font-weight: 700; }
+  .page-header p  { font-size: 12px; opacity: .8; margin-top: 3px; }
+
+  /* ── layout ── */
+  .main { max-width: 1280px; margin: 0 auto; padding: 20px 16px; display: grid;
+          grid-template-columns: 420px 1fr; gap: 18px; }
+  @media(max-width:900px){ .main { grid-template-columns:1fr; } }
+
+  /* ── cards ── */
+  .card { background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); overflow:hidden; }
+  .card-header { background:var(--blue); color:#fff; padding:10px 16px;
+                 font-weight:700; font-size:13px; letter-spacing:.3px; }
+  .card-header.navy { background:var(--navy); }
+  .card-header.green { background:var(--green); }
+  .card-body  { padding:14px 16px; }
+
+  /* ── form elements ── */
+  .field { display:flex; align-items:center; margin-bottom:9px; gap:8px; }
+  .field label { min-width:190px; color:var(--navy); font-weight:600; font-size:12px; }
+  .field select, .field input[type=number] {
+    flex:1; padding:5px 8px; border:1.5px solid var(--border); border-radius:4px;
+    font-size:12px; background:var(--xblue); outline:none; transition:border .15s;
+  }
+  .field select:focus, .field input[type=number]:focus { border-color:var(--blue); }
+  .field select:disabled, .field input[type=number]:disabled {
+    background:var(--inactive-bg); color:var(--inactive-fg); cursor:not-allowed;
+  }
+
+  /* primary voltages checkboxes */
+  .volt-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px; }
+  .volt-item { display:flex; align-items:center; gap:5px; padding:5px 8px;
+               border:1.5px solid var(--border); border-radius:4px; background:var(--xblue);
+               cursor:pointer; transition:background .15s; }
+  .volt-item:hover  { background:var(--lblue); }
+  .volt-item.active { background:var(--lblue); border-color:var(--blue); }
+  .volt-item input  { accent-color:var(--blue); width:14px; height:14px; }
+  .volt-item span   { font-size:12px; font-weight:600; color:var(--navy); }
+
+  /* section heading inside card */
+  .section-lbl { background:var(--lblue); color:var(--navy); font-weight:700;
+                 font-size:11px; padding:5px 10px; margin:-2px -16px 10px;
+                 text-transform:uppercase; letter-spacing:.4px; }
+
+  /* secondaries */
+  .sec-row { display:grid; grid-template-columns:80px 1fr 1fr; gap:8px;
+             align-items:center; margin-bottom:7px; }
+  .sec-row label { font-size:12px; font-weight:600; color:var(--navy); }
+  .sec-row input  { padding:5px 8px; border:1.5px solid var(--border); border-radius:4px;
+                    font-size:12px; background:var(--xblue); outline:none; width:100%; }
+  .sec-row input:disabled { background:var(--inactive-bg); color:var(--inactive-fg); }
+
+  /* ── output code ── */
+  .code-display {
+    font-family: 'Courier New', monospace; font-size:28px; font-weight:700;
+    letter-spacing:2px; color:var(--navy); padding:16px 20px; background:var(--xblue);
+    border:2px solid var(--blue); border-radius:6px; text-align:center;
+    word-break:break-all; min-height:64px;
+  }
+  .code-display.error { color:var(--red); border-color:var(--red); background:#fff0f0; }
+  .code-meta { display:flex; gap:10px; margin-top:8px; }
+  .code-meta .badge {
+    padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600;
+    background:var(--lblue); color:var(--navy);
+  }
+  .code-meta .badge.warn { background:#FFF2CC; color:var(--amber); }
+
+  .desc-box { margin-top:10px; padding:10px 14px; background:var(--grey);
+              border-radius:5px; font-size:12px; color:#444; line-height:1.5; }
+  .desc-box strong { color:var(--navy); }
+
+  /* ── protection tables ── */
+  .prot-table-wrap { overflow-x:auto; margin-top:0; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { background:var(--lblue); color:var(--navy); font-weight:700; padding:7px 10px;
+       text-align:center; border:1px solid var(--border); white-space:nowrap; }
+  td { padding:6px 10px; border:1px solid var(--border); text-align:center;
+       white-space:nowrap; }
+  tr.inactive td { background:var(--inactive-bg); color:var(--inactive-fg); }
+  tr.active td   { background:#fff; }
+  td.ocpd { background:var(--lamber); font-weight:700; color:var(--amber); }
+  td.flq  { background:var(--lgreen); font-weight:700; color:var(--green); }
+  td.out  { color:var(--red); font-weight:600; }
+  td.note { text-align:left; font-style:italic; font-size:11px; color:#555; }
+  td.label{ font-weight:700; text-align:left; color:var(--navy); }
+
+  /* ── rule note ── */
+  .rule-note { background:var(--grey); border-left:3px solid var(--blue);
+               padding:7px 12px; font-size:11px; color:#555; margin-bottom:12px;
+               border-radius:0 4px 4px 0; font-style:italic; line-height:1.6; }
+
+  /* ── info strip ── */
+  .info-strip { background:var(--xblue); border:1px solid var(--border);
+                border-radius:5px; padding:8px 14px; margin-top:10px;
+                font-size:11px; color:var(--navy); display:flex; flex-wrap:wrap; gap:16px; }
+  .info-strip span b { color:var(--blue); }
+
+  /* ── copy button ── */
+  .btn-copy { margin-top:8px; padding:6px 18px; background:var(--blue); color:#fff;
+              border:none; border-radius:4px; cursor:pointer; font-size:12px;
+              font-weight:600; transition:background .15s; }
+  .btn-copy:hover { background:var(--navy); }
+  .btn-copy.copied { background:#2E7D32; }
+
+  .right-col { display:flex; flex-direction:column; gap:18px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>⚡ Sistema di Codifica — Trasformatori Elettrici</h1>
+    <p>Seleziona i parametri per generare il codice identificativo &amp; calcolare le protezioni UL 508A</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ LEFT: CONFIGURATORE ══ -->
+  <div class="card">
+    <div class="card-header">CONFIGURATORE</div>
+    <div class="card-body">
+
+      <div class="section-lbl">Dati comuni</div>
+
+      <div class="field">
+        <label>Tipo di apparecchio</label>
+        <select id="tipo">
+          <option value="T">Trasformatore</option>
+          <option value="A">Autotrasformatore</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Numero di fasi</label>
+        <select id="fasi">
+          <option value="3">Trifase</option>
+          <option value="1">Monofase</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;">
+          Tensioni primario disponibili
+        </div>
+        <div class="volt-grid">
+          <label class="volt-item active"><input type="checkbox" data-v="380"  checked><span>380 V</span></label>
+          <label class="volt-item active"><input type="checkbox" data-v="400"  checked><span>400 V</span></label>
+          <label class="volt-item"><input type="checkbox" data-v="440"><span>440 V</span></label>
+          <label class="volt-item"><input type="checkbox" data-v="460"><span>460 V</span></label>
+          <label class="volt-item"><input type="checkbox" data-v="480"><span>480 V</span></label>
+          <label class="volt-item"><input type="checkbox" data-v="600"><span>600 V</span></label>
+          <label class="volt-item"><input type="checkbox" data-v="690"><span>690 V</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Avvolgimento primario</label>
+        <select id="avvp">
+          <option value="Y">Stella (Y)</option>
+          <option value="D">Triangolo (D)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Avvolgimento secondario</label>
+        <select id="avvs">
+          <option value="N">Stella con Neutro (YN)</option>
+          <option value="Y">Stella (Y)</option>
+          <option value="D">Triangolo (D)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Frequenza (Hz)</label>
+        <select id="freq">
+          <option value="B">50 + 60 Hz</option>
+          <option value="5">50 Hz</option>
+          <option value="6">60 Hz</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Certificazione</label>
+        <select id="cert">
+          <option value="C">CE</option>
+          <option value="U">UL</option>
+          <option value="B">CE + UL</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Classe di isolamento</label>
+        <select id="iso">
+          <option value="F">F</option>
+          <option value="B">B</option>
+          <option value="H">H</option>
+          <option value="C">C</option>
+        </select>
+      </div>
+
+      <div class="section-lbl" style="margin-top:12px;">Secondari</div>
+
+      <div class="field">
+        <label>Numero secondari</label>
+        <select id="nsec">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:4px;">
+        <div class="sec-row" style="font-weight:700;color:var(--navy);font-size:11px;">
+          <span></span><span>Tensione (V)</span><span>Potenza (VA)</span>
+        </div>
+        <div id="secondari-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: OUTPUT + PROTEZIONE ══ -->
+  <div class="right-col">
+
+    <!-- ── Output codice ── -->
+    <div class="card">
+      <div class="card-header navy">CODICE IDENTIFICATIVO GENERATO</div>
+      <div class="card-body">
+        <div class="code-display" id="code-display">—</div>
+        <div class="code-meta" id="code-meta"></div>
+        <button class="btn-copy" id="btn-copy" onclick="copyCode()">📋 Copia codice</button>
+        <div class="desc-box">
+          <strong>Descrizione breve:</strong><br>
+          <span id="desc-breve">—</span>
+        </div>
+        <div class="desc-box" style="margin-top:8px;">
+          <strong>Descrizione estesa:</strong><br>
+          <span id="desc-estesa">—</span>
+        </div>
+        <div class="info-strip" id="info-strip"></div>
+      </div>
+    </div>
+
+    <!-- ── Protezione primario ── -->
+    <div class="card">
+      <div class="card-header">PROTEZIONE PRIMARIO — UL 508A § 66.1</div>
+      <div class="card-body">
+        <div class="rule-note" id="rule-note-prim">
+          I<sub>prim</sub> = VA<sub>tot</sub> ÷ (V × √3) per trifase &nbsp;|&nbsp; ÷ V per monofase<br>
+          <b>Con secondario:</b> ×2.50 se Ip ≥ 2A &nbsp;·&nbsp; ×3.00 se Ip &lt; 2A &nbsp;|&nbsp;
+          <b>Solo primario:</b> ×1.25 se Ip ≥ 9A &nbsp;·&nbsp; ×1.67 se 2A ≤ Ip &lt; 9A &nbsp;·&nbsp; ×3.00 se Ip &lt; 2A
+        </div>
+        <div class="prot-table-wrap">
+          <table id="tbl-prim">
+            <thead>
+              <tr>
+                <th>Tensione</th>
+                <th>Stato</th>
+                <th>I nom. (A)</th>
+                <th>Fattore UL</th>
+                <th>I prot. (A)</th>
+                <th>OCPD NEC (A)</th>
+                <th>FLQ Littelfuse 10×38 (A)</th>
+                <th>Regola applicata</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-prim"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Protezione secondario ── -->
+    <div class="card">
+      <div class="card-header">PROTEZIONE SECONDARIO — UL 508A § 66.2</div>
+      <div class="card-body">
+        <div class="rule-note">
+          I<sub>sec</sub> = VA<sub>sec</sub> ÷ V<sub>sec</sub> (monofase) &nbsp;|&nbsp;
+          ×1.25 se Is ≥ 9A &nbsp;·&nbsp; ×1.67 se Is &lt; 9A
+        </div>
+        <div class="prot-table-wrap">
+          <table id="tbl-sec">
+            <thead>
+              <tr>
+                <th>Secondario</th>
+                <th>Tensione (V)</th>
+                <th>Potenza (VA)</th>
+                <th>I nom. (A)</th>
+                <th>Fattore UL</th>
+                <th>I prot. (A)</th>
+                <th>OCPD NEC (A)</th>
+                <th>FLQ Littelfuse 10×38 (A)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-sec"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;font-size:10.5px;color:#666;font-style:italic;">
+          ⚠ FLQ Littelfuse 10×38mm: max 30A / 500V AC. Se corrente protezione &gt; 30A → usare formato maggiore (es. 14×51mm o Class J 600V).
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── lookup tables ─────────────────────────────────────────────────────────────
+const VOLT_BITS   = {380:1, 400:2, 440:4, 460:8, 480:16, 600:32, 690:64};
+const VOLT_CODES  = {24:'A', 48:'B', 70:'C', 110:'M', 115:'N', 120:'D', 230:'E', 380:'F', 400:'G',
+                     440:'H', 460:'I', 480:'J', 600:'K', 690:'L'};
+
+const NEC_SIZES = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,
+                   150,175,200,225,250,300,350,400,450,500,600,700,800,
+                   1000,1200,1600,2000,2500];
+
+const FLQ_SIZES = [0.5,0.75,1,1.25,1.5,1.6,1.75,2,2.25,2.5,2.8,
+                   3,3.5,4,4.5,5,5.6,6,6.25,7,8,9,10,12,15,17.5,20,25,30];
+const FLQ_MAX = 30;
+
+function nextSize(val, sizes) {
+  if (val <= sizes[0]) return sizes[0];
+  for (let i=0; i<sizes.length; i++) {
+    if (sizes[i] >= val) return sizes[i];
+  }
+  return null; // out of range
+}
+
+// ── build secondary rows ──────────────────────────────────────────────────────
+function buildSecondaries() {
+  const n = parseInt(document.getElementById('nsec').value);
+  const list = document.getElementById('secondari-list');
+  const existing = [];
+  list.querySelectorAll('.sec-row').forEach(r => {
+    existing.push({v: r.querySelector('.v-inp').value, p: r.querySelector('.p-inp').value});
+  });
+  list.innerHTML = '';
+  for (let i=1; i<=5; i++) {
+    const row = document.createElement('div');
+    row.className = 'sec-row';
+    const v = existing[i-1]?.v || '';
+    const p = existing[i-1]?.p || '';
+    const dis = i > n ? 'disabled' : '';
+    row.innerHTML = `
+      <label>Sec. ${i}</label>
+      <input type="number" class="v-inp" placeholder="V" value="${i<=n?v:''}"
+             min="1" step="1" ${dis} oninput="update()">
+      <input type="number" class="p-inp" placeholder="VA" value="${i<=n?p:''}"
+             min="1" step="1" ${dis} oninput="update()">`;
+    list.appendChild(row);
+  }
+}
+
+// ── hex bitmask ───────────────────────────────────────────────────────────────
+function hexBitmask() {
+  let sum = 0;
+  document.querySelectorAll('[data-v]').forEach(cb => {
+    if (cb.checked) sum += VOLT_BITS[parseInt(cb.dataset.v)];
+  });
+  return sum.toString(16).toUpperCase().padStart(2,'0');
+}
+
+function activeVoltages() {
+  const arr = [];
+  document.querySelectorAll('[data-v]').forEach(cb => {
+    if (cb.checked) arr.push(parseInt(cb.dataset.v));
+  });
+  return arr;
+}
+
+// ── power / VA formatting ─────────────────────────────────────────────────────
+function fmtVA(va) {
+  if (va >= 1000) {
+    const kva = va / 1000;
+    if (Number.isInteger(kva)) {
+      // Numero intero: formato con zeri davanti (es. 2000 → 002K, 3000 → 003K)
+      return kva.toString().padStart(3, '0') + 'K';
+    } else {
+      // Valore decimale: mostra le cifre significative (es. 1500 → 1.5K, 1250 → 1.25K)
+      const s = parseFloat(kva.toFixed(3)).toString();
+      return s + 'K';
+    }
+  }
+  return va.toString().padStart(3,'0') + 'V';
+}
+
+// ── generate code ─────────────────────────────────────────────────────────────
+function generateCode() {
+  const tipo = document.getElementById('tipo').value;
+  const fasi = document.getElementById('fasi').value;
+  const avvp = document.getElementById('avvp').value;
+  const avvs = document.getElementById('avvs').value;
+  const freq = document.getElementById('freq').value;
+  const cert = document.getElementById('cert').value;
+  const iso  = document.getElementById('iso').value;
+  const nsec = parseInt(document.getElementById('nsec').value);
+  const hex  = hexBitmask();
+
+  // avvolgimento chars (monofase = X)
+  const pChar = fasi==='1' ? 'X' : avvp;
+  const sChar = fasi==='1' ? 'X' : avvs;
+
+  let code = tipo + fasi + hex + pChar + sChar + freq + cert + iso + nsec;
+
+  const secRows = document.querySelectorAll('#secondari-list .sec-row');
+  let totalVA = 0; let secOk = true;
+
+  for (let i=0; i<nsec; i++) {
+    const vv = parseFloat(secRows[i].querySelector('.v-inp').value);
+    const pp = parseFloat(secRows[i].querySelector('.p-inp').value);
+    if (!vv || !pp || pp<=0) { secOk = false; code += '?????'; continue; }
+    const vc = VOLT_CODES[vv];
+    if (!vc) { secOk = false; code += '?????'; continue; }
+    code += vc + fmtVA(pp);
+    totalVA += pp;
+  }
+
+  return { code, totalVA, tipo, fasi, avvp, avvs, freq, cert, iso, nsec, secOk, hex };
+}
+
+// ── descriptions ─────────────────────────────────────────────────────────────
+function genDescs(cfg) {
+  const {tipo,fasi,avvp,avvs,freq,cert,iso,nsec} = cfg;
+  const tipoStr = tipo==='T' ? 'TRF' : 'AUTO';
+  const fasiStr = fasi==='3' ? '3F' : '1F';
+  const freqStr = cfg.freq==='5'?'50Hz':cfg.freq==='6'?'60Hz':'50+60Hz';
+  const avvStr  = fasi==='1'?'':` ${avvp==='Y'?'Y':avvp==='D'?'D':'?'}/${avvs==='D'?'D':avvs==='Y'?'Y':avvs==='N'?'YN':'?'} `;
+  const nsecRows = document.querySelectorAll('#secondari-list .sec-row');
+
+  let breve = `${tipoStr} ${fasiStr} ${cfg.hex}h${avvStr}${freqStr} ${cert==='C'?'CE':cert==='U'?'UL':'CE+UL'} Cl.${iso}`;
+  let estesa = `${tipo==='T'?'Trasformatore':'Autotrasformatore'} ${fasi==='3'?'trifase':'monofase'}. `;
+  estesa += `Tensioni primario: ${activeVoltages().map(v=>v+'V').join(', ')}. `;
+  if (fasi==='3') estesa += `Avv. prim.: ${avvp==='Y'?'Stella':avvp==='D'?'Triangolo':avvp}; avv. sec.: ${avvs==='Y'?'Stella':avvs==='D'?'Triangolo':'Stella con Neutro'}. `;
+  estesa += `Frequenza: ${freqStr}. Cert.: ${cert==='C'?'CE':cert==='U'?'UL':'CE+UL'}. Classe iso.: ${iso}. Temp.: 60°C. N.sec.: ${nsec}.`;
+
+  for (let i=0; i<nsec; i++) {
+    const vv = parseFloat(nsecRows[i].querySelector('.v-inp').value);
+    const pp = parseFloat(nsecRows[i].querySelector('.p-inp').value);
+    if (vv && pp) { breve += ` ${vv}V/${pp}VA`; estesa += ` Sec.${i+1}: ${vv}V/${pp}VA.`; }
+  }
+  if (cfg.totalVA) estesa += ` Pot. totale: ${cfg.totalVA} VA.`;
+  return {breve, estesa};
+}
+
+// ── protection helpers ────────────────────────────────────────────────────────
+function primFactor(i, hasSec) {
+  if (hasSec) return i >= 2 ? 2.50 : 3.00;
+  return i >= 9 ? 1.25 : i >= 2 ? 1.67 : 3.00;
+}
+function primNote(i, hasSec) {
+  if (hasSec) return i>=2 ? 'Con sec. – Ip≥2A → ×2.50 (250%)' : 'Con sec. – Ip<2A → ×3.00 (300%)';
+  if (i>=9)   return 'Solo prim. – Ip≥9A → ×1.25 (125%)';
+  if (i>=2)   return 'Solo prim. – 2A≤Ip<9A → ×1.67 (167%)';
+  return 'Solo prim. – Ip<2A → ×3.00 (300%)';
+}
+function secFactor(i) { return i >= 9 ? 1.25 : 1.67; }
+
+function flqCell(cprot) {
+  if (cprot > FLQ_MAX) return `<td class="flq out">Fuori gamma (&gt;${FLQ_MAX}A)</td>`;
+  const sz = nextSize(cprot, FLQ_SIZES);
+  return sz != null ? `<td class="flq">${fmt(sz)}</td>` : `<td class="flq out">—</td>`;
+}
+function necCell(cprot) {
+  const sz = nextSize(cprot, NEC_SIZES);
+  return sz != null ? `<td class="ocpd">${sz}</td>` : `<td class="ocpd out">Fuori tabella</td>`;
+}
+function fmt(n) { return Number.isInteger(n) ? n.toString() : n.toFixed(n<10?2:1); }
+
+// ── build protection tables ───────────────────────────────────────────────────
+function buildPrimTable(cfg) {
+  const {fasi, nsec, totalVA} = cfg;
+  const hasSec = nsec >= 1 && totalVA > 0;
+  const sqrt3 = Math.sqrt(3);
+  const voltages = [380,400,440,460,480,600,690];
+  const cbs = document.querySelectorAll('[data-v]');
+  const activeMap = {};
+  cbs.forEach(cb => { activeMap[parseInt(cb.dataset.v)] = cb.checked; });
+
+  let html = '';
+  for (const v of voltages) {
+    const active = activeMap[v];
+    if (!active) {
+      html += `<tr class="inactive">
+        <td class="label">${v} V</td><td>—</td><td>—</td><td>—</td>
+        <td>—</td><td class="ocpd" style="background:var(--inactive-bg);color:var(--inactive-fg)">—</td>
+        <td class="flq"  style="background:var(--inactive-bg);color:var(--inactive-fg)">—</td>
+        <td class="note">Tensione non attiva</td></tr>`;
+      continue;
+    }
+    const inom = totalVA / (v * (fasi==='3' ? sqrt3 : 1));
+    const fatt = primFactor(inom, hasSec);
+    const cprot = inom * fatt;
+    html += `<tr class="active">
+      <td class="label">${v} V</td>
+      <td><span style="color:var(--green);font-weight:700">SI</span></td>
+      <td>${inom.toFixed(3)}</td>
+      <td>${fatt.toFixed(2)}</td>
+      <td>${cprot.toFixed(3)}</td>
+      ${necCell(cprot)}
+      ${flqCell(cprot)}
+      <td class="note">${primNote(inom, hasSec)}</td>
+    </tr>`;
+  }
+  document.getElementById('tbody-prim').innerHTML = html;
+}
+
+function buildSecTable(cfg) {
+  const {nsec} = cfg;
+  const rows = document.querySelectorAll('#secondari-list .sec-row');
+  let html = '';
+  for (let i=0; i<5; i++) {
+    const active = i < nsec;
+    if (!active) {
+      html += `<tr class="inactive">
+        <td class="label">Secondario ${i+1}</td>
+        <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+        <td class="ocpd" style="background:var(--inactive-bg);color:var(--inactive-fg)">—</td>
+        <td class="flq"  style="background:var(--inactive-bg);color:var(--inactive-fg)">—</td>
+      </tr>`;
+      continue;
+    }
+    const vv = parseFloat(rows[i].querySelector('.v-inp').value);
+    const pp = parseFloat(rows[i].querySelector('.p-inp').value);
+    if (!vv || !pp || vv<=0 || pp<=0) {
+      html += `<tr class="active">
+        <td class="label">Secondario ${i+1}</td>
+        <td colspan="7" style="color:#999;font-style:italic;text-align:left">
+          Inserire tensione e potenza per il calcolo</td>
+      </tr>`;
+      continue;
+    }
+    const inom = pp / vv;
+    const fatt = secFactor(inom);
+    const cprot = inom * fatt;
+    html += `<tr class="active">
+      <td class="label">Secondario ${i+1}</td>
+      <td>${vv}</td><td>${pp}</td>
+      <td>${inom.toFixed(3)}</td>
+      <td>${fatt.toFixed(2)}</td>
+      <td>${cprot.toFixed(3)}</td>
+      ${necCell(cprot)}
+      ${flqCell(cprot)}
+    </tr>`;
+  }
+  document.getElementById('tbody-sec').innerHTML = html;
+}
+
+// ── main update ───────────────────────────────────────────────────────────────
+function update() {
+  const fasi = document.getElementById('fasi').value;
+
+  // monofase: disable avvolgimento selects
+  document.getElementById('avvp').disabled = (fasi==='1');
+  document.getElementById('avvs').disabled = (fasi==='1');
+
+  const cfg = generateCode();
+  const { code, secOk } = cfg;
+
+  // display code
+  const disp = document.getElementById('code-display');
+  const len  = code.length;
+  const over = len > 35;
+  disp.textContent = code;
+  disp.className   = 'code-display' + (over ? ' error' : '');
+
+  // badges
+  const meta = document.getElementById('code-meta');
+  meta.innerHTML = `<span class="badge ${over?'warn':''}">Lunghezza: ${len} / 35</span>` +
+    (!secOk ? '<span class="badge warn">⚠ Parametri secondari incompleti</span>' : '') +
+    (over ? '<span class="badge warn">⚠ Supera il limite!</span>' : '');
+
+  // descriptions
+  const {breve, estesa} = genDescs(cfg);
+  document.getElementById('desc-breve').textContent  = breve;
+  document.getElementById('desc-estesa').textContent = estesa;
+
+  // info strip
+  const totalVA = cfg.totalVA;
+  const certStr = {C:'CE',U:'UL',B:'CE+UL'}[cfg.cert];
+  document.getElementById('info-strip').innerHTML =
+    `<span>Tipo: <b>${cfg.tipo==='T'?'Trasformatore':'Autotrasformatore'}</b></span>` +
+    `<span>Fasi: <b>${cfg.fasi==='3'?'Trifase':'Monofase'}</b></span>` +
+    `<span>Potenza totale: <b>${totalVA.toLocaleString('it')} VA</b></span>` +
+    `<span>Cert.: <b>${certStr}</b></span>` +
+    `<span>Iso.: <b>Classe ${cfg.iso}</b></span>`;
+
+  // protection tables
+  buildPrimTable(cfg);
+  buildSecTable(cfg);
+}
+
+// ── copy code ─────────────────────────────────────────────────────────────────
+function copyCode() {
+  const code = document.getElementById('code-display').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✅ Copiato!'; btn.className = 'btn-copy copied';
+    setTimeout(() => { btn.textContent = '📋 Copia codice'; btn.className = 'btn-copy'; }, 2000);
+  });
+}
+
+// ── checkbox styling ──────────────────────────────────────────────────────────
+document.querySelectorAll('[data-v]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.volt-item').classList.toggle('active', cb.checked);
+    update();
+  });
+});
+
+// ── wire all inputs ───────────────────────────────────────────────────────────
+['tipo','fasi','avvp','avvs','freq','cert','iso','nsec'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (id==='nsec') buildSecondaries();
+    update();
+  });
+});
+
+// ── init ──────────────────────────────────────────────────────────────────────
+buildSecondaries();
+// set some sample values in secondari
+setTimeout(() => {
+  const rows = document.querySelectorAll('#secondari-list .sec-row');
+  rows[0].querySelector('.v-inp').value = 600;
+  rows[0].querySelector('.p-inp').value = 8000;
+  update();
+}, 50);
+</script>
+</body>
+</html>

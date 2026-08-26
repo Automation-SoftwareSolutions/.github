@@ -1,0 +1,2907 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIASTRA — Generatore DXF / 3D</title>
+<style>
+
+:root{--bg:#0f1117;--surface:#1a1d27;--border:#2d3148;
+  --accent:#4f7ef8;--green:#38d9a9;--warn:#f7c948;
+  --err:#f76c6c;--text:#e8eaf0;--muted:#7880a0;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:40px 16px 60px}
+.wrap{width:100%;max-width:740px}
+#pyodide-loading{position:fixed;inset:0;background:rgba(15,17,23,.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999;gap:14px}
+#pyodide-loading h2{font-size:1.6rem;color:var(--accent);font-weight:800}
+.py-bar-wrap{width:320px;height:6px;background:#2d3148;border-radius:3px;overflow:hidden}
+.py-bar{height:100%;background:linear-gradient(90deg,#4f7ef8,#38d9a9);width:0;
+  transition:width .5s;border-radius:3px}
+.py-msg{font-size:.82rem;color:var(--muted)}
+.py-note{font-size:.72rem;color:#3a4060;text-align:center;max-width:340px;line-height:1.6}
+header{text-align:center;margin-bottom:28px}
+header h1{font-size:2.2rem;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,#4f7ef8 30%,#38d9a9);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+header .sub{color:var(--muted);margin-top:6px;font-size:.88rem}
+.chips{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;
+  padding:4px 12px;border-radius:20px;border:1px solid}
+.chip::before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ok{border-color:var(--green);color:var(--green);background:rgba(56,217,169,.07)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:24px;margin-bottom:14px}
+.card-title{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px}
+.drop{border:2px dashed var(--border);border-radius:10px;padding:28px 20px;
+  text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover,.drop.over{border-color:var(--accent);background:rgba(79,126,248,.04)}
+.drop .ico{font-size:1.9rem;margin-bottom:8px}
+.drop p{color:var(--muted);font-size:.85rem}
+.drop p strong{color:var(--text)}
+.drop input{display:none}
+.file-row{display:none;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;
+  background:rgba(79,126,248,.07);border:1px solid rgba(79,126,248,.35);border-radius:8px}
+.file-row.show{display:flex}
+.fname{flex:1;font-size:.85rem;color:var(--accent);font-weight:600;word-break:break-all}
+.xbtn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;
+  padding:2px 6px;border-radius:4px;transition:color .15s}
+.xbtn:hover{color:var(--err)}
+.sim-box{margin-top:14px;padding:11px 14px;
+  background:rgba(247,201,72,.04);border:1px solid rgba(247,201,72,.18);border-radius:8px}
+.sim-box label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--muted)}
+.sim-box label strong{color:var(--warn)}
+.sim-box input{display:none}
+.sim-ok{font-size:.76rem;color:var(--warn);margin-top:5px;padding-left:24px}
+.obj3d-box{margin-top:10px;padding:11px 14px;
+  background:rgba(79,126,248,.04);border:1px solid rgba(79,126,248,.2);border-radius:8px}
+.obj3d-box label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--muted)}
+.obj3d-box label strong{color:var(--accent)}
+.obj3d-box input{display:none}
+.obj3d-ok{font-size:.76rem;color:var(--accent);margin-top:5px;padding-left:24px}
+.opts{margin-top:16px;display:none}
+.opt-row{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;font-size:.87rem}
+.opt-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+.btn-gen{margin-top:18px;width:100%;padding:13px;border:none;border-radius:10px;cursor:pointer;
+  font-size:.95rem;font-weight:700;background:linear-gradient(135deg,#4f7ef8,#3462e0);color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:filter .2s,transform .15s}
+.btn-gen:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+.spin{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;animation:rot .65s linear infinite;display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
+.log{display:none;margin-top:14px;padding:11px;background:#090b10;border:1px solid var(--border);
+  border-radius:8px;font-family:"SF Mono","Fira Code",monospace;font-size:.72rem;
+  color:var(--green);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;line-height:1.6}
+.log.show{display:block}
+.result{display:none;align-items:center;gap:14px;margin-top:14px;padding:14px 18px;
+  background:rgba(56,217,169,.06);border:1px solid rgba(56,217,169,.35);border-radius:10px}
+.result.show{display:flex}
+.r-ico{font-size:1.5rem;flex-shrink:0}
+.r-info{flex:1}
+.r-info strong{color:var(--green);display:block;font-size:.88rem}
+.r-info span{color:var(--muted);font-size:.76rem}
+.btn-dl{background:var(--green);color:#0f1117;font-weight:800;font-size:.8rem;
+  border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap;transition:filter .15s}
+.btn-dl:hover{filter:brightness(1.08)}
+.err-box{display:none;margin-top:14px;padding:11px 14px;
+  background:rgba(247,108,108,.06);border:1px solid rgba(247,108,108,.35);border-radius:8px;
+  font-size:.78rem;color:var(--err);white-space:pre-wrap;word-break:break-all}
+.err-box.show{display:block}
+.canvas-card{position:relative}
+#three-canvas{width:100%;height:420px;display:none;border-radius:8px;cursor:grab}
+#three-canvas:active{cursor:grabbing}
+.canvas-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:200px;color:var(--muted);gap:8px;font-size:.85rem}
+.canvas-ph .ico{font-size:2.6rem}
+.canvas-hint{text-align:center;margin-top:8px;font-size:.7rem;color:var(--muted)}
+.info-box{background:rgba(79,126,248,.05);border:1px solid rgba(79,126,248,.18);
+  border-radius:8px;padding:12px 14px;font-size:.79rem;color:var(--muted);line-height:1.75}
+.info-box code{background:rgba(255,255,255,.07);border-radius:4px;padding:1px 6px;
+  font-family:"SF Mono",monospace;font-size:.77rem;color:var(--accent)}
+footer{margin-top:32px;color:var(--muted);font-size:.72rem;text-align:center;line-height:1.9}
+
+</style>
+</head>
+<body>
+
+<div id="pyodide-loading">
+  <h2>&#x26A1; PIASTRA</h2>
+  <p style="color:var(--muted);font-size:.88rem">Generatore DXF / 3D per Quadri Elettrici</p>
+  <div class="py-bar-wrap"><div class="py-bar" id="py-bar"></div></div>
+  <p class="py-msg" id="py-msg">Inizializzazione&#x2026;</p>
+  <p class="py-note">Prima apertura: circa 15-30 sec (download Pyodide + openpyxl dal CDN)<br>
+     Esecuzioni successive molto pi&#xF9; veloci grazie alla cache del browser</p>
+</div>
+
+<div class="wrap" id="main-wrap" style="display:none">
+
+  <header>
+    <h1>&#x26A1; PIASTRA</h1>
+    <p class="sub">Generatore DXF / 3D per Quadri Elettrici &nbsp;&#xB7;&nbsp; 100% in-browser</p>
+    <div class="chips">
+      <div class="chip ok">DXF AutoCAD</div>
+      <div class="chip ok">Anteprima 3D</div>
+      <div class="chip ok">Python in-browser (Pyodide)</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card-title">1 &#x2014; Carica il file Excel</div>
+    <div class="drop" id="drop">
+      <div class="ico">&#x1F4CA;</div>
+      <p><strong>Trascina qui il file Excel</strong></p>
+      <p style="margin-top:4px">oppure clicca per sfogliare</p>
+      <p style="margin-top:7px;font-size:.7rem;color:var(--muted)">.xlsx &#xB7; max 32 MB</p>
+      <input type="file" id="fileInput" accept=".xlsx,.xlsm">
+    </div>
+    <div style="text-align:center;margin-top:6px">
+      <button id="tplBtn" style="background:none;border:none;cursor:pointer;
+        font-size:.78rem;color:var(--accent);text-decoration:underline;padding:2px 0"
+        title="Scarica un file Excel di esempio con la struttura corretta">
+        &#x1F4E5; Scarica template Excel di esempio
+      </button>
+    </div>
+    <div class="file-row" id="fileRow">
+      <span>&#x1F4C4;</span>
+      <span class="fname" id="fileName"></span>
+      <button class="xbtn" id="clearBtn">&#x2715;</button>
+    </div>
+    <div class="sim-box">
+      <label>
+        <input type="file" id="simZipIn" webkitdirectory multiple>
+        <span>&#x1F4C2;</span>
+        <span>Seleziona <strong>cartella</strong> con simboli DXF fornitori (opzionale)</span>
+      </label>
+      <div class="sim-ok" id="simOk" style="display:none"></div>
+    </div>
+    <div class="obj3d-box">
+      <label>
+        <input type="file" id="obj3dZipIn" webkitdirectory multiple>
+        <span>&#x1F9CA;</span>
+        <span>Seleziona <strong>cartella</strong> con modelli OBJ fornitori (opzionale)</span>
+      </label>
+      <div class="obj3d-ok" id="obj3dOk" style="display:none"></div>
+    </div>
+    <div class="opts" id="opts">
+      <div class="card-title" style="margin-top:4px;margin-bottom:8px">2 &#x2014; Opzioni</div>
+      <label class="opt-row">
+        <input type="checkbox" checked disabled>
+        Genera file DXF (AutoCAD / LibreCAD)
+      </label>
+      <label class="opt-row">
+        <input type="checkbox" id="cb3d" checked>
+        Mostra anteprima 3D interattiva nel browser
+      </label>
+    </div>
+    <button class="btn-gen" id="genBtn" disabled>
+      <div class="spin" id="spin"></div>
+      <span id="btnLbl">&#x26A1; Genera DXF</span>
+    </button>
+    <div class="log" id="log"></div>
+    <div class="result" id="result">
+      <div class="r-ico">&#x2705;</div>
+      <div class="r-info">
+        <strong>DXF generato con successo!</strong>
+        <span id="resultDet"></span>
+      </div>
+      <button class="btn-dl" id="dlBtn">&#x2193; Scarica ZIP</button>
+    </div>
+    <div class="err-box" id="errBox"></div>
+  </div>
+
+  <div class="card canvas-card">
+    <div class="card-title">Anteprima 3D &#x2014; piastra di montaggio</div>
+    <div class="canvas-ph" id="canvas-ph">
+      <div class="ico">&#x1F3D7;&#xFE0F;</div>
+      <p>L'anteprima 3D appare dopo la generazione del DXF</p>
+    </div>
+    <canvas id="three-canvas"></canvas>
+    <p class="canvas-hint">&#x1F5B1; Trascina per ruotare &nbsp;&#xB7;&nbsp; Scroll per zoom &nbsp;&#xB7;&nbsp; Pizzica per zoom (touch)</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Come funziona</div>
+    <div class="info-box">
+      Questa pagina esegue il codice Python <strong>direttamente nel browser</strong> tramite
+      <strong>Pyodide</strong> (WebAssembly) &#x2014; nessun server necessario.<br><br>
+      Il file ZIP scaricato contiene il <code>.dxf</code> apribile con AutoCAD, LibreCAD, QCAD, DraftSight.<br><br>
+      Per generare il file <code>.step</code> 3D reale (FreeCAD / SolidWorks), usa la versione server:<br>
+      <code>pip3 install flask cadquery &amp;&amp; python3 app.py</code><br><br>
+      I simboli DXF dei fornitori si caricano opzionalmente come ZIP della cartella <code>SIMBOLI/</code>.
+      Senza simboli i componenti vengono disegnati come rettangoli standard.
+    </div>
+  </div>
+
+  <footer>
+    PIASTRA Generator &nbsp;&#xB7;&nbsp; DXF R12 (AC1009) &nbsp;&#xB7;&nbsp;
+    Pyodide 0.26 &middot; Three.js r128 &middot; JSZip
+  </footer>
+</div>
+
+<script id="genera_dxf_src" type="text/plain">
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Generatore DXF - Piastra Quadro Elettrico
+==========================================
+Legge i parametri dal file Excel e genera un DXF AutoCAD.
+Se nella cartella "simboli/" esistono DXF dei fornitori, li usa
+al posto dei rettangoli semplici.
+
+Supporta quadri con 1 o 2 piastre di montaggio.
+
+Struttura cartella:
+    genera_dxf.py
+    piastra_quadro.xlsx
+    simboli/
+        5SY4106.dxf
+        3RT2015.dxf
+        LC1D09.dxf
+        ...
+
+Uso:
+    python3 genera_dxf.py                    -> legge il primo .xlsx trovato
+    python3 genera_dxf.py mio_quadro.xlsx    -> legge il file specificato
+
+Dipendenze:
+    pip3 install openpyxl
+"""
+
+import sys
+import os
+import math
+import re
+from datetime import datetime
+
+try:
+    import openpyxl
+except ImportError:
+    print("ERRORE: manca la libreria openpyxl.")
+    print("Installa con:  pip3 install openpyxl")
+    sys.exit(1)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  LETTURA EXCEL
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _leggi_cfg_sheet(sheet, fallback=None):
+    """Legge un foglio Configurazione e restituisce il dict cfg."""
+    raw = {}
+    for row in sheet.iter_rows(min_row=3, values_only=True):
+        if row[0] and row[1] is not None:
+            raw[str(row[0]).strip()] = row[1]
+
+    fb = fallback or {}
+
+    def _f(key, default):
+        v = raw.get(key, fb.get(key, default))
+        try:    return float(v)
+        except: return float(default) if default is not None else 0.0
+
+    def _i(key, default):
+        v = raw.get(key, fb.get(key, default))
+        try:    return int(float(v))
+        except: return int(default)
+
+    def _s(key, default=''):
+        v = raw.get(key, fb.get(key, default))
+        return str(v).strip() if v is not None else str(default)
+
+    return {
+        'larghezza':    _f('Larghezza piastra (mm)', 600),
+        'altezza':      _f('Altezza piastra (mm)', 500),
+        'margine':      _f('Margine bordo (mm)', 20),
+        'n_guide':      _i('Numero guide DIN', 3),
+        'spaziatura':   _f('Spaziatura tra guide (mm)', 150),
+        'offset_prima': _f('Offset prima guida da basso (mm)', 60),
+        'gap_comp':     _f('Gap tra componenti (mm)', 2),
+        'nome_quadro':  _s('Nome quadro', 'QE-001'),
+        'revisione':    _s('Revisione', 'REV.0'),
+        # ── Solo P1: letti qui ma sovrascritti/ignorati per P2 ──────────────
+        'profondita':   _f('Profondità utile custodia (mm)', 0),
+        'due_piastre':  _s('2 Piastre (SI/NO)', 'NO').upper().startswith('S'),
+        # ── Solo P2: ignorato per P1 ─────────────────────────────────────────
+        'montaggio':    _s('Montaggio (SUPERIORE/INFERIORE)', 'INFERIORE').upper(),
+    }
+
+
+def leggi_excel(percorso):
+    """
+    Legge il file Excel (.xlsx o .xlsm) e restituisce:
+      (cfg, componenti, cfg2, componenti2)
+    cfg2 e componenti2 sono None se non è configurata la seconda piastra.
+    """
+    # keep_vba=True necessario per file .xlsm (preserva le macro VBA)
+    keep_vba = percorso.lower().endswith('.xlsm')
+    wb = openpyxl.load_workbook(percorso, data_only=True, keep_vba=keep_vba)
+
+    # ── Configurazione P1 ─────────────────────────────────────────────────────
+    cfg = _leggi_cfg_sheet(wb['Configurazione'])
+
+    # ── Database Componenti ───────────────────────────────────────────────────
+    sheet_db = wb['Database_Componenti']
+    db = {}
+    for row in sheet_db.iter_rows(min_row=3, values_only=True):
+        if row[0] and row[2] is not None and row[3] is not None:
+            try:
+                db[str(row[0]).strip()] = {
+                    'desc': str(row[1]) if row[1] else '',
+                    'w':    float(row[2]),
+                    'h':    float(row[3]),
+                    'prof': float(row[4]) if row[4] is not None else 0.0,
+                }
+            except (ValueError, TypeError):
+                pass
+
+    # ── Helper: cerca profondità nel DB ───────────────────────────────────────
+    def _cerca_prof_in_db(codice):
+        cod_up = codice.upper()
+        # 1° match esatto
+        for prefix, dati in db.items():
+            if prefix.upper() == cod_up:
+                return dati.get('prof', 0.0)
+        # 2° prefisso più lungo
+        best_len, best_prof = 0, 0.0
+        for prefix, dati in db.items():
+            p_up = prefix.upper()
+            if cod_up.startswith(p_up) and len(p_up) > best_len:
+                best_len = len(p_up)
+                best_prof = dati.get('prof', 0.0)
+        return best_prof
+
+    # ── Helper: leggi un foglio Componenti ────────────────────────────────────
+    def _leggi_comp_sheet(sheet_comp):
+        componenti_raw = []
+        for row in sheet_comp.iter_rows(min_row=4, values_only=True):
+            if not row[0]:
+                continue
+            codice = str(row[0]).strip()
+
+            if not codice[0].isascii() or not codice[0].isalnum():
+                continue
+            if len(codice) < 2:
+                continue
+            _riservate = ('LEGENDA', 'VERDE', 'BLU', 'GIALLO', 'ARANCIO')
+            if any(codice.upper().startswith(p) for p in _riservate):
+                continue
+
+            desc   = str(row[1]).strip() if row[1] else ''
+            qty    = int(row[2]) if row[2] else 1
+            w_man  = float(row[3]) if row[3] is not None else None
+            h_man  = float(row[4]) if row[4] is not None else None
+            guida  = int(row[5]) if row[5] is not None else None
+            item   = str(row[6]).strip() if row[6] else ''
+            note   = str(row[7]).strip() if row[7] else ''
+
+            w, h, desc_db = w_man, h_man, desc
+            if w is None or h is None:
+                trovato = None
+                cod_up  = codice.upper()
+                for prefix, dati in db.items():
+                    if prefix.upper() == cod_up:
+                        trovato = dati
+                        break
+                if trovato is None:
+                    best_len = 0
+                    for prefix, dati in db.items():
+                        p_up = prefix.upper()
+                        if cod_up.startswith(p_up) and len(p_up) > best_len:
+                            trovato  = dati
+                            best_len = len(p_up)
+                if trovato:
+                    if w is None:   w = trovato['w']
+                    if h is None:   h = trovato['h']
+                    if not desc_db: desc_db = trovato['desc']
+
+            if w is None: w = 30.0
+            if h is None: h = 85.0
+
+            prof = _cerca_prof_in_db(codice)
+
+            for i in range(qty):
+                tag = f" ({i+1})" if qty > 1 else ""
+                componenti_raw.append({
+                    'codice': codice,
+                    'desc':   (desc_db or codice) + tag,
+                    'w': w, 'h': h,
+                    'prof': prof,
+                    'guida': guida,
+                    'item':  item,
+                    'note':  note,
+                })
+        return componenti_raw
+
+    componenti = _leggi_comp_sheet(wb['Componenti'])
+
+    # ── Seconda piastra (opzionale) ───────────────────────────────────────────
+    cfg2        = None
+    componenti2 = None
+
+    if cfg['due_piastre']:
+        # Configurazione P2
+        # NOTA: profondita e due_piastre vengono SEMPRE da Configurazione (P1),
+        # non da Configurazione_P2 — il foglio P2 non li contiene.
+        if 'Configurazione_P2' in wb.sheetnames:
+            cfg2 = _leggi_cfg_sheet(wb['Configurazione_P2'], fallback=cfg)
+        else:
+            # Fallback: stesse dimensioni di P1
+            cfg2 = dict(cfg)
+            cfg2['montaggio'] = 'INFERIORE'
+
+        # Forza sempre profondita e due_piastre da P1
+        cfg2['profondita']  = cfg['profondita']
+        cfg2['due_piastre'] = False   # inutilizzato per P2, ma evita confusione
+
+        if 'Componenti_P2' in wb.sheetnames:
+            componenti2 = _leggi_comp_sheet(wb['Componenti_P2'])
+        else:
+            componenti2 = []
+
+    return cfg, componenti, cfg2, componenti2
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  POSIZIONAMENTO AUTOMATICO
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def posiziona(cfg, componenti):
+    n    = cfg['n_guide']
+    spaZ = cfg['spaziatura']
+    off  = cfg['offset_prima']
+    marg = cfg['margine']
+    gap  = cfg['gap_comp']
+    W    = cfg['larghezza']
+
+    y_guide  = [off + i * spaZ for i in range(n)]
+    x_cur    = [marg] * n
+    piazzati = []
+    scartati = []
+
+    for comp in componenti:
+        g = comp['guida']
+        if g is not None:
+            g = max(1, min(n, g)) - 1
+        else:
+            g = None
+            for i in range(n):
+                if x_cur[i] + comp['w'] <= W - marg:
+                    g = i
+                    break
+
+        if g is None or x_cur[g] + comp['w'] > W - marg:
+            scartati.append(comp)
+            continue
+
+        y_centro = y_guide[g]
+        piazzati.append({
+            **comp,
+            'x':       x_cur[g],
+            'y':       y_centro - comp['h'] / 2,
+            'y_guida': y_centro,
+            'g_idx':   g,
+        })
+        x_cur[g] += comp['w'] + gap
+
+    return piazzati, scartati, y_guide
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  CONTROLLO PROFONDITÀ GUIDE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def controlla_profondita_guide(cfg, cfg2, piazzati1, piazzati2):
+    """
+    Per ogni coppia di guide affacciate verifica che la somma delle profondità
+    massime dei componenti di P1 e P2 non superi la profondità utile della
+    custodia.
+
+    Il campo 'montaggio' di cfg2 determina quali guide di P1 si fronteggiano
+    con quelle di P2:
+      INFERIORE — P2 è montata nella metà BASSA di P1:
+                  P2-G1 affronta P1-G1, P2-G2 affronta P1-G2, ecc.
+      SUPERIORE — P2 è montata nella metà ALTA di P1:
+                  P2-G1 affronta P1-G_ultima, P2-G2 affronta P1-G_(ultima-1), ecc.
+    """
+    profondita_custodia = cfg.get('profondita', 0.0)
+    if profondita_custodia <= 0:
+        return  # Profondità non configurata → skip
+
+    n1 = cfg['n_guide']
+    n2 = cfg2['n_guide']
+    montaggio = cfg2.get('montaggio', 'INFERIORE').upper()
+
+    # ── Profondità massima per guida ──────────────────────────────────────────
+    max_prof_p1 = [0.0] * n1
+    max_prof_p2 = [0.0] * n2
+
+    for comp in piazzati1:
+        g = comp.get('g_idx', -1)
+        if 0 <= g < n1:
+            max_prof_p1[g] = max(max_prof_p1[g], comp.get('prof', 0.0))
+
+    for comp in piazzati2:
+        g = comp.get('g_idx', -1)
+        if 0 <= g < n2:
+            max_prof_p2[g] = max(max_prof_p2[g], comp.get('prof', 0.0))
+
+    # ── Mapping guide P2 → P1 ────────────────────────────────────────────────
+    # INFERIORE: P2-G(k) affronta P1-G(k)   (guide basse di P1)
+    # SUPERIORE: P2-G(k) affronta P1-G(n1-n2+k)  (guide alte di P1)
+    coppie = []   # lista di (label_p1, g1_idx, label_p2, g2_idx)
+    if montaggio == 'SUPERIORE':
+        offset = max(0, n1 - n2)
+        for k in range(n2):
+            g1 = offset + k
+            if 0 <= g1 < n1:
+                coppie.append((f"G{g1+1}", g1, f"G{k+1}", k))
+    else:  # INFERIORE (default)
+        for k in range(n2):
+            g1 = k
+            if 0 <= g1 < n1:
+                coppie.append((f"G{g1+1}", g1, f"G{k+1}", k))
+
+    if not coppie:
+        return
+
+    # ── Verifica coppie ───────────────────────────────────────────────────────
+    print(f"   Verifica profondità guide [{montaggio}]  —  custodia: {profondita_custodia:.0f} mm")
+    avvisi = []
+    ok_lines = []
+
+    for lbl1, g1, lbl2, g2 in coppie:
+        d1 = max_prof_p1[g1]
+        d2 = max_prof_p2[g2]
+        if d1 == 0 and d2 == 0:
+            continue
+        totale = d1 + d2
+        if totale > profondita_custodia:
+            avvisi.append(
+                f"   ! P1-{lbl1} ({d1:.0f}mm) + P2-{lbl2} ({d2:.0f}mm)"
+                f" = {totale:.0f}mm  >  {profondita_custodia:.0f}mm  [SUPERATO]"
+            )
+        else:
+            ok_lines.append(
+                f"   ✓ P1-{lbl1} + P2-{lbl2} = {totale:.0f}/{profondita_custodia:.0f}mm"
+            )
+
+    for line in ok_lines:
+        print(line)
+
+    if avvisi:
+        print()
+        print("  ATTENZIONE - Profondità componenti supera la custodia:")
+        for a in avvisi:
+            print(a)
+        print()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PARSER DXF FORNITORI
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _leggi_gruppi(filepath):
+    """Legge un file DXF e restituisce lista di (codice_int, valore_str)."""
+    gruppi = []
+    try:
+        for enc in ('utf-8', 'latin-1', 'ascii'):
+            try:
+                with open(filepath, 'r', encoding=enc, errors='replace') as f:
+                    righe = f.readlines()
+                break
+            except Exception:
+                continue
+        i = 0
+        while i + 1 < len(righe):
+            codice = righe[i].strip()
+            valore = righe[i+1].strip()
+            try:
+                gruppi.append((int(codice), valore))
+            except ValueError:
+                pass
+            i += 2
+    except Exception as e:
+        print(f"   Attenzione: impossibile leggere {filepath}: {e}")
+    return gruppi
+
+
+def _parse_blocchi(gruppi):
+    """Estrae le definizioni di BLOCK dalla sezione BLOCKS come lista di dict."""
+    blocchi = {}
+    in_blocks = False
+    nome_blocco = None
+    gruppi_correnti = []
+    i = 0
+
+    while i < len(gruppi):
+        c, v = gruppi[i]
+        if c == 0 and v == 'SECTION':
+            if i+1 < len(gruppi) and gruppi[i+1][1] == 'BLOCKS':
+                in_blocks = True
+        elif c == 0 and v == 'ENDSEC' and in_blocks:
+            if nome_blocco and gruppi_correnti:
+                blocchi[nome_blocco] = _entita_da_gruppi(gruppi_correnti)
+            in_blocks = False
+            nome_blocco = None
+            gruppi_correnti = []
+        elif in_blocks:
+            if c == 0 and v == 'BLOCK':
+                if nome_blocco and gruppi_correnti:
+                    blocchi[nome_blocco] = _entita_da_gruppi(gruppi_correnti)
+                nome_blocco = None
+                gruppi_correnti = []
+            elif c == 2 and nome_blocco is None:
+                nome_blocco = v
+            elif c == 0 and v == 'ENDBLK':
+                if nome_blocco and gruppi_correnti:
+                    blocchi[nome_blocco] = _entita_da_gruppi(gruppi_correnti)
+                nome_blocco = None
+                gruppi_correnti = []
+            elif v not in ('BLOCK', 'ENDBLK', 'SECTION', 'ENDSEC'):
+                gruppi_correnti.append((c, v))
+        i += 1
+
+    return blocchi
+
+
+def _entita_da_gruppi(gruppi_raw):
+    """Converte una lista di (codice, valore) in lista di dict entità,
+    con POLYLINE/VERTEX già uniti."""
+    entita = []
+    tipo_corrente = None
+    dati_correnti = {}
+
+    for c, v in gruppi_raw:
+        if c == 0:
+            if tipo_corrente:
+                entita.append({'tipo': tipo_corrente, **dati_correnti})
+            tipo_corrente = v
+            dati_correnti = {}
+        else:
+            if c in dati_correnti:
+                if not isinstance(dati_correnti[c], list):
+                    dati_correnti[c] = [dati_correnti[c]]
+                dati_correnti[c].append(v)
+            else:
+                dati_correnti[c] = v
+
+    if tipo_corrente:
+        entita.append({'tipo': tipo_corrente, **dati_correnti})
+
+    return _merge_polylines(entita)
+
+
+def _merge_polylines(entita):
+    """
+    Post-processa la lista di entità:
+    - Raccoglie i VERTEX successivi a ogni POLYLINE e li salva in 'vertices'
+    - Rimuove le entità VERTEX e SEQEND dalla lista principale
+    """
+    out = []
+    i = 0
+    while i < len(entita):
+        ent = entita[i]
+        if ent.get('tipo') == 'POLYLINE':
+            vertices = []
+            j = i + 1
+            while j < len(entita):
+                t2 = entita[j].get('tipo')
+                if t2 == 'VERTEX':
+                    x = _primo(entita[j], 10, 0.0)
+                    y = _primo(entita[j], 20, 0.0)
+                    vertices.append((x, y))
+                    j += 1
+                elif t2 == 'SEQEND':
+                    j += 1
+                    break
+                else:
+                    break
+            ent = dict(ent)
+            ent['vertices'] = vertices
+            out.append(ent)
+            i = j
+        elif ent.get('tipo') in ('VERTEX', 'SEQEND'):
+            i += 1
+        else:
+            out.append(ent)
+            i += 1
+    return out
+
+
+def _estrai_entita(gruppi, sezione='ENTITIES'):
+    """Estrae le entità dalla sezione specificata come lista di dict,
+    con POLYLINE/VERTEX già uniti."""
+    gruppi_raw = []
+    in_sezione = False
+    i = 0
+
+    while i < len(gruppi):
+        c, v = gruppi[i]
+        if c == 0 and v == 'SECTION':
+            if i+1 < len(gruppi) and gruppi[i+1][1] == sezione:
+                in_sezione = True
+                i += 2
+                continue
+        elif c == 0 and v == 'ENDSEC' and in_sezione:
+            break
+        if in_sezione:
+            gruppi_raw.append((c, v))
+        i += 1
+
+    return _entita_da_gruppi(gruppi_raw)
+
+
+def _f(v, default=0.0):
+    """Converte stringa in float con fallback."""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def _primo(d, key, default=0.0):
+    """Prende il primo valore di una chiave che potrebbe essere lista."""
+    v = d.get(key, default)
+    if isinstance(v, list):
+        return _f(v[0], default)
+    return _f(v, default)
+
+
+def _secondo(d, key, default=0.0):
+    """Prende il secondo valore di una chiave lista."""
+    v = d.get(key, default)
+    if isinstance(v, list) and len(v) > 1:
+        return _f(v[1], default)
+    return _f(v, default)
+
+
+def calcola_bbox(punti):
+    """Bounding box da lista di (x, y)."""
+    if not punti:
+        return None
+    xs = [p[0] for p in punti]
+    ys = [p[1] for p in punti]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _punti_da_entita(ent, blocchi=None):
+    """Restituisce lista di (x,y) rappresentativi dell'entità, per la bbox."""
+    t = ent.get('tipo', '')
+    punti = []
+
+    if t == 'LINE':
+        punti += [(_primo(ent,10), _primo(ent,20)),
+                  (_primo(ent,11), _primo(ent,21))]
+
+    elif t == 'CIRCLE':
+        cx = _primo(ent,10); cy = _primo(ent,20); r = _primo(ent,40,1)
+        punti += [(cx-r,cy-r),(cx+r,cy+r)]
+
+    elif t == 'ARC':
+        cx = _primo(ent,10); cy = _primo(ent,20); r = _primo(ent,40,1)
+        punti += [(cx-r,cy-r),(cx+r,cy+r)]
+
+    elif t in ('LWPOLYLINE',):
+        xs = ent.get(10, [])
+        ys = ent.get(20, [])
+        if not isinstance(xs, list): xs = [xs]
+        if not isinstance(ys, list): ys = [ys]
+        punti += list(zip([_f(x) for x in xs], [_f(y) for y in ys]))
+
+    elif t == 'POLYLINE':
+        punti += list(ent.get('vertices', []))
+
+    elif t == 'SPLINE':
+        xs = ent.get(11, ent.get(10, []))
+        ys = ent.get(21, ent.get(20, []))
+        if not isinstance(xs, list): xs = [xs]
+        if not isinstance(ys, list): ys = [ys]
+        punti += list(zip([_f(x) for x in xs], [_f(y) for y in ys]))
+
+    elif t == 'INSERT' and blocchi:
+        bname = ent.get(2, '')
+        if bname in blocchi:
+            sx = _primo(ent,41,1.0); sy = _primo(ent,42,1.0)
+            tx = _primo(ent,10,0.0); ty = _primo(ent,20,0.0)
+            for e2 in blocchi[bname]:
+                for px, py in _punti_da_entita(e2, blocchi):
+                    punti.append((px*sx+tx, py*sy+ty))
+
+    return punti
+
+
+def leggi_insunits_dxf(filepath):
+    """
+    Legge $INSUNITS dall'header del file DXF.
+    Restituisce (fattore_scala_verso_mm, codice_unita, nome_unita).
+    """
+    TO_MM = {0: 1.0, 1: 25.4, 2: 304.8, 4: 1.0, 5: 10.0, 6: 1000.0}
+    NOMI  = {0: "unitless", 1: "pollici", 2: "piedi",
+             4: "mm", 5: "cm", 6: "m"}
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            header = f.read(8192)
+        m = re.search(r'\$INSUNITS\s*\n\s*70\s*\n\s*(\d+)', header)
+        if m:
+            code = int(m.group(1))
+            return TO_MM.get(code, 1.0), code, NOMI.get(code, f"code={code}")
+    except Exception:
+        pass
+    return 1.0, 0, "unitless"
+
+
+def _centro_entita(e, blocchi):
+    """Calcola il centro approssimato (cx, cy) di un'entità."""
+    pts = _punti_da_entita(e, blocchi)
+    if not pts:
+        return None, None
+    return (sum(p[0] for p in pts) / len(pts),
+            sum(p[1] for p in pts) / len(pts))
+
+
+def _trasforma_entita_geom(e, sx, sy, tx, ty, cos_a, sin_a):
+    """
+    Applica trasformazione geometrica (scala + rotazione + traslazione)
+    a una singola entità. Restituisce un nuovo dict con coordinate modificate.
+    """
+    ec = dict(e)
+    t  = ec.get('tipo', '')
+
+    def trasf(x, y):
+        xr = _f(x) * sx
+        yr = _f(y) * sy
+        return xr * cos_a - yr * sin_a + tx, xr * sin_a + yr * cos_a + ty
+
+    if t == 'LINE':
+        ec[10], ec[20] = trasf(ec.get(10, 0), ec.get(20, 0))
+        ec[11], ec[21] = trasf(ec.get(11, 0), ec.get(21, 0))
+    elif t in ('CIRCLE', 'ARC'):
+        ec[10], ec[20] = trasf(ec.get(10, 0), ec.get(20, 0))
+        if 40 in ec: ec[40] = _f(ec[40]) * sx
+    elif t == 'POLYLINE':
+        ec['vertices'] = [trasf(vx, vy) for vx, vy in ec.get('vertices', [])]
+    elif t == 'LWPOLYLINE':
+        xs = ec.get(10, [])
+        ys = ec.get(20, [])
+        if not isinstance(xs, list): xs = [xs]
+        if not isinstance(ys, list): ys = [ys]
+        pts_t = [trasf(_f(x), _f(y)) for x, y in zip(xs, ys)]
+        ec[10] = [p[0] for p in pts_t]
+        ec[20] = [p[1] for p in pts_t]
+    elif t in ('TEXT', 'MTEXT'):
+        ec[10], ec[20] = trasf(ec.get(10, 0), ec.get(20, 0))
+    return ec
+
+
+def _flatten_entita(entita, blocchi, sx=1.0, sy=1.0,
+                    tx=0.0, ty=0.0, ang=0.0, depth=0, max_depth=5):
+    """
+    Espande ricorsivamente tutti gli INSERT, restituendo una lista piatta
+    di entità primitive con coordinate già trasformate.
+    """
+    if depth > max_depth:
+        return []
+
+    cos_a = math.cos(math.radians(ang))
+    sin_a = math.sin(math.radians(ang))
+    result = []
+
+    for e in entita:
+        t = e.get('tipo', '')
+        if t == 'INSERT':
+            bname = e.get(2, '')
+            if bname not in blocchi:
+                continue
+            b_sx  = _primo(e, 41, 1.0)
+            b_sy  = _primo(e, 42, 1.0)
+            b_tx  = _primo(e, 10, 0.0)
+            b_ty  = _primo(e, 20, 0.0)
+            b_ang = _primo(e, 50, 0.0)
+            b_ca  = math.cos(math.radians(b_ang))
+            b_sa  = math.sin(math.radians(b_ang))
+            new_sx  = sx * b_sx
+            new_sy  = sy * b_sy
+            new_tx  = b_tx * sx * cos_a - b_ty * sy * sin_a + tx
+            new_ty  = b_tx * sx * sin_a + b_ty * sy * cos_a + ty
+            new_ang = ang + b_ang
+            result.extend(_flatten_entita(
+                blocchi[bname], blocchi,
+                new_sx, new_sy, new_tx, new_ty, new_ang,
+                depth + 1, max_depth
+            ))
+        else:
+            result.append(_trasforma_entita_geom(e, sx, sy, tx, ty, cos_a, sin_a))
+
+    return result
+
+
+def _estrai_vista_principale(entita, blocchi, nominal_w, nominal_h):
+    """
+    Per DXF multi-vista estrae solo la vista principale usando un algoritmo
+    sliding-window sulla densità delle entità.
+    """
+    if not entita:
+        return entita, None
+
+    tutti_punti = []
+    for e in entita:
+        tutti_punti.extend(_punti_da_entita(e, blocchi))
+    bbox_full = calcola_bbox(tutti_punti)
+    if not bbox_full:
+        return entita, None
+
+    x0, y0, x1, y1 = bbox_full
+    aw = x1 - x0
+    ah = y1 - y0
+
+    if aw <= nominal_w * 2.0 and ah <= nominal_h * 2.0:
+        return entita, bbox_full
+
+    n_insert = sum(1 for e in entita if e.get('tipo') == 'INSERT')
+    if n_insert > 0:
+        entita_lavoro = _flatten_entita(entita, blocchi)
+        usa_flat = True
+    else:
+        entita_lavoro = entita
+        usa_flat = False
+
+    if not entita_lavoro:
+        return entita, bbox_full
+
+    centri_y_tutti = []
+    for e in entita_lavoro:
+        _, cy_e = _centro_entita(e, blocchi if not usa_flat else {})
+        if cy_e is not None:
+            centri_y_tutti.append(cy_e)
+    if centri_y_tutti:
+        centri_y_tutti.sort()
+        mid_i  = len(centri_y_tutti) // 2
+        cy_mid = centri_y_tutti[mid_i]
+    else:
+        cy_mid = (y0 + y1) / 2
+    half_h = nominal_h * 1.5
+    entita_y = []
+    for e in entita_lavoro:
+        cx_e, cy_e = _centro_entita(e, blocchi if not usa_flat else {})
+        if cy_e is not None and (cy_mid - half_h) <= cy_e <= (cy_mid + half_h):
+            entita_y.append(e)
+    if not entita_y:
+        entita_y = entita_lavoro
+
+    pts_y = []
+    for e in entita_y:
+        pts_y.extend(_punti_da_entita(e, blocchi if not usa_flat else {}))
+    bb_y = calcola_bbox(pts_y)
+    if not bb_y:
+        return entita, bbox_full
+    x0b, y0b, x1b, y1b = bb_y
+    awb = x1b - x0b
+
+    win_w     = nominal_w * 1.5
+    n_steps   = 60
+    step_size = max((awb - win_w) / n_steps, 0.5)
+
+    centri_x = []
+    for e in entita_y:
+        cx_e, _ = _centro_entita(e, blocchi if not usa_flat else {})
+        centri_x.append(cx_e)
+
+    best_wx0 = x0b
+    best_cnt = 0
+    for i in range(n_steps + 1):
+        wx0 = x0b + i * step_size
+        wx1 = wx0 + win_w
+        cnt = sum(1 for cx in centri_x if cx is not None and wx0 <= cx <= wx1)
+        if cnt > best_cnt:
+            best_cnt = cnt
+            best_wx0 = wx0
+    best_wx1 = best_wx0 + win_w
+
+    entita_fin = []
+    for e, cx_e in zip(entita_y, centri_x):
+        if cx_e is not None and best_wx0 <= cx_e <= best_wx1:
+            entita_fin.append(e)
+    if not entita_fin:
+        entita_fin = entita_y
+
+    pts_fin = []
+    for e in entita_fin:
+        pts_fin.extend(_punti_da_entita(e, blocchi if not usa_flat else {}))
+    bbox_fin = calcola_bbox(pts_fin)
+
+    if bbox_fin:
+        wf = bbox_fin[2] - bbox_fin[0]
+        hf = bbox_fin[3] - bbox_fin[1]
+        if wf > nominal_w * 3.0 or hf > nominal_h * 3.0:
+            return entita, None
+
+    return entita_fin, (bbox_fin if bbox_fin else bbox_full)
+
+
+def carica_simbolo_dxf(filepath):
+    """
+    Carica un DXF fornitore e restituisce:
+      (entita, blocchi, bbox, scale_mm)
+    """
+    gruppi  = _leggi_gruppi(filepath)
+    blocchi = _parse_blocchi(gruppi)
+    entita  = _estrai_entita(gruppi, 'ENTITIES')
+
+    scale_mm, _, unit_nome = leggi_insunits_dxf(filepath)
+
+    if scale_mm != 1.0:
+        entita_conv = []
+        for e in entita:
+            ec = dict(e)
+            t  = ec.get('tipo', '')
+            if t == 'LINE':
+                for k in (10, 20, 11, 21, 30, 31):
+                    if k in ec: ec[k] = str(_f(ec[k]) * scale_mm)
+            elif t in ('CIRCLE', 'ARC'):
+                for k in (10, 20, 30):
+                    if k in ec: ec[k] = str(_f(ec[k]) * scale_mm)
+                if 40 in ec: ec[40] = str(_f(ec[40]) * scale_mm)
+            elif t == 'LWPOLYLINE':
+                for k in (10, 20):
+                    if k in ec:
+                        vs = ec[k] if isinstance(ec[k], list) else [ec[k]]
+                        ec[k] = [str(_f(v) * scale_mm) for v in vs]
+            elif t in ('TEXT', 'MTEXT'):
+                for k in (10, 20):
+                    if k in ec: ec[k] = str(_f(ec[k]) * scale_mm)
+                if 40 in ec: ec[40] = str(_f(ec[40]) * scale_mm)
+            entita_conv.append(ec)
+        entita = entita_conv
+
+    tutti_punti = []
+    for e in entita:
+        tutti_punti.extend(_punti_da_entita(e, blocchi))
+
+    bbox = calcola_bbox(tutti_punti)
+    return entita, blocchi, bbox, scale_mm
+
+
+def trova_simbolo(codice, cartella_simboli):
+    """
+    Cerca il file DXF corrispondente al codice (match esatto o prefisso).
+    """
+    if not os.path.isdir(cartella_simboli):
+        return None
+
+    for f in os.listdir(cartella_simboli):
+        nome, ext = os.path.splitext(f)
+        if ext.lower() == '.dxf' and nome.upper() == codice.upper():
+            return os.path.join(cartella_simboli, f)
+
+    for f in sorted(os.listdir(cartella_simboli), key=len, reverse=True):
+        nome, ext = os.path.splitext(f)
+        if ext.lower() == '.dxf' and codice.upper().startswith(nome.upper()):
+            return os.path.join(cartella_simboli, f)
+
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  WRITER DXF R12
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class DXFWriter:
+    def __init__(self):
+        self._L = []
+
+    def _p(self, *pairs):
+        for code, val in pairs:
+            self._L.append(str(code))
+            self._L.append(str(val))
+
+    def line(self, layer, x1, y1, x2, y2):
+        self._p(
+            ("  0","LINE"),("  8",layer),
+            (" 10",f"{x1:.4f}"),(" 20",f"{y1:.4f}"),(" 30","0.0"),
+            (" 11",f"{x2:.4f}"),(" 21",f"{y2:.4f}"),(" 31","0.0"),
+        )
+
+    def lwpolyline(self, layer, pts, closed=False):
+        """POLYLINE/VERTEX/SEQEND (DXF R12/AC1009): compatibile con tutti i CAD."""
+        if len(pts) < 2:
+            return
+        flag = 1 if closed else 0
+        self._p(
+            ("  0", "POLYLINE"),
+            ("  8", layer),
+            (" 66", "1"),
+            (" 70", str(flag)),
+        )
+        for x, y in pts:
+            self._p(
+                ("  0", "VERTEX"),
+                ("  8", layer),
+                (" 10", f"{x:.4f}"),
+                (" 20", f"{y:.4f}"),
+                (" 30", "0.0"),
+            )
+        self._p(("  0", "SEQEND"), ("  8", layer))
+
+    def circle(self, layer, cx, cy, r):
+        self._p(
+            ("  0","CIRCLE"),("  8",layer),
+            (" 10",f"{cx:.4f}"),(" 20",f"{cy:.4f}"),(" 30","0.0"),
+            (" 40",f"{r:.4f}"),
+        )
+
+    def arc(self, layer, cx, cy, r, ang_start, ang_end):
+        self._p(
+            ("  0","ARC"),("  8",layer),
+            (" 10",f"{cx:.4f}"),(" 20",f"{cy:.4f}"),(" 30","0.0"),
+            (" 40",f"{r:.4f}"),
+            (" 50",f"{ang_start:.4f}"),(" 51",f"{ang_end:.4f}"),
+        )
+
+    def rect(self, layer, x1, y1, x2, y2):
+        self.lwpolyline(layer, [(x1,y1),(x2,y1),(x2,y2),(x1,y2)], closed=True)
+
+    def text(self, layer, x, y, txt, h=3.5, halign=0):
+        if not txt:
+            return
+        txt = str(txt).replace('\n', ' ').strip()
+        if not txt:
+            return
+        if halign == 0:
+            self._p(
+                ("  0","TEXT"),("  8",layer),
+                (" 10",f"{x:.4f}"),(" 20",f"{y:.4f}"),(" 30","0.0"),
+                (" 40",f"{h:.4f}"),("  1",txt),
+            )
+        else:
+            self._p(
+                ("  0","TEXT"),("  8",layer),
+                (" 10", f"{x:.4f}"), (" 20", f"{y:.4f}"), (" 30", "0.0"),
+                (" 40", f"{h:.4f}"), ("  1", txt),
+                (" 72", str(halign)),
+                (" 11", f"{x:.4f}"), (" 21", f"{y:.4f}"), (" 31", "0.0"),
+            )
+
+    def text_center(self, layer, cx, cy, txt, h=3.5):
+        self.text(layer, cx, cy, txt, h=h, halign=1)
+
+    def quota_orizz(self, layer, x1, x2, y_dim, y_ref1=None, y_ref2=None,
+                    h_txt=3.0, off_ext=5):
+        arrow = 3.0
+        yr1 = y_ref1 if y_ref1 is not None else y_dim
+        yr2 = y_ref2 if y_ref2 is not None else y_dim
+        sign = 1 if y_dim >= yr1 else -1
+        self.line(layer, x1, yr1, x1, y_dim + off_ext * sign)
+        self.line(layer, x2, yr2, x2, y_dim + off_ext * sign)
+        self.line(layer, x1, y_dim, x2, y_dim)
+        self.line(layer, x1, y_dim, x1 + arrow, y_dim + 1)
+        self.line(layer, x1, y_dim, x1 + arrow, y_dim - 1)
+        self.line(layer, x2, y_dim, x2 - arrow, y_dim + 1)
+        self.line(layer, x2, y_dim, x2 - arrow, y_dim - 1)
+        self.text_center(layer, (x1+x2)/2, y_dim + 2, f"{abs(x2-x1):.0f}", h=h_txt)
+
+    def quota_vert(self, layer, y1, y2, x_dim, x_ref1=None, x_ref2=None,
+                   h_txt=3.0, off_ext=5):
+        arrow = 3.0
+        xr1 = x_ref1 if x_ref1 is not None else x_dim
+        xr2 = x_ref2 if x_ref2 is not None else x_dim
+        sign = 1 if x_dim >= xr1 else -1
+        self.line(layer, xr1, y1, x_dim + off_ext * sign, y1)
+        self.line(layer, xr2, y2, x_dim + off_ext * sign, y2)
+        self.line(layer, x_dim, y1, x_dim, y2)
+        self.line(layer, x_dim, y1, x_dim + 1, y1 + arrow)
+        self.line(layer, x_dim, y1, x_dim - 1, y1 + arrow)
+        self.line(layer, x_dim, y2, x_dim + 1, y2 - arrow)
+        self.line(layer, x_dim, y2, x_dim - 1, y2 - arrow)
+        self.text(layer, x_dim + 2, (y1+y2)/2, f"{abs(y2-y1):.0f}", h=h_txt)
+
+    # ── Incolla simbolo fornitore ──────────────────────────────────────────────
+
+    def incolla_simbolo(self, layer, entita, blocchi, bbox,
+                        dest_x, dest_y, dest_w, dest_h):
+        """
+        Posiziona il simbolo DXF fornitore alla sua dimensione reale (1:1),
+        senza alcuna scalatura. Il simbolo viene centrato nell'area destinazione.
+        """
+        if bbox is None:
+            return False
+
+        entita_uso, bbox_uso = _estrai_vista_principale(
+            entita, blocchi, dest_w, dest_h
+        )
+        if bbox_uso is None:
+            return False
+        blocchi_uso = blocchi
+
+        xmin, ymin, xmax, ymax = bbox_uso
+        src_w = xmax - xmin
+        src_h = ymax - ymin
+
+        if src_w < 0.001 or src_h < 0.001:
+            return False
+
+        tx = dest_x + (dest_w - src_w) / 2 - xmin
+        ty = dest_y + (dest_h - src_h) / 2 - ymin
+
+        def trasforma(x, y):
+            return x + tx, y + ty
+
+        blocchi_render = {} if any(
+            e.get('tipo') not in ('INSERT',) and isinstance(e.get(10, 0), (int, float))
+            for e in entita_uso[:1]
+        ) else blocchi
+        self._scrivi_entita(layer, entita_uso, blocchi_render, trasforma)
+
+        top_y_reale = ty + ymax
+        return True, top_y_reale
+
+    def _scrivi_entita(self, layer, entita, blocchi, trasforma):
+        """Scrive le entità applicando la trasformazione."""
+        for ent in entita:
+            t = ent.get('tipo', '')
+
+            if t == 'LINE':
+                x1, y1 = trasforma(_primo(ent,10), _primo(ent,20))
+                x2, y2 = trasforma(_primo(ent,11), _primo(ent,21))
+                self.line(layer, x1, y1, x2, y2)
+
+            elif t == 'CIRCLE':
+                cx, cy = trasforma(_primo(ent,10), _primo(ent,20))
+                r = _primo(ent,40,1)
+                self.circle(layer, cx, cy, r)
+
+            elif t == 'ARC':
+                cx, cy = trasforma(_primo(ent,10), _primo(ent,20))
+                r = _primo(ent,40,1)
+                ang_s = _primo(ent,50,0)
+                ang_e = _primo(ent,51,360)
+                self.arc(layer, cx, cy, r, ang_s, ang_e)
+
+            elif t == 'LWPOLYLINE':
+                xs = ent.get(10, [])
+                ys = ent.get(20, [])
+                if not isinstance(xs, list): xs = [xs]
+                if not isinstance(ys, list): ys = [ys]
+                pts = [trasforma(_f(x), _f(y)) for x, y in zip(xs, ys)]
+                flag = int(ent.get(70, 0))
+                self.lwpolyline(layer, pts, closed=bool(flag & 1))
+
+            elif t == 'POLYLINE':
+                vertices = ent.get('vertices', [])
+                if vertices:
+                    flag = int(ent.get(70, 0)) if not isinstance(ent.get(70,0), list) else int(ent[70][0])
+                    pts = [trasforma(x, y) for x, y in vertices]
+                    self.lwpolyline(layer, pts, closed=bool(flag & 1))
+
+            elif t == 'SPLINE':
+                xs = ent.get(11, ent.get(10, []))
+                ys = ent.get(21, ent.get(20, []))
+                if not isinstance(xs, list): xs = [xs]
+                if not isinstance(ys, list): ys = [ys]
+                pts = [trasforma(_f(x), _f(y)) for x, y in zip(xs, ys)]
+                self.lwpolyline(layer, pts, closed=False)
+
+            elif t == 'SOLID':
+                pts = []
+                for k10, k20 in [(10,20),(11,21),(12,22),(13,23)]:
+                    pts.append(trasforma(_primo(ent,k10), _primo(ent,k20)))
+                self.line(layer, pts[0][0],pts[0][1], pts[1][0],pts[1][1])
+                self.line(layer, pts[1][0],pts[1][1], pts[3][0],pts[3][1])
+                self.line(layer, pts[3][0],pts[3][1], pts[2][0],pts[2][1])
+                self.line(layer, pts[2][0],pts[2][1], pts[0][0],pts[0][1])
+
+            elif t == 'INSERT' and blocchi:
+                bname = ent.get(2, '')
+                if bname in blocchi:
+                    sx_b = _primo(ent,41,1.0); sy_b = _primo(ent,42,1.0)
+                    tx_b = _primo(ent,10,0.0); ty_b = _primo(ent,20,0.0)
+                    ang  = _primo(ent,50,0.0)
+                    cos_a = math.cos(math.radians(ang))
+                    sin_a = math.sin(math.radians(ang))
+
+                    def trasforma_block(x, y,
+                                        _sx=sx_b, _sy=sy_b,
+                                        _tx=tx_b, _ty=ty_b,
+                                        _ca=cos_a, _sa=sin_a,
+                                        _tf=trasforma):
+                        xr = x * _sx * _ca - y * _sy * _sa + _tx
+                        yr = x * _sx * _sa + y * _sy * _ca + _ty
+                        return _tf(xr, yr)
+
+                    self._scrivi_entita(layer, blocchi[bname], blocchi, trasforma_block)
+
+    def build(self, layers):
+        L = []
+        # ── HEADER (AC1009 = DXF R12, aperto da tutti i CAD) ─────────────────
+        L += ["  0","SECTION","  2","HEADER",
+              "  9","$ACADVER","  1","AC1009",
+              "  9","$INSBASE"," 10","0.0"," 20","0.0"," 30","0.0",
+              "  9","$EXTMIN"," 10","-300.0"," 20","-300.0"," 30","0.0",
+              "  9","$EXTMAX"," 10","3000.0"," 20","2000.0"," 30","0.0",
+              "  9","$LUNITS"," 70","4",
+              "  9","$LIMMIN"," 10","0.0"," 20","0.0",
+              "  9","$LIMMAX"," 10","3000.0"," 20","2000.0",
+              "  0","ENDSEC"]
+
+        # ── TABLES: solo LAYER (sufficiente per AC1009) ───────────────────────
+        L += ["  0","SECTION","  2","TABLES",
+              "  0","TABLE","  2","LAYER"," 70",str(len(layers))]
+        for lay in layers:
+            L += ["  0","LAYER",
+                  "  2", lay['name'],
+                  " 70","0",
+                  " 62", str(lay['color']),
+                  "  6","Continuous"]
+        L += ["  0","ENDTAB","  0","ENDSEC"]
+
+        # ── ENTITIES ──────────────────────────────────────────────────────────
+        L += ["  0","SECTION","  2","ENTITIES"]
+        L += self._L
+        L += ["  0","ENDSEC"]
+
+        L += ["  0","EOF"]
+        return "\n".join(L)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DISEGNO PIASTRA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+DIN_H    = 7.5
+CART_H   = 35
+CART_SEP = 10
+
+DM_GAP   = 30    # distanza orizzontale tra piastra e tabella
+DM_R_POS = 12    # larghezza colonna Pos.
+DM_R_COD = 48    # larghezza colonna Codice
+DM_R_DSC = 68    # larghezza colonna Descrizione
+DM_R_QTA = 14    # larghezza colonna Q.tà
+DM_ROW_H = 8.0   # altezza riga standard
+DM_HDR_H = 10.0  # altezza riga intestazione
+BALL_R   = 4.0   # raggio pallino numerazione
+
+GAP_TRA_PIASTRE = 60  # mm tra la distinta P1 e il bordo P2
+
+
+def _assegna_numeri(piazzati):
+    """
+    Assegna un numero di posizione (POS) a ogni componente.
+    Componenti con lo stesso codice base condividono lo stesso numero.
+    """
+    codice_to_pos = {}
+    pos_counter = 1
+    for comp in piazzati:
+        codice_base = comp['codice']
+        if codice_base not in codice_to_pos:
+            codice_to_pos[codice_base] = pos_counter
+            pos_counter += 1
+        comp['pos'] = codice_to_pos[codice_base]
+
+    distinta_dict = {}
+    for comp in piazzati:
+        cb = comp['codice']
+        if cb not in distinta_dict:
+            desc_base = comp['desc']
+            desc_base = re.sub(r'\s*\(\d+\)\s*$', '', desc_base).strip()
+            distinta_dict[cb] = {
+                'pos':    comp['pos'],
+                'codice': cb,
+                'desc':   desc_base,
+                'qty':    1,
+                'note':   comp.get('note', ''),
+            }
+        else:
+            distinta_dict[cb]['qty'] += 1
+
+    distinta = sorted(distinta_dict.values(), key=lambda x: x['pos'])
+    return piazzati, distinta
+
+
+def disegna_piastra(dxf, cfg, piazzati, scartati, y_guide,
+                    cartella_simboli, cache_simboli,
+                    ox=0.0, oy=0.0, label=''):
+    """
+    Disegna una singola piastra nel DXFWriter dato, con offset (ox, oy).
+
+    Parametri:
+      dxf             — DXFWriter condiviso
+      cfg             — dict configurazione piastra
+      piazzati        — componenti posizionati (già con g_idx)
+      scartati        — componenti non posizionati
+      y_guide         — posizioni Y delle guide (relative alla piastra)
+      cartella_simboli— cartella DXF fornitori
+      cache_simboli   — dict condiviso {filepath: (entita, blocchi, bbox, scale)}
+      ox, oy          — offset X, Y in mm per questa piastra nel DXF
+      label           — etichetta piastra ('PIASTRA 1', 'PIASTRA 2', o '')
+
+    Restituisce:
+      (dm_x_fine, distinta)
+      dm_x_fine — coordinata X di fine della distinta (per posizionare la P2)
+      distinta  — lista voci distinta materiali
+    """
+    W    = cfg['larghezza']
+    H    = cfg['altezza']
+    marg = cfg['margine']
+
+    # ── Assegna numeri di posizione ───────────────────────────────────────────
+    piazzati, distinta = _assegna_numeri(piazzati)
+
+    # ── Label piastra (sopra la piastra) ──────────────────────────────────────
+    if label:
+        dxf.text_center('TESTI', ox + W/2, oy + H + 8, label, h=5.0)
+
+    # ── Bordo piastra e margine ───────────────────────────────────────────────
+    dxf.rect('PIASTRA', ox, oy, ox + W, oy + H)
+    dxf.rect('MARGINE', ox + marg, oy + marg, ox + W - marg, oy + H - marg)
+
+    # ── Guide DIN ─────────────────────────────────────────────────────────────
+    for i, yg in enumerate(y_guide):
+        x1_g  = ox + marg
+        x2_g  = ox + W - marg
+        yg_a  = oy + yg   # coordinata Y assoluta della guida
+        dxf.rect('GUIDE_DIN', x1_g, yg_a - DIN_H/2, x2_g, yg_a + DIN_H/2)
+        dxf.line('GUIDE_DIN', x1_g, yg_a, x2_g, yg_a)
+        dxf.text('TESTI', x2_g + 3, yg_a - 2, f"G{i+1}", h=3.5)
+
+    # ── Montaggio label (sotto la piastra, solo per P2) ───────────────────────
+    montaggio = cfg.get('montaggio', '').strip()
+    if montaggio and label:
+        dxf.text_center('TESTI', ox + W/2, oy - 8,
+                        f"Montaggio: {montaggio}", h=3.0)
+
+    # ── Componenti ────────────────────────────────────────────────────────────
+    usati_simbolo    = 0
+    usati_rettangolo = 0
+
+    for comp in piazzati:
+        x1 = ox + comp['x']
+        y1 = oy + comp['y']
+        x2 = x1 + comp['w']
+        y2 = y1 + comp['h']
+        cx = (x1 + x2) / 2
+        pos = comp['pos']
+
+        # Simbolo fornitore
+        simbolo_inserito = False
+        simbolo_top_y    = y2
+        percorso_sim = trova_simbolo(comp['codice'], cartella_simboli)
+
+        if percorso_sim:
+            if percorso_sim not in cache_simboli:
+                cache_simboli[percorso_sim] = carica_simbolo_dxf(percorso_sim)
+            entita, blocchi, bbox, scale_mm = cache_simboli[percorso_sim]
+            risultato = dxf.incolla_simbolo(
+                'SIMBOLI', entita, blocchi, bbox,
+                x1, y1, comp['w'], comp['h']
+            )
+            if risultato is not False:
+                simbolo_inserito = True
+                simbolo_top_y    = risultato[1]
+
+        if simbolo_inserito:
+            usati_simbolo += 1
+        else:
+            usati_rettangolo += 1
+            dxf.rect('COMPONENTI', x1, y1, x2, y2)
+            dxf.line('COMPONENTI', x1, oy + comp['y_guida'], x2, oy + comp['y_guida'])
+            dxf.text_center('TESTI', cx, oy + comp['y_guida'] + 2.5,
+                            comp['codice'][:14], h=2.5)
+            dxf.text_center('TESTI', cx, oy + comp['y_guida'] - 6.0,
+                            comp['desc'][:18], h=2.0)
+
+        # ── Testo ITEM sopra il componente ────────────────────────────────────
+        item_val = comp.get('item', '').strip()
+        if item_val:
+            y_item = max(y2, simbolo_top_y) + 2.0
+            dxf.text_center('ITEM', cx, y_item, item_val, h=3.0)
+
+        # ── Pallino di numerazione ────────────────────────────────────────────
+        bx = x2 - BALL_R * 0.6
+        by = y2 - BALL_R * 0.6
+        dxf.circle('DISTINTA', bx, by, BALL_R)
+        dxf.text_center('DISTINTA', bx, by - BALL_R * 0.35,
+                        str(pos), h=BALL_R * 0.9)
+
+    tag_lbl = f" [{label}]" if label else ""
+    print(f"   Simboli fornitore{tag_lbl}: {usati_simbolo}  |  Rettangoli: {usati_rettangolo}")
+
+    # ── Quotature ─────────────────────────────────────────────────────────────
+    dxf.quota_orizz('QUOTE', ox, ox+W, oy+H+20,
+                    y_ref1=oy+H, y_ref2=oy+H, off_ext=5)
+    dxf.quota_vert ('QUOTE', oy, oy+H, ox+W+20,
+                    x_ref1=ox+W, x_ref2=ox+W, off_ext=5)
+    dxf.quota_orizz('QUOTE', ox, ox+marg, oy-15,
+                    y_ref1=oy, y_ref2=oy, h_txt=2.5, off_ext=4)
+    if len(y_guide) >= 2:
+        dxf.quota_vert('QUOTE', oy+y_guide[0], oy+y_guide[1], ox-30,
+                       x_ref1=ox+marg, x_ref2=ox+marg, h_txt=2.5, off_ext=4)
+
+    # ── Distinta Materiali ────────────────────────────────────────────────────
+    dm_cw  = [DM_R_POS, DM_R_COD, DM_R_DSC, DM_R_QTA]
+    dm_W   = sum(dm_cw)
+    dm_x   = ox + W + DM_GAP
+
+    # Titolo
+    y_cur = oy + H
+    titolo_dm = f"DISTINTA {label}" if label else "DISTINTA MATERIALI"
+    dxf.rect('DISTINTA', dm_x, y_cur, dm_x + dm_W, y_cur + DM_HDR_H + 2)
+    dxf.text_center('DISTINTA', dm_x + dm_W/2, y_cur + 3, titolo_dm, h=4.5)
+    y_cur -= DM_HDR_H
+
+    # Intestazione
+    dxf.rect('DISTINTA', dm_x, y_cur, dm_x + dm_W, y_cur + DM_HDR_H)
+    hdr_labels = ["POS.", "CODICE ARTICOLO", "DESCRIZIONE", "Q.TA'"]
+    xc = dm_x
+    for i, (lbl, cw) in enumerate(zip(hdr_labels, dm_cw)):
+        if i > 0:
+            dxf.line('DISTINTA', xc, y_cur, xc, y_cur + DM_HDR_H)
+        dxf.text_center('DISTINTA', xc + cw/2, y_cur + 2.5, lbl, h=3.0)
+        xc += cw
+    y_cur -= DM_ROW_H
+
+    # Righe dati
+    for row in distinta:
+        dxf.rect('DISTINTA', dm_x, y_cur, dm_x + dm_W, y_cur + DM_ROW_H)
+        xc = dm_x
+        values = [
+            str(row['pos']),
+            row['codice'][:20],
+            row['desc'][:32],
+            str(row['qty']),
+        ]
+        for i, (val, cw) in enumerate(zip(values, dm_cw)):
+            if i > 0:
+                dxf.line('DISTINTA', xc, y_cur, xc, y_cur + DM_ROW_H)
+            if i in (0, 3):
+                dxf.text_center('DISTINTA', xc + cw/2, y_cur + 1.8, val, h=3.0)
+            else:
+                dxf.text('DISTINTA', xc + 1.5, y_cur + 1.8, val, h=3.0)
+            xc += cw
+        y_cur -= DM_ROW_H
+
+    # Bordo esterno distinta
+    dxf.rect('DISTINTA', dm_x, y_cur, dm_x + dm_W, oy + H + DM_HDR_H + 2)
+
+    print(f"   Distinta{tag_lbl}: {len(distinta)} voci, "
+          f"{sum(r['qty'] for r in distinta)} componenti totali")
+
+    # ── Componenti NON posizionati ────────────────────────────────────────────
+    if scartati:
+        print(f"\n  ATTENZIONE{tag_lbl} - Componenti NON posizionati (spazio insufficiente):")
+        for c in scartati:
+            item_info = f"  →  ITEM: {c['item']}" if c.get('item', '').strip() else ''
+            print(f"   x  {c['codice']}{item_info}  ({c['w']:.1f} mm)")
+        print("   Aumenta la larghezza della piastra o riduci i componenti.\n")
+
+    dm_x_fine = dm_x + dm_W
+    return dm_x_fine, distinta
+
+
+def disegna_tutto(cfg,  piazzati,  scartati,  y_guide,  cartella_simboli,
+                  cfg2=None, piazzati2=None, scartati2=None, y_guide2=None):
+    """
+    Disegna 1 o 2 piastre in un unico DXF e restituisce il contenuto testuale.
+    """
+    dxf = DXFWriter()
+
+    layers = [
+        {'name': 'PIASTRA',    'color': 7},
+        {'name': 'MARGINE',    'color': 8},
+        {'name': 'GUIDE_DIN',  'color': 5},
+        {'name': 'COMPONENTI', 'color': 3},
+        {'name': 'SIMBOLI',    'color': 6},
+        {'name': 'TESTI',      'color': 2},
+        {'name': 'DISTINTA',   'color': 4},
+        {'name': 'QUOTE',      'color': 1},
+        {'name': 'CARTIGLIO',  'color': 4},
+        {'name': 'ITEM',       'color': 7},   # bianco
+    ]
+
+    # Cache simboli condivisa tra le due piastre
+    cache_simboli = {}
+
+    due_piastre = cfg2 is not None
+    label1 = 'PIASTRA 1' if due_piastre else ''
+
+    # ── Piastra 1 ─────────────────────────────────────────────────────────────
+    dm_x_fine1, _ = disegna_piastra(
+        dxf, cfg, piazzati, scartati, y_guide,
+        cartella_simboli, cache_simboli,
+        ox=0.0, oy=0.0, label=label1
+    )
+
+    # ── Piastra 2 (se presente) ───────────────────────────────────────────────
+    dm_x_fine2 = dm_x_fine1
+    if due_piastre:
+        ox2 = dm_x_fine1 + GAP_TRA_PIASTRE
+        dm_x_fine2, _ = disegna_piastra(
+            dxf, cfg2, piazzati2 or [], scartati2 or [], y_guide2 or [],
+            cartella_simboli, cache_simboli,
+            ox=ox2, oy=0.0, label='PIASTRA 2'
+        )
+
+    # ── Cartiglio (copre tutta la larghezza) ──────────────────────────────────
+    cart_W = dm_x_fine2
+    yc_b = -CART_SEP - CART_H
+    yc_t = -CART_SEP
+    dxf.rect('CARTIGLIO', 0, yc_b, cart_W, yc_t)
+    cx1 = cart_W * 0.30; cx2 = cart_W * 0.50
+    cx3 = cart_W * 0.65; cx4 = cart_W * 0.80
+    yc_m = yc_b + CART_H / 2
+    for cxx in [cx1, cx2, cx3, cx4]:
+        dxf.line('CARTIGLIO', cxx, yc_b, cxx, yc_t)
+    dxf.line('CARTIGLIO', 0, yc_m, cart_W, yc_m)
+    for lbl_txt, xo in [("QUADRO:", 2), ("REVISIONE:", cx1+2),
+                         ("DATA:", cx2+2), ("SCALA:", cx3+2), ("FOGLIO:", cx4+2)]:
+        dxf.text('CARTIGLIO', xo, yc_m + 2, lbl_txt, h=2.5)
+    data_oggi = datetime.now().strftime("%d/%m/%Y")
+    foglio    = "1 / 1" if not due_piastre else "1 / 1  (2 piastre)"
+    dxf.text('CARTIGLIO', 2,      yc_b+4, cfg['nome_quadro'], h=5.0)
+    dxf.text('CARTIGLIO', cx1+2,  yc_b+4, cfg['revisione'],   h=5.0)
+    dxf.text('CARTIGLIO', cx2+2,  yc_b+4, data_oggi,          h=4.0)
+    dxf.text('CARTIGLIO', cx3+2,  yc_b+4, "1:1",              h=5.0)
+    dxf.text('CARTIGLIO', cx4+2,  yc_b+4, foglio,             h=4.0)
+
+    return dxf.build(layers)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def main():
+    # __file__ non è disponibile in Pyodide — fallback su cwd
+    try:
+        _script_dir_main = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        _script_dir_main = os.getcwd()
+
+    if len(sys.argv) >= 2:
+        excel_path = sys.argv[1]
+    else:
+        folder = _script_dir_main
+        # Cerca solo .xlsx, preferendo piastra_quadro.xlsx
+        files = sorted(
+            [f for f in os.listdir(folder)
+             if f.endswith('.xlsx')
+             and not f.startswith('~')],
+            key=lambda f: (
+                0 if f == 'piastra_quadro.xlsx' else 1,
+                -os.path.getmtime(os.path.join(folder, f))
+            )
+        )
+        if not files:
+            print("Errore: nessun file .xlsx trovato nella cartella dello script.")
+            print("Uso:    python3 genera_dxf.py <file.xlsx>")
+            sys.exit(1)
+        excel_path = os.path.join(folder, files[0])
+        print(f"Excel trovato automaticamente: {files[0]}")
+
+    if not os.path.exists(excel_path):
+        print(f"Errore: file non trovato -> {excel_path}")
+        sys.exit(1)
+
+    script_dir       = _script_dir_main
+    cartella_simboli = os.path.join(script_dir, "simboli")
+
+    if os.path.isdir(cartella_simboli):
+        n_sim = len([f for f in os.listdir(cartella_simboli)
+                     if f.lower().endswith('.dxf')])
+        print(f"Cartella simboli trovata: {n_sim} DXF disponibili")
+    else:
+        print("Cartella 'simboli/' non trovata -> uso rettangoli per tutti i componenti")
+
+    print(f"Lettura: {os.path.basename(excel_path)}")
+    cfg, componenti, cfg2, componenti2 = leggi_excel(excel_path)
+
+    print(f"   Piastra 1: {cfg['larghezza']} x {cfg['altezza']} mm")
+    print(f"   Guide DIN: {cfg['n_guide']}  |  Componenti totali: {len(componenti)}")
+    if cfg.get('profondita', 0) > 0:
+        print(f"   Profondità custodia: {cfg['profondita']:.0f} mm")
+
+    piazzati, scartati, y_guide = posiziona(cfg, componenti)
+    print(f"   Posizionati: {len(piazzati)}  |  Non posizionati: {len(scartati)}")
+
+    # ── Seconda piastra (se abilitata) ───────────────────────────────────────
+    piazzati2 = scartati2 = y_guide2 = None
+
+    if cfg2 is not None:
+        print(f"\n   Piastra 2: {cfg2['larghezza']} x {cfg2['altezza']} mm"
+              f"  |  Montaggio: {cfg2.get('montaggio','')}")
+        print(f"   Guide DIN P2: {cfg2['n_guide']}  |  Componenti P2: {len(componenti2 or [])}")
+        piazzati2, scartati2, y_guide2 = posiziona(cfg2, componenti2 or [])
+        print(f"   Posizionati P2: {len(piazzati2)}  |  Non posizionati P2: {len(scartati2)}")
+
+        # Verifica profondità guide (tiene conto del montaggio SUPERIORE/INFERIORE)
+        controlla_profondita_guide(cfg, cfg2, piazzati, piazzati2)
+
+    # ── Genera DXF ──────────────────────────────────────────────────────────
+    dxf_content = disegna_tutto(
+        cfg,  piazzati,  scartati,  y_guide,  cartella_simboli,
+        cfg2, piazzati2, scartati2, y_guide2
+    )
+
+    base = os.path.splitext(excel_path)[0]
+    out_path = base + ".dxf"
+    try:
+        with open(out_path, 'w', encoding='ascii', errors='replace') as f:
+            f.write(dxf_content)
+    except OSError:
+        nome = os.path.splitext(os.path.basename(excel_path))[0]
+        out_path = os.path.join(script_dir, nome + ".dxf")
+        with open(out_path, 'w', encoding='ascii', errors='replace') as f:
+            f.write(dxf_content)
+
+    print(f"\nDXF generato: {out_path}")
+    print(f"Aprilo con AutoCAD, LibreCAD, QCAD o DraftSight.")
+
+    # ── Generazione 3D opzionale ──────────────────────────────────────────────
+    # Se genera_3d.py è presente nella stessa cartella, viene eseguito
+    # automaticamente dopo il DXF. Se cadquery non è installato, lo script
+    # avvisa senza bloccare la generazione del DXF.
+    _g3d_path = os.path.join(script_dir, "genera_3d.py")
+    if os.path.exists(_g3d_path):
+        try:
+            import importlib.util as _ilu
+            _spec = _ilu.spec_from_file_location("genera_3d", _g3d_path)
+            _mod  = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_mod)
+            print()
+            _mod.main(excel_path)
+        except SystemExit:
+            pass   # genera_3d.py ha chiamato sys.exit() → ignora
+        except Exception as _e:
+            _msg = str(_e).lower()
+            if 'cadquery' in _msg or 'no module named' in _msg:
+                print("\nInfo 3D: installa cadquery per generare anche il modello 3D.")
+                print("         pip3 install cadquery")
+            else:
+                print(f"\nAttenzione (generazione 3D): {_e}")
+
+
+if __name__ == "__main__" and sys.platform != 'emscripten':
+    main()
+
+</script>
+<script id="piastra_wrapper_src" type="text/plain">
+import json as _json, sys as _sys, os as _os, io as _io
+
+def _run_piastra(xlsx_bytes_js, sim_map_js):
+    old_out = _sys.stdout
+    log_buf = _io.StringIO()
+    _sys.stdout = log_buf
+    try:
+        xlsx_bytes = bytes(xlsx_bytes_js)
+        sim_map = {}
+        try:
+            for k, v in sim_map_js.items():
+                sim_map[k] = bytes(v)
+        except Exception:
+            pass
+        tmpdir = '/tmp/_piastra'
+        _os.makedirs(tmpdir, exist_ok=True)
+        xlsx_path = tmpdir + '/piastra.xlsx'
+        with open(xlsx_path, 'wb') as f:
+            f.write(xlsx_bytes)
+        sim_dir = tmpdir + '/SIMBOLI'
+        _os.makedirs(sim_dir, exist_ok=True)
+        for fname, fbytes in sim_map.items():
+            with open(sim_dir + '/' + fname, 'wb') as f:
+                f.write(fbytes)
+        cfg, componenti, cfg2, componenti2 = leggi_excel(xlsx_path)
+        piazzati, scartati, y_guide = posiziona(cfg, componenti)
+        p2 = s2 = g2 = None
+        if cfg2 is not None:
+            p2, s2, g2 = posiziona(cfg2, componenti2 or [])
+        dxf_text = disegna_tutto(cfg, piazzati, scartati, y_guide, sim_dir,
+                                  cfg2, p2, s2, g2)
+        def cdict(c):
+            return {
+                'x': float(c['x']), 'y': float(c['y']),
+                'w': float(c['w']), 'h': float(c['h']),
+                'codice': c['codice'],
+                'prof': float(c.get('prof') or 60.0),
+            }
+        piastre = [{
+            'W': float(cfg['larghezza']), 'H': float(cfg['altezza']),
+            'guide': [float(y) for y in y_guide],
+            'componenti': [cdict(c) for c in piazzati],
+            'label': 'PIASTRA 1' if cfg2 else '',
+        }]
+        if cfg2 is not None:
+            piastre.append({
+                'W': float(cfg2['larghezza']), 'H': float(cfg2['altezza']),
+                'guide': [float(y) for y in (g2 or [])],
+                'componenti': [cdict(c) for c in (p2 or [])],
+                'label': 'PIASTRA 2',
+            })
+        obj_text, mtl_text = _genera_obj(piastre)
+        log_str = log_buf.getvalue()
+        _sys.stdout = old_out
+        return _json.dumps({'ok': True, 'dxf': dxf_text, 'obj': obj_text, 'mtl': mtl_text, 'layout': piastre, 'log': log_str})
+    except Exception as _e:
+        import traceback as _tb
+        log_str = log_buf.getvalue()
+        _sys.stdout = old_out
+        return _json.dumps({'ok': False, 'dxf': None, 'obj': None, 'layout': None,
+            'log': log_str + '\nERRORE:\n' + _tb.format_exc()})
+
+
+def _genera_obj(piastre):
+    """Genera OBJ + MTL con colori diversi per ogni componente.
+    Apribile con: Windows 3D Viewer, Blender, FreeCAD, MeshLab, ecc.
+    Restituisce (obj_text, mtl_text).
+    """
+    # Palette colori (RGB 0-1) — stessa usata nell'anteprima browser
+    PAL_RGB = [
+        (1.00, 0.28, 0.34), (0.18, 0.84, 0.45), (0.12, 0.56, 1.00),
+        (1.00, 0.65, 0.01), (0.64, 0.61, 1.00), (0.00, 0.82, 0.83),
+        (1.00, 0.42, 0.51), (0.48, 0.93, 0.62), (0.44, 0.63, 1.00),
+        (0.93, 0.80, 0.41), (1.00, 0.39, 0.28), (0.15, 0.87, 0.51),
+        (0.27, 0.67, 0.95), (0.97, 0.72, 0.19), (0.82, 0.80, 0.89),
+        (0.99, 0.59, 0.27), (0.06, 0.73, 0.69), (0.99, 0.36, 0.40),
+        (0.27, 0.67, 0.95), (0.53, 0.33, 0.82),
+    ]
+
+    mtl_lines = ['# Materiali piastra quadro', '']
+    # Materiale piastra metallica
+    mtl_lines += ['newmtl mat_piastra', 'Kd 0.540 0.584 0.627', 'Ka 0.1 0.1 0.1', 'Ks 0.3 0.3 0.3', 'Ns 20', '']
+    # Materiale guida DIN
+    mtl_lines += ['newmtl mat_guida', 'Kd 0.133 0.333 0.800', 'Ka 0.05 0.05 0.1', 'Ks 0.4 0.4 0.4', 'Ns 60', '']
+    # Materiali componenti
+    for i, (r, g, b) in enumerate(PAL_RGB):
+        mtl_lines += [f'newmtl mat_comp_{i}', f'Kd {r:.3f} {g:.3f} {b:.3f}',
+                      'Ka 0.05 0.05 0.05', 'Ks 0.2 0.2 0.2', 'Ns 50', '']
+
+    obj_lines = ['# Piastra quadro elettrico — generato da PIASTRA', '# Unità: mm',
+                 'mtllib piastra_3d.mtl', '']
+    vi = 1
+    GAP = 80.0
+
+    def box(x0, y0, z0, w, h, d, name, mat):
+        nonlocal vi
+        obj_lines.append(f'o {name}')
+        obj_lines.append(f'usemtl {mat}')
+        verts = [
+            (x0,     y0,     z0),     (x0+w, y0,     z0),
+            (x0+w,   y0+h,   z0),     (x0,   y0+h,   z0),
+            (x0,     y0,     z0+d),   (x0+w, y0,     z0+d),
+            (x0+w,   y0+h,   z0+d),   (x0,   y0+h,   z0+d),
+        ]
+        for vx, vy, vz in verts:
+            obj_lines.append(f'v {vx:.3f} {vy:.3f} {vz:.3f}')
+        b = vi
+        obj_lines.append(f'f {b} {b+3} {b+2} {b+1}')
+        obj_lines.append(f'f {b+4} {b+5} {b+6} {b+7}')
+        obj_lines.append(f'f {b} {b+1} {b+5} {b+4}')
+        obj_lines.append(f'f {b+2} {b+3} {b+7} {b+6}')
+        obj_lines.append(f'f {b} {b+4} {b+7} {b+3}')
+        obj_lines.append(f'f {b+1} {b+2} {b+6} {b+5}')
+        obj_lines.append('')
+        vi += 8
+
+    ox = 0.0
+    ci = 0
+    for pi, p in enumerate(piastre):
+        lbl = (p.get('label') or f'piastra_{pi+1}').replace(' ', '_')
+        W, H = p['W'], p['H']
+        box(ox, 0, -3, W, H, 3, f'{lbl}_piastra', 'mat_piastra')
+        for gi, yg in enumerate(p.get('guide', [])):
+            box(ox + W*0.05, yg - 3.75, 0, W*0.9, 7.5, 2, f'{lbl}_guida_{gi+1}', 'mat_guida')
+        for c in p.get('componenti', []):
+            prof = max(float(c.get('prof') or 60.0), 18.0)
+            cod  = c.get('codice', f'comp_{ci}').replace(' ', '_')
+            mat  = f'mat_comp_{ci % len(PAL_RGB)}'
+            box(ox + c['x'], c['y'], 0, c['w'], c['h'], prof, f'{lbl}_{cod}_{ci}', mat)
+            ci += 1
+        ox += W + GAP
+
+    return '\n'.join(obj_lines), '\n'.join(mtl_lines)
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ── Carica occt-import-js via fetch+blob (compatibile con file://) ─────── */
+(async function loadOCCT() {
+  // 0.0.30 dà 404 sul CDN — usa 0.0.16 (confermato funzionante)
+  const VERSIONS = ['0.0.16', '0.0.30'];
+
+  for (const ver of VERSIONS) {
+    const BASE = `https://cdn.jsdelivr.net/npm/occt-import-js@${ver}/dist/`;
+    const OPTS = { locateFile: f => BASE + f };
+    // Reset stato precedente prima di ogni tentativo
+    delete window._occtFactory;
+    delete window._occtWrapErr;
+
+    try {
+      // 1) Scarica il sorgente JS dal CDN (fetch funziona anche da file://)
+      const resp = await fetch(BASE + 'occt-import-js.js');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const jsText = await resp.text();
+
+      // 2) Avvolgiamo il codice iniettando module/exports/require fittizi
+      //    così intercettiamo l'export CJS senza usare import() ESM
+      const wrapper = `(function(){
+  var _mod = { exports: {} };
+  var _require = function(){ return {}; };
+  try {
+    (function(module, exports, require){ ${jsText} })(_mod, _mod.exports, _require);
+  } catch(err) {
+    window._occtWrapErr = err.message;
+  }
+  // Il factory può essere in exports direttamente o in exports.default
+  var f = _mod.exports;
+  if (typeof f === 'function')         { window._occtFactory = f; return; }
+  if (f && typeof f.default==='function') { window._occtFactory = f.default; return; }
+  // Ultima spiaggia: cerca nomi globali noti
+  ['occtimportjs','occt_import_js','OcctImportJs','occtImportJs'].forEach(function(n){
+    if (!window._occtFactory && typeof window[n]==='function') window._occtFactory = window[n];
+  });
+})();`;
+
+      // 3) Crea Blob URL (same-origin → nessuna restrizione)
+      const blob   = new Blob([wrapper], { type: 'text/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      await new Promise((ok, fail) => {
+        const s = document.createElement('script');
+        s.src    = blobUrl;
+        s.onload = ok;
+        s.onerror = () => fail(new Error('script-load-error'));
+        document.head.appendChild(s);
+      });
+      URL.revokeObjectURL(blobUrl);
+
+      if (window._occtWrapErr) console.warn(`OCCT v${ver} wrap err:`, window._occtWrapErr);
+
+      if (typeof window._occtFactory === 'function') {
+        window._occtInitFn = () => window._occtFactory(OPTS);
+        console.log(`✅ occt-import-js@${ver} caricato (fetch+blob)`);
+        return; // successo — esci dal loop
+      }
+      console.warn(`OCCT v${ver}: factory non trovato dopo blob`);
+    } catch(e) {
+      console.warn(`OCCT v${ver} fallito:`, e.message);
+    }
+  }
+
+  // Tutti i tentativi falliti
+  console.warn('⚠️ occt-import-js non disponibile — file .stp non supportati');
+  window._occtInitFn = null;
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+
+<script>
+
+const $_ = id => document.getElementById(id);
+const drop      = $_('drop');
+const fileInput = $_('fileInput');
+const fileRow   = $_('fileRow');
+const fileNameEl= $_('fileName');
+const clearBtn  = $_('clearBtn');
+const tplBtn    = $_('tplBtn');
+const simZipIn   = $_('simZipIn');
+const simOk      = $_('simOk');
+const obj3dZipIn = $_('obj3dZipIn');
+const obj3dOk    = $_('obj3dOk');
+const opts      = $_('opts');
+const cb3d      = $_('cb3d');
+const genBtn    = $_('genBtn');
+const btnLbl    = $_('btnLbl');
+const spin      = $_('spin');
+const logEl     = $_('log');
+const resultEl  = $_('result');
+const resultDet = $_('resultDet');
+const dlBtn     = $_('dlBtn');
+const errBox    = $_('errBox');
+
+/* ── Template Excel incorporato (base64) ─────────────────────────────────── */
+const TEMPLATE_B64 = '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';
+
+// Decodifica base64 → Uint8Array (non usa atob per sicurezza su caratteri estesi)
+function _b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+tplBtn.addEventListener('click', () => {
+  const bytes = _b64ToBytes(TEMPLATE_B64);
+  const blob  = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url   = URL.createObjectURL(blob);
+  const a     = Object.assign(document.createElement('a'), { href: url, download: 'PIASTRA_template.xlsx' });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+let selFile    = null;
+let simFiles   = null;
+let obj3dFiles = {};   // { 'CODICE': { type:'obj'|'step', data: string|Uint8Array } }
+let lastBlob   = null;
+let lastName   = 'piastra_output.zip';
+let pyodide    = null;
+let occt       = null;   // istanza occt-import-js (caricata lazy al primo file STEP)
+
+/* ── Pyodide init ─────────────────────────────────────────────────────────── */
+async function initPyodide() {
+  const setBar = (pct, msg) => {
+    $_('py-bar').style.width = pct + '%';
+    if (msg) $_('py-msg').textContent = msg;
+  };
+  try {
+    setBar(8, 'Caricamento Pyodide (WebAssembly)…');
+    pyodide = await loadPyodide({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/'
+    });
+    setBar(40, 'Caricamento micropip…');
+    await pyodide.loadPackage('micropip');
+    setBar(60, 'Installazione openpyxl…');
+    const micropip = pyodide.pyimport('micropip');
+    await micropip.install('openpyxl');
+    setBar(84, 'Caricamento moduli PIASTRA…');
+    pyodide.runPython($_('genera_dxf_src').textContent);
+    pyodide.runPython($_('piastra_wrapper_src').textContent);
+    setBar(100, 'Pronto! ✓');
+    await new Promise(r => setTimeout(r, 350));
+    $_('pyodide-loading').style.display = 'none';
+    $_('main-wrap').style.display = 'block';
+  } catch(e) {
+    $_('py-msg').textContent = 'Errore: ' + e.message;
+    $_('py-msg').style.color = '#f76c6c';
+    console.error(e);
+  }
+}
+
+/* ── Drag & drop ──────────────────────────────────────────────────────────── */
+drop.addEventListener('click',     () => fileInput.click());
+drop.addEventListener('dragover',  e  => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('over');
+  const f = e.dataTransfer.files[0]; if(f) pickFile(f);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) pickFile(fileInput.files[0]);
+});
+clearBtn.addEventListener('click', () => {
+  selFile = null; fileInput.value = '';
+  fileRow.classList.remove('show');
+  opts.style.display = 'none';
+  hideOutput(); updateBtn();
+});
+
+/* ── Modelli 3D — lettura da cartella (OBJ + STEP) ───────────────────────── */
+obj3dZipIn.addEventListener('change', async () => {
+  const isModel = f => /\.(obj|stp|step|mtl)$/i.test(f.name);
+  const files = Array.from(obj3dZipIn.files).filter(isModel);
+  if (!files.length) {
+    obj3dOk.textContent = '⚠️ Nessun file .obj / .stp / .step / .mtl trovato nella cartella';
+    obj3dOk.style.display = 'block'; return;
+  }
+  obj3dOk.textContent = '⏳ Lettura ' + files.length + ' file…'; obj3dOk.style.display = 'block';
+
+  const hasStep = files.some(f => /\.(stp|step)$/i.test(f.name));
+  // Se ci sono file STEP e occt non è ancora pronto, aspetta che si carichi
+  if (hasStep && !occt) {
+    obj3dOk.textContent = '⏳ Attesa motore STEP (OpenCASCADE)…';
+    // Aspetta max 15 secondi che il caricamento all'avvio finisca
+    for (let i = 0; i < 30 && !occt; i++) await new Promise(r => setTimeout(r, 500));
+    if (!occt && window._occtInitFn) {
+      // Ultimo tentativo diretto
+      try {
+        occt = await window._occtInitFn();
+      } catch(e) {
+        obj3dOk.textContent = '✗ Motore STEP non disponibile: ' + e.message;
+      }
+    }
+  }
+  if (hasStep && !occt) {
+    obj3dOk.textContent = '✗ Impossibile caricare il motore STEP. I file .stp verranno ignorati.';
+  }
+
+  try {
+    obj3dFiles = {};
+    const mtlMap = {};  // { 'nomefile.mtl': 'testo mtl' }
+    // Prima passata: carica tutti i file
+    await Promise.all(files.map(async f => {
+      const ext  = f.name.split('.').pop().toLowerCase();
+      const code = f.name.replace(/\.(obj|stp|step|mtl)$/i, '').trim();
+      if (ext === 'mtl') {
+        mtlMap[f.name] = await f.text();
+      } else if (ext === 'obj') {
+        obj3dFiles[code] = { type: 'obj', data: await f.text(), mtl: null };
+      } else {
+        obj3dFiles[code] = { type: 'step', data: new Uint8Array(await f.arrayBuffer()), mtl: null };
+      }
+    }));
+    // Seconda passata: collega mtl agli obj con lo stesso nome base
+    for (const [code, entry] of Object.entries(obj3dFiles)) {
+      if (entry.type === 'obj') {
+        // Cerca riferimento mtllib nel testo OBJ
+        const m = entry.data.match(/^mtllib\s+(.+)$/mi);
+        if (m) {
+          const mtlName = m[1].trim();
+          if (mtlMap[mtlName]) entry.mtl = mtlMap[mtlName];
+        }
+        // Fallback: mtl con stesso nome base
+        if (!entry.mtl && mtlMap[code + '.mtl']) entry.mtl = mtlMap[code + '.mtl'];
+      }
+    }
+    const n    = Object.keys(obj3dFiles).length;
+    const nStp = Object.values(obj3dFiles).filter(v => v.type === 'step').length;
+    const nObj = n - nStp;
+    const nMtl = Object.values(obj3dFiles).filter(v => v.mtl).length;
+    let msg = '✓ ' + n + ' modelli caricati';
+    if (nStp) msg += ' (' + nStp + ' STEP, ' + nObj + ' OBJ';
+    if (nMtl) msg += ', ' + nMtl + ' con MTL';
+    if (nStp) msg += ')';
+    msg += ': ' + Object.keys(obj3dFiles).join(', ');
+    obj3dOk.textContent = msg;
+  } catch(e) {
+    obj3dOk.textContent = '✗ Errore lettura: ' + e.message; obj3dFiles = {};
+  }
+});
+
+/* ── Simboli DXF — lettura da cartella ───────────────────────────────────── */
+simZipIn.addEventListener('change', async () => {
+  const files = Array.from(simZipIn.files).filter(f => f.name.toLowerCase().endsWith('.dxf'));
+  if (!files.length) {
+    simOk.textContent = '⚠️ Nessun file .dxf trovato nella cartella';
+    simOk.style.display = 'block'; return;
+  }
+  simOk.textContent = '⏳ Lettura ' + files.length + ' simboli…'; simOk.style.display = 'block';
+  try {
+    simFiles = {};
+    await Promise.all(files.map(async f => {
+      const buf = await f.arrayBuffer();
+      simFiles[f.name] = new Uint8Array(buf);
+    }));
+    simOk.textContent = '✓ ' + Object.keys(simFiles).length + ' simboli DXF caricati: '
+      + Object.keys(simFiles).join(', ');
+  } catch(e) {
+    simOk.textContent = '✗ Errore lettura: ' + e.message; simFiles = null;
+  }
+});
+
+function pickFile(f) {
+  if (!f.name.match(/\.xlsx?$|\.xlsm$/i)) { showErr('Carica un file .xlsx o .xlsm'); return; }
+  selFile = f; fileNameEl.textContent = f.name;
+  fileRow.classList.add('show'); opts.style.display = 'block';
+  hideOutput(); updateBtn();
+}
+function updateBtn() {
+  genBtn.disabled = !selFile;
+  btnLbl.textContent = selFile ? '⚡ Genera DXF' : '⚡ Genera';
+}
+
+/* ── Generate ─────────────────────────────────────────────────────────────── */
+genBtn.addEventListener('click', async () => {
+  if (!selFile) return;
+  setLoading(true); hideOutput();
+  logEl.textContent = '⏳ Lettura Excel…\n'; logEl.classList.add('show');
+  try {
+    const ab     = await readFileBytes(selFile);
+    const xlU8   = new Uint8Array(ab);
+
+    // Pass Excel bytes and simboli map to Python globals
+    pyodide.globals.set('_xl_bytes', xlU8);
+    // Build JS plain object with Uint8Array values, then convert to Python
+    const simRaw = simFiles ? Object.assign({}, simFiles) : {};
+    pyodide.globals.set('_sim_map', pyodide.toPy(simRaw));
+
+    logEl.textContent += '⚙️  Pyodide in esecuzione…\n';
+    const jsonStr = await pyodide.runPythonAsync('_run_piastra(_xl_bytes, _sim_map)');
+    const res     = JSON.parse(jsonStr);
+
+    logEl.textContent = res.log || '✓ Completato';
+
+    if (!res.ok) { showErr('Errore:\n\n' + res.log); setLoading(false); return; }
+
+    // Pack DXF + OBJ into ZIP
+    logEl.textContent += '\n📦 Creazione archivio ZIP…';
+    const base = selFile.name.replace(/\.xlsx?$|\.xlsm$/i, '');
+    const zip  = new JSZip();
+    zip.file(base + '.dxf', res.dxf);
+    // Se ci sono modelli 3D fornitori caricati, sostituisce l'OBJ base con uno che usa i modelli reali
+    let objText = res.obj, mtlText = res.mtl, objMsg = '✅ File 3D (.obj + .mtl) incluso nello ZIP';
+    if (Object.keys(obj3dFiles).length > 0 && res.layout) {
+      try {
+        const [eObj, eMtl] = buildEnhancedOBJ(res.layout);
+        if (eObj) {
+          objText = eObj; mtlText = eMtl;
+          objMsg = '✅ File 3D con modelli fornitori (.obj) incluso nello ZIP';
+        }
+      } catch(e) { console.warn('buildEnhancedOBJ:', e); }
+    }
+    if (objText) {
+      zip.file(base + '_3d.obj', objText);
+      if (mtlText) zip.file('piastra_3d.mtl', mtlText);
+      logEl.textContent += '\n' + objMsg;
+    }
+    // DXF 3D con entità 3DFACE — importabile in qualsiasi versione AutoCAD
+    if (res.layout) {
+      try {
+        const dxf3d = buildDXF3D(res.layout);
+        if (dxf3d) {
+          zip.file(base + '_3d.dxf', dxf3d);
+          logEl.textContent += '\n✅ File DXF 3D incluso nello ZIP (importabile in AutoCAD)';
+        }
+      } catch(e) { console.warn('buildDXF3D:', e); }
+    }
+    lastBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    lastName  = base + '_output.zip';
+
+    const nSim = simFiles ? Object.keys(simFiles).length : 0;
+    resultDet.textContent = nSim > 0
+      ? 'con ' + nSim + ' simboli DXF fornitore'
+      : 'senza simboli (rettangoli standard)';
+    resultEl.classList.add('show');
+
+    // Log diagnostico modelli 3D
+    if (Object.keys(obj3dFiles).length > 0 && res.layout) {
+      // Confronta sia con chiave esatta sia con chiave normalizzata (/ → _)
+      const _normD = s => (s||'').trim().toUpperCase().replace(/[\/\\:*?"<>|]/g,'_').replace(/\s+/g,' ');
+      const disponibili = Object.keys(obj3dFiles).flatMap(k => [k.trim().toUpperCase(), _normD(k)]);
+      const codiciPiastra = res.layout.flatMap(p => (p.componenti || []).map(c => (c.codice||'').trim().toUpperCase()));
+      const trovati   = codiciPiastra.filter(c => disponibili.includes(c) || disponibili.includes(_normD(c)));
+      const nonTrovati = [...new Set(codiciPiastra.filter(c => !disponibili.includes(c) && !disponibili.includes(_normD(c))))];
+      logEl.textContent += '\n🔍 Modelli 3D: ' + trovati.length + '/' + codiciPiastra.length + ' corrispondenti';
+      if (trovati.length > 0)   logEl.textContent += '\n   ✓ ' + [...new Set(trovati)].join(', ');
+      if (nonTrovati.length > 0) logEl.textContent += '\n   ✗ senza modello: ' + nonTrovati.slice(0,10).join(', ');
+    }
+
+    // 3D — aspetta il prossimo frame così il browser calcola le dimensioni del canvas
+    if (cb3d.checked) {
+      if (!res.layout || res.layout.length === 0) {
+        logEl.textContent += '\n⚠️  Layout 3D non disponibile.';
+      } else {
+        try {
+          render3D(res.layout);
+        } catch(e3) {
+          console.error('3D err', e3);
+          logEl.textContent += '\n⚠️  Errore anteprima 3D: ' + e3.message;
+        }
+      }
+    } else {
+      logEl.textContent += '\n(Anteprima 3D disabilitata dalle opzioni)';
+    }
+  } catch(e) {
+    showErr('Errore JS: ' + e.message); console.error(e);
+  }
+  setLoading(false);
+});
+
+/* ── Download ─────────────────────────────────────────────────────────────── */
+dlBtn.addEventListener('click', () => {
+  if (!lastBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(lastBlob); a.download = lastName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(a.href);
+});
+
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
+function readFileBytes(f) {
+  return new Promise((res,rej) => {
+    const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej;
+    r.readAsArrayBuffer(f);
+  });
+}
+
+/* ── Normalizza codice per confronto con nomi file ────────────────────────── */
+function normCode(s) {
+  return (s||'').trim().toUpperCase()
+    .replace(/[\/\\:*?"<>|]/g, '_')   // caratteri vietati nei nomi file → _
+    .replace(/\s+/g, ' ');
+}
+
+/* ── Genera DXF 3D con entità 3DFACE (importabile in qualsiasi AutoCAD) ────── */
+function buildDXF3D(piastre) {
+  if (!piastre || !piastre.length) return null;
+
+  const ln = [];            // righe DXF
+  const L  = v => ln.push(String(v));
+
+  // Helper: scrive un gruppo DXF (codice + valore su righe separate, codice a 3 cifre)
+  const G = (code, val) => { L(String(code).padStart(3)); L(String(val)); };
+
+  // Header minimo R12
+  G(0,'SECTION'); G(2,'HEADER');
+  G(9,'$ACADVER'); G(1,'AC1009');
+  G(9,'$INSUNITS'); G(70,4);  // 4 = mm
+  G(0,'ENDSEC');
+
+  // ENTITIES
+  G(0,'SECTION'); G(2,'ENTITIES');
+
+  // Helper: scrive un triangolo come 3DFACE
+  // v1,v2,v3 = [x,y,z]; il quarto vertice replica il terzo (triangolo)
+  const face = (v1,v2,v3,layer,color) => {
+    G(0,'3DFACE'); G(8,layer); if(color!=null) G(62,color);
+    G(10,v1[0].toFixed(3)); G(20,v1[1].toFixed(3)); G(30,v1[2].toFixed(3));
+    G(11,v2[0].toFixed(3)); G(21,v2[1].toFixed(3)); G(31,v2[2].toFixed(3));
+    G(12,v3[0].toFixed(3)); G(22,v3[1].toFixed(3)); G(32,v3[2].toFixed(3));
+    G(13,v3[0].toFixed(3)); G(23,v3[1].toFixed(3)); G(33,v3[2].toFixed(3));
+    G(70,0);
+  };
+
+  // Helper: scrive un box (parallelepipedo) come 12 triangoli
+  const box = (x,y,z,w,h,d,layer,color) => {
+    const v = [
+      [x,y,z],[x+w,y,z],[x+w,y+h,z],[x,y+h,z],
+      [x,y,z+d],[x+w,y,z+d],[x+w,y+h,z+d],[x,y+h,z+d],
+    ];
+    // Bottom(z), Top(z+d), Front(y), Back(y+h), Left(x), Right(x+w)
+    face(v[0],v[2],v[1],layer,color); face(v[0],v[3],v[2],layer,color);
+    face(v[4],v[5],v[6],layer,color); face(v[4],v[6],v[7],layer,color);
+    face(v[0],v[1],v[5],layer,color); face(v[0],v[5],v[4],layer,color);
+    face(v[3],v[6],v[2],layer,color); face(v[3],v[7],v[6],layer,color);
+    face(v[0],v[7],v[3],layer,color); face(v[0],v[4],v[7],layer,color);
+    face(v[1],v[2],v[6],layer,color); face(v[1],v[6],v[5],layer,color);
+  };
+
+  // Palette ACI (AutoCAD Color Index)
+  const PAL_ACI = [1,3,30,4,6,50,60,140,200,14,20,40,70,90,110,130,150,170,190,210];
+
+  // Mappa codici → entry 3D
+  const obj3dMap = {};
+  for (const [k,v] of Object.entries(obj3dFiles)) {
+    const e = k.trim().toUpperCase(); const n = normCode(k);
+    obj3dMap[e] = v; if(n!==e) obj3dMap[n]=v;
+  }
+
+  const GAP = 80;
+  let ox = 0, ci = 0;
+
+  for (const p of piastre) {
+    const W = p.W, H = p.H;
+
+    // Piastra backing (grigio scuro ACI 8)
+    box(ox, 0, -3, W, H, 3, 'PIASTRA', 8);
+
+    // Guide DIN (blu ACI 5)
+    for (const yg of (p.guide||[]))
+      box(ox + W*0.05, yg-3.75, 0, W*0.9, 7.5, 2, 'DIN_RAIL', 5);
+
+    // Componenti
+    for (const c of (p.componenti||[])) {
+      const prof     = Math.max(c.prof||60, 18);
+      const aciColor = PAL_ACI[ci % PAL_ACI.length];
+      // Nome layer: max 31 char, solo caratteri sicuri per DXF
+      const layer = ('C_' + (c.codice||'comp').replace(/[^a-zA-Z0-9_-]/g,'_'))
+                      .substring(0,31);
+      const code     = (c.codice||'').trim().toUpperCase();
+      const codeNorm = normCode(c.codice);
+      const entry    = obj3dMap[code] || obj3dMap[codeNorm] || null;
+      let written    = false;
+
+      if (entry) {
+        let rawTris = null;
+        try {
+          if (entry.type==='obj')              rawTris = objToTris(entry.data, entry.mtl||null, '#cccccc');
+          else if (entry.type==='step' && occt) rawTris = stepToTris(entry.data.slice(), '#cccccc');
+        } catch(e) {}
+
+        if (rawTris && rawTris.length) {
+          const faceColor = (entry.type==='step') ? 9 : aciColor;   // STP → ACI 9 (grigio chiaro)
+          const scaled = scaleTris(rawTris, c.w, c.h, prof, ox+c.x, c.y, 0);
+          for (const t of scaled) {
+            if (t.v && t.v.length===3 &&
+                t.v.every(v => v && isFinite(v[0]) && isFinite(v[1]) && isFinite(v[2])))
+              face(t.v[0], t.v[1], t.v[2], layer, faceColor);
+          }
+          written = true;
+        }
+      }
+
+      if (!written) box(ox+c.x, c.y, 0, c.w, c.h, prof, layer, aciColor);
+      ci++;
+    }
+
+    ox += W + GAP;
+  }
+
+  G(0,'ENDSEC');
+  G(0,'EOF');
+  return ln.join('\n');
+}
+
+/* ── Genera OBJ + MTL con modelli reali fornitori (se disponibili) ────────── */
+function buildEnhancedOBJ(piastre) {
+  if (!piastre || !piastre.length) return [null, null];
+
+  // ── Build triCache dai file fornitori caricati ─────────────────────────────
+  const obj3dMap = {};
+  for (const [k,v] of Object.entries(obj3dFiles)) {
+    const exact = k.trim().toUpperCase();
+    const norm  = normCode(k);
+    obj3dMap[exact] = v;
+    if (norm !== exact) obj3dMap[norm] = v;
+  }
+  const triCache = {};
+  const _seen = new Set();
+  for (const [code, entry] of Object.entries(obj3dMap)) {
+    if (_seen.has(entry)) {
+      const prev = Object.keys(triCache).find(k => obj3dMap[k] === entry);
+      triCache[code] = prev ? triCache[prev] : null;
+      continue;
+    }
+    _seen.add(entry);
+    try {
+      let raw = null;
+      if (entry.type === 'obj')       raw = objToTris(entry.data, entry.mtl||null, '#cccccc');
+      else if (entry.type === 'step') {
+        if (!occt) { console.warn('buildEnhancedOBJ: occt non caricato per', code); }
+        // .slice() crea una copia: evita che OCCT consumi il buffer originale
+        raw = stepToTris(entry.data.slice(), '#cccccc');
+        if (!raw || !raw.length) console.warn('buildEnhancedOBJ: stepToTris vuoto per', code);
+      }
+      if (raw && raw.length) {
+        const valid = raw.filter(t => t.v && t.v.length===3 && t.v.every(v => v && isFinite(v[0]) && isFinite(v[1]) && isFinite(v[2])));
+        triCache[code] = valid.length ? valid : null;
+        if (!valid.length) console.warn('buildEnhancedOBJ: tutti i triangoli non validi per', code);
+      } else { triCache[code] = null; }
+    } catch(e) { triCache[code] = null; console.warn('buildEnhancedOBJ errore per', code, e); }
+  }
+
+  // ── Helpers colori ─────────────────────────────────────────────────────────
+  const colorMap = {};
+  let matIdx = 0;
+  const getMat = c => { if (!colorMap[c]) colorMap[c] = 'mat_'+matIdx++; return colorMap[c]; };
+  function hexToRgb(s) {
+    s = (s||'').trim();
+    if (s.startsWith('#')) { const c=parseInt(s.slice(1),16); return [(c>>16&255)/255,(c>>8&255)/255,(c&255)/255]; }
+    const m = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    return m ? [+m[1]/255,+m[2]/255,+m[3]/255] : [0.5,0.5,0.5];
+  }
+
+  const PAL2D = ['#ff4757','#2ed573','#1e90ff','#ffa502','#a29bfe','#00d2d3',
+    '#ff6b81','#7bed9f','#70a1ff','#eccc68','#ff6348','#26de81','#45aaf2',
+    '#f7b731','#d1cce3','#fd9644','#0fb9b1','#fc5c65','#45aaf2','#8854d0'];
+
+  const objLines = ['# Piastra quadro elettrico — modelli 3D fornitori', '# Unità: mm', 'mtllib piastra_3d.mtl', ''];
+  let vi = 1;
+  const GAP = 80;
+  let ox = 0, ci = 0;
+
+  function writeBox(x,y,z,w,h,d,name,col) {
+    objLines.push('o '+name, 'usemtl '+getMat(col));
+    const vs=[[x,y,z],[x+w,y,z],[x+w,y+h,z],[x,y+h,z],[x,y,z+d],[x+w,y,z+d],[x+w,y+h,z+d],[x,y+h,z+d]];
+    vs.forEach(([vx,vy,vz]) => objLines.push(`v ${vx.toFixed(3)} ${vy.toFixed(3)} ${vz.toFixed(3)}`));
+    const b=vi;
+    objLines.push(`f ${b} ${b+3} ${b+2} ${b+1}`,`f ${b+4} ${b+5} ${b+6} ${b+7}`,
+      `f ${b} ${b+1} ${b+5} ${b+4}`,`f ${b+2} ${b+3} ${b+7} ${b+6}`,
+      `f ${b} ${b+4} ${b+7} ${b+3}`,`f ${b+1} ${b+2} ${b+6} ${b+5}`,'');
+    vi += 8;
+  }
+
+  function writeMesh(tris, name) {
+    // Raggruppa per colore per ridurre i cambi di materiale
+    const grp = {};
+    for (const t of tris) { if (!grp[t.color]) grp[t.color]=[]; grp[t.color].push(t); }
+    objLines.push('o '+name);
+    for (const [col, ts] of Object.entries(grp)) {
+      objLines.push('usemtl '+getMat(col));
+      for (const t of ts) {
+        for (const [vx,vy,vz] of t.v) objLines.push(`v ${vx.toFixed(3)} ${vy.toFixed(3)} ${vz.toFixed(3)}`);
+        objLines.push(`f ${vi} ${vi+1} ${vi+2}`);
+        vi += 3;
+      }
+    }
+    objLines.push('');
+  }
+
+  for (const p of piastre) {
+    const lbl = (p.label||'piastra').replace(/\s+/g,'_');
+    const W=p.W, H=p.H;
+    writeBox(ox, 0, -3, W, H, 3, lbl+'_piastra', '#8a95a0');
+    (p.guide||[]).forEach((yg,gi) => writeBox(ox+W*0.05, yg-3.75, 0, W*0.9, 7.5, 2, lbl+'_guida_'+(gi+1), '#2255cc'));
+    for (const c of (p.componenti||[])) {
+      const prof = Math.max(c.prof||60, 18);
+      const color = PAL2D[ci % PAL2D.length];
+      const rawTris = triCache[(c.codice||'').trim().toUpperCase()] || triCache[normCode(c.codice)] || null;
+      const safeName = lbl+'_'+(c.codice||'comp').replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+ci;
+      if (rawTris && rawTris.length) {
+        // Modello reale: scala nel sistema di coordinate OBJ (non centrato, come Python)
+        // STP → grigio chiaro; OBJ → usa colori materiale o palette
+        const codeKey = (c.codice||'').trim().toUpperCase();
+        const srcEntry = obj3dMap[codeKey] || obj3dMap[normCode(c.codice)] || null;
+        const colored = (srcEntry && srcEntry.type === 'step')
+          ? rawTris.map(t => ({...t, color: '#d0d0d0'}))
+          : rawTris.map(t => ({...t, color: t.color==='#cccccc' ? color : t.color}));
+        writeMesh(scaleTris(colored, c.w, c.h, prof, ox+c.x, c.y, 0), safeName);
+      } else {
+        writeBox(ox+c.x, c.y, 0, c.w, c.h, prof, safeName, color);
+      }
+      ci++;
+    }
+    ox += W + GAP;
+  }
+
+  // ── MTL ────────────────────────────────────────────────────────────────────
+  const mtlLines = ['# Materiali piastra quadro', ''];
+  for (const [col, name] of Object.entries(colorMap)) {
+    const [r,g,b] = hexToRgb(col);
+    mtlLines.push(`newmtl ${name}`, `Kd ${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)}`,
+      'Ka 0.05 0.05 0.05','Ks 0.2 0.2 0.2','Ns 50','');
+  }
+  return [objLines.join('\n'), mtlLines.join('\n')];
+}
+
+function setLoading(on) {
+  genBtn.disabled = on; spin.style.display = on ? 'block' : 'none';
+  btnLbl.textContent = on ? 'Generazione in corso…' : (selFile ? '⚡ Genera DXF' : '⚡ Genera');
+}
+function showErr(msg) { errBox.textContent = msg; errBox.classList.add('show'); }
+function hideOutput() {
+  resultEl.classList.remove('show'); errBox.classList.remove('show');
+  logEl.classList.remove('show'); logEl.textContent = '';
+}
+
+/* ── Anteprima 3D — canvas 2D con proiezione assonometrica ───────────────── */
+let r3d_ctrl = null;   // AbortController per i listener mouse/touch
+
+
+/* ── Converte OBJ text → lista triangoli [{v:[[x,y,z]×3], color}] ────────── */
+function objToTris(objText, mtlText, fallback) {
+  // Parse MTL colors
+  const matCol = {};
+  if (mtlText) {
+    let cur = null;
+    for (const line of mtlText.split('\n')) {
+      const l = line.trim();
+      if (l.startsWith('newmtl ')) { cur = l.slice(7).trim(); matCol[cur] = fallback; }
+      if (cur && l.startsWith('Kd ')) {
+        const [,r,g,b] = l.split(/\s+/);
+        matCol[cur] = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+      }
+    }
+  }
+  const verts = []; const tris = []; let curMat = null;
+  for (const line of objText.split('\n')) {
+    const l = line.trim();
+    if (l.startsWith('v '))      { const [,x,y,z]=l.split(/\s+/); verts.push([+x,+y,+z]); }
+    else if (l.startsWith('usemtl ')) { curMat = l.slice(7).trim(); }
+    else if (l.startsWith('f ')) {
+      const vi = l.split(/\s+/).slice(1).map(t=>parseInt(t.split('/')[0])-1);
+      for (let i=1;i<vi.length-1;i++)
+        tris.push({ v:[verts[vi[0]],verts[vi[i]],verts[vi[i+1]]], color: (curMat && matCol[curMat]) || fallback });
+    }
+  }
+  return tris;
+}
+
+/* ── Converte STEP bytes → lista triangoli (via occt-import-js) ──────────── */
+function stepToTris(bytes, fallback) {
+  if (!occt) { console.warn('stepToTris: occt non disponibile'); return null; }
+  let res;
+  try { res = occt.ReadStepFile(bytes, null); }
+  catch(e) { console.warn('stepToTris: ReadStepFile eccezione', e); return null; }
+  if (!res || !res.success) { console.warn('stepToTris: ReadStepFile non success', res); return null; }
+  const tris = [];
+  for (const mesh of (res.meshes||[])) {
+    try {
+      const pos = mesh.attributes.position.array;
+      const idx = mesh.index ? mesh.index.array : null;
+      const col = (mesh.color && mesh.color.length >= 3)
+        ? `rgb(${Math.round(mesh.color[0]*255)},${Math.round(mesh.color[1]*255)},${Math.round(mesh.color[2]*255)})`
+        : fallback;
+      const count = idx ? idx.length/3 : pos.length/9;
+      for (let i=0;i<count;i++) {
+        const a=idx?idx[i*3]:i*3, b=idx?idx[i*3+1]:i*3+1, c=idx?idx[i*3+2]:i*3+2;
+        // Copia esplicita dei valori (evita riferimenti a memoria WASM invalidata)
+        tris.push({ v:[
+          [pos[a*3],pos[a*3+1],pos[a*3+2]],
+          [pos[b*3],pos[b*3+1],pos[b*3+2]],
+          [pos[c*3],pos[c*3+1],pos[c*3+2]]
+        ], color:col });
+      }
+    } catch(e) { console.warn('stepToTris: errore su mesh', e); }
+  }
+  console.log('stepToTris: estratti', tris.length, 'triangoli da', (res.meshes||[]).length, 'mesh');
+  return tris;
+}
+
+/* ── Scala e posiziona triangoli nel sistema di coordinate componente ─────── */
+function scaleTris(tris, tw, th, td, ox, oy, oz) {
+  if (!tris || !tris.length) return tris;
+  let mnx=Infinity,mny=Infinity,mnz=Infinity,mxx=-Infinity,mxy=-Infinity,mxz=-Infinity;
+  for (const t of tris) for (const v of t.v) {
+    mnx=Math.min(mnx,v[0]); mny=Math.min(mny,v[1]); mnz=Math.min(mnz,v[2]);
+    mxx=Math.max(mxx,v[0]); mxy=Math.max(mxy,v[1]); mxz=Math.max(mxz,v[2]);
+  }
+  const sx=tw/Math.max(mxx-mnx,0.001), sy=th/Math.max(mxy-mny,0.001), sz=td/Math.max(mxz-mnz,0.001);
+  return tris.map(t=>({ color:t.color, v:t.v.map(v=>[(v[0]-mnx)*sx+ox,(v[1]-mny)*sy+oy,(v[2]-mnz)*sz+oz]) }));
+}
+
+function render3D(piastre) {
+  $_('canvas-ph').style.display = 'none';
+  const canvas = $_('three-canvas');
+  canvas.style.display = 'block';
+  if (r3d_ctrl) { r3d_ctrl.abort(); r3d_ctrl = null; }
+
+  // ── Palette colori (hex string per canvas 2D) ──────────────────────────────
+  const PAL2D = [
+    '#ff4757','#2ed573','#1e90ff','#ffa502','#a29bfe',
+    '#00d2d3','#ff6b81','#7bed9f','#70a1ff','#eccc68',
+    '#ff6348','#26de81','#45aaf2','#f7b731','#d1cce3',
+    '#fd9644','#0fb9b1','#fc5c65','#45aaf2','#8854d0',
+  ];
+
+  // ── Stato vista (angolo, zoom, pan) ───────────────────────────────────────
+  let angleX = -0.42, angleY = 0.52, zoom = 1.0, panX = 0, panY = 0;
+
+  // ── Pre-computa modelli una sola volta (non ad ogni frame) ────────────────
+  // triCache usa sia la chiave ESATTA sia la chiave NORMALIZZATA del file
+  const obj3dMap = {};
+  for (const [k,v] of Object.entries(obj3dFiles)) {
+    const exact = k.trim().toUpperCase();
+    const norm  = normCode(k);
+    obj3dMap[exact] = v;               // chiave esatta (per compatibilità)
+    if (norm !== exact) obj3dMap[norm] = v;  // chiave normalizzata
+  }
+
+  // Cache triangoli già parsati: { CODE: tris[] | null }
+  const triCache = {};
+  let nModelli = 0;
+  // Evita di parsare lo stesso file due volte (chiave esatta e normalizzata possono puntare allo stesso entry)
+  const _parsed = new Set();
+  for (const [code, entry] of Object.entries(obj3dMap)) {
+    if (_parsed.has(entry)) { triCache[code] = triCache[Object.keys(triCache).find(k=>obj3dMap[k]===entry)||code]; continue; }
+    _parsed.add(entry);
+    try {
+      let raw = null;
+      if (entry.type === 'obj')       raw = objToTris(entry.data, entry.mtl||null, '#cccccc');
+      else if (entry.type === 'step') raw = stepToTris(entry.data.slice(), '#cccccc');
+      // Valida: scarta triangoli con vertici NaN/undefined
+      if (raw && raw.length) {
+        const valid = raw.filter(t =>
+          t.v && t.v.length === 3 && t.v.every(v => v && isFinite(v[0]) && isFinite(v[1]) && isFinite(v[2]))
+        );
+        triCache[code] = valid.length ? valid : null;
+        if (valid.length) nModelli++;
+      } else {
+        triCache[code] = null;
+      }
+    } catch(e) { triCache[code] = null; console.warn('Parse fallito per', code, e); }
+  }
+  console.log('obj3dFiles caricati:', Object.keys(obj3dFiles).length, Object.keys(obj3dFiles));
+  console.log('obj3dMap (uppercase+norm):', Object.keys(obj3dMap).length, Object.keys(obj3dMap));
+  console.log('Modelli 3D parsati:', nModelli, '/', Object.keys(obj3dFiles).length, 'triCache keys:', Object.keys(triCache));
+
+  // ── Costruisce la lista di oggetti da disegnare (box o mesh triangoli) ─────
+  // Chiamato UNA SOLA VOLTA — il risultato viene riusato ad ogni frame
+  const _items = (() => {
+    const items = [];
+    const GAP = 80;
+    let ox = 0, ci = 0;
+    const totalW = piastre.reduce((s, p) => s + p.W, 0) + GAP * (piastre.length - 1);
+    for (const p of piastre) {
+      const bx = ox - totalW / 2;
+      const by = -p.H / 2;
+      items.push({ type:'box', x:bx, y:by, z:-3, w:p.W, h:p.H, d:3, color:'#8a95a0', border:'#aabbcc' });
+      for (const yg of (p.guide||[]))
+        items.push({ type:'box', x:bx+p.W*0.05, y:by+yg-3.75, z:0, w:p.W*0.9, h:7.5, d:2, color:'#2255cc', border:'#4477ee' });
+      for (const c of (p.componenti||[])) {
+        const prof  = Math.max(c.prof||60, 18);
+        const color = PAL2D[ci % PAL2D.length];
+        const code     = (c.codice||'').trim().toUpperCase();
+        const codeNorm = normCode(c.codice);
+        ci++;
+        // Prima cerca corrispondenza esatta, poi normalizzata (/ → _, ecc.)
+        const rawTris = triCache[code] || triCache[codeNorm] || null;
+        console.log('Componente:', JSON.stringify(c.codice), '→', code, '| norm:', codeNorm, '→ hit:', !!(rawTris && rawTris.length));
+        if (rawTris && rawTris.length) {
+          // STP → grigio chiaro uniforme; OBJ → usa colori materiale o palette
+          const srcEntry = obj3dMap[code] || obj3dMap[codeNorm] || null;
+          const isStp = srcEntry && srcEntry.type === 'step';
+          const coloredTris = isStp
+            ? rawTris.map(t => ({ ...t, color: '#d0d0d0' }))
+            : rawTris.map(t => ({ ...t, color: t.color === '#cccccc' ? color : t.color }));
+          const tris = scaleTris(coloredTris, c.w*0.93, c.h*0.93, prof, bx+c.x, by+c.y, 0);
+          items.push({ type:'mesh', tris, cx:bx+c.x+c.w/2, cy:by+c.y+c.h/2, cz:prof/2 });
+        } else {
+          items.push({ type:'box', x:bx+c.x, y:by+c.y, z:0, w:c.w*0.93, h:c.h*0.93, d:prof,
+                       color, border:'#00000055' });
+        }
+      }
+      ox += p.W + GAP;
+    }
+    return items;
+  })();
+
+  function buildBoxes() { return _items; }
+
+  // ── Proiezione assonometrica obliqua ───────────────────────────────────────
+  function project(x, y, z, W, H) {
+    // Rotazione Y poi X
+    const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+    const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+    const rx = x * cosY + z * sinY;
+    const ry = y;
+    const rz = -x * sinY + z * cosY;
+    const rx2 = rx;
+    const ry2 = ry * cosX - rz * sinX;
+    return { sx: rx2 * zoom + W / 2 + panX,
+             sy: -ry2 * zoom + H / 2 + panY };
+  }
+
+  // ── Schiarisce / scurisce un colore hex ────────────────────────────────────
+  function shade(hex, factor) {
+    const c = parseInt(hex.replace('#',''), 16);
+    const r = Math.min(255, Math.max(0, Math.round(((c>>16)&255)*factor)));
+    const g = Math.min(255, Math.max(0, Math.round(((c>>8)&255)*factor)));
+    const b = Math.min(255, Math.max(0, Math.round((c&255)*factor)));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // ── Disegna un singolo box ─────────────────────────────────────────────────
+  function drawBox(ctx, b, W, H) {
+    const { x, y, z, w, h, d, color, border } = b;
+    const p = (px,py,pz) => project(px,py,pz,W,H);
+    const v = [
+      p(x,   y,   z),   p(x+w, y,   z),   p(x+w, y+h, z),   p(x,   y+h, z),
+      p(x,   y,   z+d), p(x+w, y,   z+d), p(x+w, y+h, z+d), p(x,   y+h, z+d),
+    ];
+    const face = (pts, fill) => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].sx, pts[0].sy);
+      for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].sx, pts[i].sy);
+      ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill();
+      ctx.strokeStyle = border; ctx.lineWidth = 0.7; ctx.stroke();
+    };
+    face([v[4],v[5],v[6],v[7]], shade(color, 1.15)); // fronte
+    face([v[3],v[2],v[6],v[7]], shade(color, 0.75)); // destra
+    face([v[2],v[3],v[0],v[1]], shade(color, 1.35)); // top (più chiaro)
+  }
+
+  // ── Profondità media per painter's algorithm ──────────────────────────────
+  function itemDepth(item) {
+    const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+    if (item.type === 'box') {
+      const cx = item.x+item.w/2, cz = item.z+item.d/2;
+      return -cx*sinY + cz*cosY;
+    } else {
+      return -item.cx*sinY + item.cz*cosY;
+    }
+  }
+
+  // ── Disegna un triangolo 3D proiettato ────────────────────────────────────
+  function drawTri(ctx, tri, W, H) {
+    const pts = tri.v.map(v => project(v[0], v[1], v[2], W, H));
+    ctx.beginPath();
+    ctx.moveTo(pts[0].sx, pts[0].sy);
+    ctx.lineTo(pts[1].sx, pts[1].sy);
+    ctx.lineTo(pts[2].sx, pts[2].sy);
+    ctx.closePath();
+    ctx.fillStyle = tri.color; ctx.fill();
+    ctx.strokeStyle = tri.color; ctx.lineWidth = 0.3; ctx.stroke();
+  }
+
+  // ── Disegna la scena ───────────────────────────────────────────────────────
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d0f14'; ctx.fillRect(0, 0, W, H);
+    const items = buildBoxes();
+    items.sort((a,b) => itemDepth(a) - itemDepth(b));
+    let nMesh = 0, nBox = 0;
+    for (const item of items) {
+      if (item.type === 'box') {
+        drawBox(ctx, item, W, H);
+        nBox++;
+      } else {
+        // Mesh: ordina i triangoli per profondità (back-to-front = ascending rz)
+        const cosY=Math.cos(angleY), sinY=Math.sin(angleY);
+        const sorted = [...item.tris].sort((a,b) => {
+          const da = a.v.reduce((s,v)=>s+(-v[0]*sinY+v[2]*cosY),0)/3;
+          const db = b.v.reduce((s,v)=>s+(-v[0]*sinY+v[2]*cosY),0)/3;
+          return da - db;
+        });
+        for (const tri of sorted) drawTri(ctx, tri, W, H);
+        nMesh++;
+      }
+    }
+    // Debug overlay
+    const nFiles = Object.keys(obj3dFiles).length;
+    if (nFiles > 0) {
+      ctx.save();
+      ctx.font = `${12*devicePixelRatio}px monospace`;
+      ctx.fillStyle = nMesh > 0 ? '#00ff88' : '#ff4444';
+      ctx.fillText(`Modelli 3D: ${nMesh} mesh / ${nBox} box | file: ${nFiles} | parsed: ${nModelli}`, 8*devicePixelRatio, 18*devicePixelRatio);
+      ctx.restore();
+    }
+  }
+
+  // ── Ridimensiona canvas e aggiorna zoom iniziale ───────────────────────────
+  function resize() {
+    const W = canvas.parentElement?.clientWidth || 700;
+    canvas.width  = W * devicePixelRatio;
+    canvas.height = 420 * devicePixelRatio;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = '420px';
+    // Zoom automatico per far entrare tutta la piastra
+    const totalW = piastre.reduce((s,p)=>s+p.W,0) + 80*(piastre.length-1);
+    const totalH = Math.max(...piastre.map(p=>p.H));
+    zoom = Math.min((W * 0.85 * devicePixelRatio) / (totalW * 1.4),
+                    (420 * 0.85 * devicePixelRatio) / (totalH * 1.2));
+    draw();
+  }
+  resize();
+  new ResizeObserver(resize).observe(canvas);
+
+  // ── Controlli mouse ────────────────────────────────────────────────────────
+  r3d_ctrl = new AbortController();
+  const sig = { signal: r3d_ctrl.signal };
+  let drag=false, lx=0, ly=0;
+  canvas.addEventListener('mousedown', e=>{drag=true;lx=e.clientX;ly=e.clientY;canvas.style.cursor='grabbing';}, sig);
+  window.addEventListener('mouseup', ()=>{drag=false;canvas.style.cursor='grab';}, sig);
+  canvas.addEventListener('mousemove', e=>{
+    if(!drag) return;
+    angleY += (e.clientX-lx)*0.008; angleX += (e.clientY-ly)*0.008;
+    angleX = Math.max(-1.2, Math.min(0.2, angleX));
+    lx=e.clientX; ly=e.clientY; draw();
+  }, sig);
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    zoom *= e.deltaY < 0 ? 1.1 : 0.9;
+    draw();
+  }, {passive:false, signal:r3d_ctrl.signal});
+
+  // ── Controlli touch ────────────────────────────────────────────────────────
+  let td=false,tlx=0,tly=0,tpd=0;
+  canvas.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){td=true;tlx=e.touches[0].clientX;tly=e.touches[0].clientY;}
+    if(e.touches.length===2) tpd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                                              e.touches[0].clientY-e.touches[1].clientY);
+  }, sig);
+  canvas.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&td){
+      angleY+=(e.touches[0].clientX-tlx)*0.01; angleX+=(e.touches[0].clientY-tly)*0.01;
+      tlx=e.touches[0].clientX; tly=e.touches[0].clientY; draw();
+    }
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,
+                         e.touches[0].clientY-e.touches[1].clientY);
+      zoom*=d/tpd; tpd=d; draw();
+    }
+  },{passive:false,signal:r3d_ctrl.signal});
+  canvas.addEventListener('touchend',()=>td=false,sig);
+
+}
+
+initPyodide();
+
+// ── Inizializza OCCT all'avvio — aspetta che il fetch+blob sia completato ─────
+(async () => {
+  // loadOCCT() è asincrona: aspetta max 20s che _occtInitFn sia definita
+  for (let i = 0; i < 40 && !window._occtInitFn && window._occtInitFn !== null; i++)
+    await new Promise(r => setTimeout(r, 500));
+  if (!window._occtInitFn) {
+    console.warn('⚠️ occt-import-js non disponibile — file .stp non supportati');
+    return;
+  }
+  try {
+    occt = await window._occtInitFn();
+    console.log('✅ OCCT caricato — file .stp supportati');
+  } catch(e) {
+    console.warn('⚠️ OCCT init fallito:', e.message);
+    occt = null;
+  }
+})();
+
+</script>
+</body>
+</html>

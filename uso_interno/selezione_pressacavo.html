@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selezione Pressacavo per Cavo Armato</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 30px 20px; }
+  .container { max-width: 860px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #1F3864, #2E75B6); color: white; padding: 24px 30px; border-radius: 12px 12px 0 0; }
+  .header h1 { font-size: 20px; letter-spacing: 1px; }
+  .header p  { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+
+  /* ── Tab bar ── */
+  .tabs { display: flex; background: #162D52; border-radius: 0; }
+  .tab-btn { flex: 1; padding: 12px 0; font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.55); background: transparent; border: none; cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; border-bottom: 3px solid transparent; }
+  .tab-btn:hover { color: rgba(255,255,255,0.85); }
+  .tab-btn.active { color: #fff; border-bottom: 3px solid #70AD47; }
+
+  .card { background: white; padding: 28px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: bold; color: #1F3864; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field select { width: 100%; padding: 10px 12px; border: 2px solid #D0DCF0; border-radius: 8px; font-size: 14px; color: #333; background: #F9FBFF; transition: border-color 0.2s; }
+  .field select:focus { outline: none; border-color: #2E75B6; background: white; }
+  .diam-box { background: #EBF3FB; border: 2px solid #2E75B6; border-radius: 8px; padding: 10px 12px; font-size: 16px; font-weight: bold; color: #1F3864; text-align: center; min-height: 42px; line-height: 22px; }
+  .divider { border: none; border-top: 2px dashed #D0DCF0; margin: 22px 0; }
+  .result-area { background: #F0F7EE; border: 2px solid #70AD47; border-radius: 12px; padding: 22px 24px; text-align: center; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .result-area.empty { background: #F9FBFF; border-color: #D0DCF0; }
+  .result-area.error { background: #FFF3F3; border-color: #E06666; }
+  .result-label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .result-code  { font-size: 28px; font-weight: bold; color: #1F6B2E; letter-spacing: 2px; }
+  .result-code.error { color: #CC0000; font-size: 18px; }
+  .result-dims  { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+  .dim-chip { background: white; border: 2px solid #2E75B6; border-radius: 8px; padding: 8px 16px; text-align: center; min-width: 110px; }
+  .dim-chip.green { border-color: #70AD47; }
+  .dim-chip .dim-label { font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase; }
+  .dim-chip .dim-value { font-size: 15px; font-weight: bold; color: #2E75B6; margin-top: 2px; }
+  .dim-chip.green .dim-value { color: #375623; }
+  .hint { font-size: 12px; color: #aaa; margin-top: 6px; }
+  .section-title { font-size: 11px; font-weight: bold; color: #2E75B6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; border-bottom: 2px solid #D0DCF0; padding-bottom: 6px; }
+
+  /* ── Opzione 2 styles ── */
+  .batch-info { background: #EBF3FB; border: 2px solid #2E75B6; border-radius: 10px; padding: 16px 20px; font-size: 13px; color: #1F3864; line-height: 1.7; margin-bottom: 20px; }
+  .batch-info strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: #2E75B6; }
+  .batch-info code { background: white; border: 1px solid #B0C4DE; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; }
+  .drop-zone { border: 2px dashed #B0C4DE; border-radius: 10px; padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #F9FBFF; margin-bottom: 18px; }
+  .drop-zone:hover, .drop-zone.dragover { border-color: #2E75B6; background: #EBF3FB; }
+  .drop-zone .dz-icon { font-size: 36px; margin-bottom: 10px; }
+  .drop-zone .dz-text { font-size: 14px; color: #555; }
+  .drop-zone .dz-file { font-size: 13px; font-weight: bold; color: #1F3864; margin-top: 6px; }
+  .btn-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; }
+  .btn-primary { background: #1F3864; color: white; }
+  .btn-primary:hover { background: #2E75B6; }
+  .btn-secondary { background: #EBF3FB; color: #1F3864; border: 2px solid #2E75B6; }
+  .btn-secondary:hover { background: #D0DCF0; }
+  .btn-success { background: #70AD47; color: white; }
+  .btn-success:hover { background: #548235; }
+  .btn-reset { background: #FFF0F0; color: #CC0000; border: 2px solid #E06666; }
+  .btn-reset:hover { background: #FFE0E0; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .batch-preview { border: 1px solid #D0DCF0; border-radius: 8px; overflow: auto; max-height: 340px; margin-bottom: 18px; }
+  .batch-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .batch-preview th { background: #1F3864; color: white; padding: 8px 10px; text-align: left; position: sticky; top: 0; white-space: nowrap; }
+  .batch-preview td { padding: 7px 10px; border-bottom: 1px solid #EEF2F8; white-space: nowrap; }
+  .batch-preview tr:nth-child(even) td { background: #F5F8FF; }
+  .badge-ok  { background: #E8F5E0; color: #2E7D0C; border-radius: 4px; padding: 2px 8px; font-weight: bold; }
+  .badge-err { background: #FFF0F0; color: #CC0000; border-radius: 4px; padding: 2px 8px; font-weight: bold; }
+  .batch-summary { font-size: 13px; color: #555; margin-bottom: 12px; }
+  .batch-summary span { font-weight: bold; color: #1F3864; }
+</style>
+</head>
+<body>
+
+<!-- ── Main content ───────────────────────────────────────────────────────── -->
+<div class="container">
+  <div class="header">
+    <h1>SELEZIONE PRESSACAVO PER CAVO ARMATO</h1>
+    <p>Seleziona le caratteristiche del cavo per trovare il pressacavo corretto</p>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(1)">⚙ Selezione Manuale</button>
+    <button class="tab-btn" onclick="switchTab(2)">📊 Elaborazione Excel</button>
+  </div>
+
+  <div class="card">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — Selezione manuale (interfaccia originale)                      -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="tab1" class="tab-panel active">
+    <div class="section-title">1 — Tipo di cavo</div>
+    <div class="grid">
+      <div class="field">
+        <label>Tipologia di cavo</label>
+        <select id="tipologia" onchange="onTipologiaChange()">
+          <option value="">— Seleziona —</option>
+          <option>Potenza A +S</option>
+          <option>Strumentazione A +S</option>
+          <option>Solo schermati</option>
+          <option>Lapp FG16 Schermati</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Specifica cavo</label>
+        <select id="specifica" onchange="onSpecificaChange()">
+          <option value="">— Prima seleziona tipologia —</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="field" id="field_diam_int">
+        <label>Diametro interno cavo (mm)</label>
+        <div class="diam-box" id="diam_int">—</div>
+      </div>
+      <div class="field">
+        <label>Diametro esterno cavo (mm)</label>
+        <div class="diam-box" id="diam_ext">—</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title">2 — Caratteristiche pressacavo</div>
+    <!-- Unico grid 2 colonne: i 4 campi scorrono automaticamente.
+         Marca (nascosta per default) occupa col-1 solo per Solo schermati;
+         quando nascosta, gli altri campi risalgono mantenendo il layout originale. -->
+    <div class="grid" id="grid_section2">
+      <div class="field" id="field_marca_row" style="display:none">
+        <label>Marca pressacavo</label>
+        <select id="marca" onchange="onMarcaChange()">
+          <option value="">— Seleziona —</option>
+          <option>Coelbo</option>
+          <option>LAPP Schermati</option>
+        </select>
+      </div>
+      <div class="field" id="field_resina">
+        <label>Tipo di pressacavo</label>
+        <select id="resina" onchange="compute()">
+          <option value="">— Seleziona —</option>
+          <option>Resinabile</option>
+          <option>Non Resinabile</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Filettatura</label>
+        <select id="filettatura" onchange="compute()">
+          <option value="">— Seleziona —</option>
+          <option>Metrico</option>
+          <option>NPT</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Materiale</label>
+        <select id="materiale" onchange="onMaterialeChange()">
+          <option value="">— Seleziona —</option>
+          <option>Inox</option>
+          <option>Ottone Nichelato</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title">3 — Risultato</div>
+    <div class="result-area empty" id="result_area">
+      <div class="hint">Completa tutte le selezioni per vedere il pressacavo consigliato</div>
+    </div>
+
+  </div><!-- /tab1 -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — Elaborazione batch Excel                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="tab2" class="tab-panel">
+
+    <div class="batch-info">
+      <strong>Come funziona</strong>
+      Carica un file Excel con le colonne: <code>Tipologia</code>, <code>Specifica</code>,
+      <code>Tipo pressacavo</code>, <code>Filettatura</code>, <code>Materiale</code>, <code>Marca</code>.<br>
+      Il tool elabora ogni riga e genera un nuovo Excel con il pressacavo consigliato aggiunto.<br>
+      Non sai come strutturare il file? <a href="#" onclick="downloadTemplate(); return false;" style="color:#2E75B6; font-weight:bold;">Scarica il template</a>.
+    </div>
+
+    <!-- Logo upload -->
+    <div style="display:flex; align-items:center; gap:14px; background:#F9FBFF; border:2px solid #D0DCF0; border-radius:10px; padding:12px 16px; margin-bottom:16px;">
+      <div id="logoPreview" style="width:120px; height:40px; display:flex; align-items:center; justify-content:center; background:#EBF3FB; border-radius:6px; overflow:hidden; flex-shrink:0;">
+        <span style="font-size:11px; color:#888;">Nessun logo</span>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px; font-weight:bold; color:#1F3864; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Logo aziendale (opzionale)</div>
+        <div style="font-size:12px; color:#666;">Verrà inserito nell'intestazione del file Excel risultato.</div>
+      </div>
+      <button class="btn btn-secondary" onclick="document.getElementById('logoInput').click()" style="flex-shrink:0; font-size:12px; padding:7px 14px;">🖼 Carica logo</button>
+      <button class="btn btn-reset" id="btnRemoveLogo" onclick="removeLogo()" style="display:none; flex-shrink:0; font-size:12px; padding:7px 14px;">✕ Rimuovi</button>
+    </div>
+    <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="onLogoSelected(event)">
+
+    <!-- Drop zone upload -->
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">Clicca o trascina qui il file Excel da elaborare</div>
+      <div class="dz-file" id="dzFileName"></div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="onFileSelected(event)">
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnProcess" onclick="processBatch()" disabled>▶ Elabora</button>
+      <button class="btn btn-secondary" onclick="downloadTemplate()">⬇ Scarica Template</button>
+      <button class="btn btn-reset" onclick="resetBatch()">↺ Ricomincia</button>
+      <button class="btn btn-success" id="btnDownload" onclick="downloadResult()" disabled style="margin-left:auto">⬇ Scarica Risultato Excel</button>
+    </div>
+
+    <div class="batch-summary" id="batchSummary" style="display:none"></div>
+    <div id="batchPreviewWrap" style="display:none">
+      <div class="batch-preview" id="batchPreview"></div>
+    </div>
+
+  </div><!-- /tab2 -->
+
+  </div><!-- /card -->
+</div><!-- /container -->
+
+<script>
+// ── Thread sizes from datasheet ────────────────────────────────────────────
+const THREAD_METRICO = {"1":"M20x1,5","2":"M25x1,5","3":"M32x1,5","4":"M40x1,5","5":"M50x1,5","6":"M63x1,5"};
+const THREAD_NPT     = {"1":'1/2" NPT',"2":'3/4" NPT',"3":'1" NPT',"4":'1.1/4" NPT',"5":'1.1/2" NPT',"6":'2" NPT'};
+
+function getThreadSize(codice, filettatura) {
+  const m = codice.match(/(?:PMAX|PMX|PMA|PM)(\d)/);
+  if (!m) return "—";
+  return filettatura === "Metrico" ? (THREAD_METRICO[m[1]] || "—") : (THREAD_NPT[m[1]] || "—");
+}
+
+// ── Cable data ─────────────────────────────────────────────────────────────
+const POTENZA = [
+  ["1 x 2.5",2.2,1.0,6.0,9.7],["1 x 6",3.2,1.0,7.0,10.5],["1 x 16",4.8,1.0,10.1,11.2],
+  ["1 x 25",6.3,1.2,11.7,13.3],["1 x 35",7.1,1.2,13.0,14.6],["1 x 50",8.3,1.4,14.3,15.9],
+  ["1 x 70",10.0,1.4,16.2,17.8],["1 x 95",11.7,1.6,18.5,20.1],["1 x 120",13.0,1.6,19.6,21.2],
+  ["1 x 150",14.3,1.8,21.4,23.0],["1 x 185",16.3,2.0,23.9,25.5],["1 x 240",18.7,2.2,27.3,33.7],
+  ["1 x 300",21.7,2.4,30.7,35.0],["2 x 1.5",1.6,1.0,10.2,14.4],["2 x 2.5",2.0,1.0,11.2,15.5],
+  ["2 x 4",2.6,1.0,12.8,17.1],["2 x 6",3.2,1.0,13.8,18.3],["2 x 10",3.8,1.0,14.8,20.2],
+  ["2 x 16",4.8,1.0,16.9,22.7],["3 x 1.5",1.6,1.0,10.8,15.0],["3 x 2.5",2.0,1.0,11.9,16.1],
+  ["3 x 4",2.6,1.0,13.6,17.8],["3 x 6",3.2,1.0,14.7,19.1],["3 x 10",3.8,1.0,15.8,21.1],
+  ["3 x 16",4.8,1.0,18.0,23.6],["3 x 25",6.3,1.2,21.7,27.6],["3 x 35",7.1,1.2,24.6,30.9],
+  ["3 x 50",8.3,1.4,27.6,34.6],["3 x 70",10.0,1.4,31.8,39.4],["3 x 95",11.7,1.6,36.7,45.2],
+  ["3 x 120",13.0,1.6,39.4,48.5],["3 x 150",14.3,1.8,43.6,54.0],["3 x 185",16.3,2.0,49.0,61.0],
+  ["3 x 240",18.7,2.2,55.8,68.5],["4 x 1.5",1.6,1.0,11.7,15.9],["4 x 2.5",2.0,1.0,12.9,17.1],
+  ["4 x 4",2.6,1.0,14.8,19.0],["4 x 6",3.2,1.0,16.0,20.9],["4 x 10",3.8,1.0,17.2,22.5],
+  ["4 x 16",4.8,1.0,19.7,25.6],["4 x 25",6.3,1.2,23.8,29.7],["4 x 35",7.1,1.2,27.1,33.3],
+  ["4 x 50",8.3,1.4,30.4,37.4],["4 x 70",10.0,1.4,35.0,42.6],["4 x 95",11.7,1.6,40.5,49.0],
+  ["4 x 120",13.0,1.6,43.5,52.6],["5 x 1.5",1.6,1.0,13.0,16.5],["5 x 2.5",2.0,1.0,14.0,18.5],
+  ["5 x 4",2.6,1.0,16.0,21.5],["5 x 6",3.2,1.0,18.0,23.5],["5 x 70",10.0,1.4,38.0,46.5],
+  ["7 x 1.5",1.6,1.0,14.0,18.2],["7 x 2.5",2.0,1.0,15.3,19.9],["12 x 1.5",1.6,1.0,18.2,23.6],
+  ["12 x 2.5",2.0,1.0,19.9,25.5],["19 x 1.5",1.6,1.0,21.2,27.0],["19 x 2.5",2.0,1.0,23.5,29.3],
+  ["27 x 2.5",2.0,1.0,28.4,34.6],["37 x 1.5",1.6,1.0,25.6,31.8],["37 x 2.5",2.0,1.0,31.9,38.6]
+];
+const STRUM = [
+  ["2 pairs x 0.75",null,null,11.8,15.8],["4 pairs x 0.75",null,null,13.6,17.8],
+  ["7 pairs x 0.75",null,null,16.2,21.2],["8 pairs x 0.75",null,null,17.2,22.5],
+  ["12 pairs x 0.75",null,null,20.4,26.2],["16 pairs x 0.75",null,null,23.5,29.7],
+  ["19 pairs x 0.75",null,null,25.3,31.7],["24 pairs x 0.75",null,null,28.1,34.7],
+  ["2 pairs x 1.5",null,null,13.6,17.9],["4 pairs x 1.5",null,null,15.8,20.9],
+  ["7 pairs x 1.5",null,null,19.0,24.3],["8 pairs x 1.5",null,null,20.2,26.0],
+  ["12 pairs x 1.5",null,null,24.5,30.7],["16 pairs x 1.5",null,null,27.8,34.4],
+  ["24 pairs x 1.5",null,null,33.8,41.0],["2 triples x 0.75",null,null,12.9,17.1],
+  ["4 triples x 0.75",null,null,14.9,19.9],["8 triples x 0.75",null,null,19.7,25.3],
+  ["2 triples x 1.5",null,null,15.0,19.8],["4 triples x 1.5",null,null,17.4,22.5],
+  ["8 triples x 1.5",null,null,23.3,29.3]
+];
+const SOLO_SCHERMATI = [
+  // [label, null, null, diam_int (= overall - 2×sheath), diam_ext (= overall)]
+  // diam_int calcolato come: overall - 2 × spessore guaina esterna
+  // dove lo spessore non è disponibile, diam_int = null
+  ["2 x 1",null,null,12.6,13.2],
+  ["2 x 1.5",null,null,12.6,13.2],
+  ["2 x 2.5",null,null,13.3,13.9],
+  ["2 x 4",null,null,16.5,17.1],
+  ["2 x 6",null,null,17.0,17.6],
+  ["2 x 10",null,null,20.1,20.7],
+  ["2 x 16",null,null,22.8,23.4],
+  ["2 x 25",null,null,27.5,28.1],
+  ["2 x 35",null,null,29.5,30.1],
+  ["2 x 50",null,null,34.2,35.1],
+  ["2 x 240",null,null,64.9,65.8],
+  ["3 x 1.5",null,null,12.8,13.4],
+  ["3 x 2.5",null,null,14.1,14.7],
+  ["3 x 4",null,null,16.4,17.0],
+  ["3 x 6",null,null,17.8,18.4],
+  ["3 x 10",null,null,21.5,22.1],
+  ["3 x 16",null,null,24.0,24.6],
+  ["3 x 25",null,null,29.2,29.8],
+  ["3 x 35",null,null,32.2,33.1],
+  ["3 x 50",null,null,36.3,37.2],
+  ["3 x 70",null,null,41.0,41.9],
+  ["3 x 95",null,null,46.1,47.0],
+  ["3 x 120",null,null,51.1,52.0],
+  ["3 x 150",null,null,57.0,57.9],
+  ["3 x 185",null,null,62.0,62.9],
+  ["3 x 240",null,null,72.2,73.1],
+  ["4 x 1.5",null,null,13.6,14.2],
+  ["4 x 2.5",null,null,15.1,15.7],
+  ["4 x 4",null,null,17.8,18.4],
+  ["4 x 6",null,null,19.5,20.1],
+  ["4 x 10",null,null,23.4,24.0],
+  ["4 x 16",null,null,26.3,26.9],
+  ["4 x 25",null,null,32.7,33.6],
+  ["4 x 35",null,null,35.2,36.1],
+  ["4 x 50",null,null,40.1,41.0],
+  ["4 x 70",null,null,45.2,46.1],
+  ["4 x 95",null,null,51.7,52.6],
+  ["4 x 120",null,null,56.5,57.4],
+  ["4 x 150",null,null,62.2,63.1],
+  ["4 x 300",null,null,81.7,82.6],
+  ["5 x 1.5",null,null,14.2,14.8],
+  ["5 x 10",null,null,null,25.8],
+  ["6 x 1.5",null,null,null,17.0],
+  ["6 x 2.5",null,null,null,18.5],
+  ["6 x 4",null,null,null,20.8],
+  ["7 x 1.5",null,null,17.4,18.0],
+  ["7 x 2.5",null,null,18.6,19.2],
+  ["8 x 1.5",null,null,null,18.1],
+  ["8 x 2.5",null,null,null,19.9],
+  ["10 x 2.5",null,null,null,22.9],
+  ["12 x 1.5",null,null,21.1,21.7],
+  ["12 x 2.5",null,null,23.4,24.0],
+  ["12 x 4",null,null,null,28.2],
+  ["19 x 1.5",null,null,23.3,23.9],
+  ["19 x 2.5",null,null,null,null],
+  ["27 x 1.5",null,null,27.7,28.3],
+  ["27 x 2.5",null,null,31.7,32.6],
+  ["37 x 2.5",null,null,null,37.1]
+];
+
+// ── Lapp FG16 Schermati ────────────────────────────────────────────────────
+// [label, null, null, diam_int (null), diam_ext]
+// Fonte: ÖLFLEX® CLASSIC 110 CY datasheet
+const LAPP_FG16 = [
+  ["2 X 0.5",null,null,null,7.0],
+  ["3 G 0.5",null,null,null,7.3],
+  ["3 X 0.5",null,null,null,7.3],
+  ["4 G 0.5",null,null,null,7.9],
+  ["4 X 0.5",null,null,null,7.9],
+  ["5 G 0.5",null,null,null,8.4],
+  ["5 X 0.5",null,null,null,8.4],
+  ["7 G 0.5",null,null,null,8.9],
+  ["7 X 0.5",null,null,null,8.9],
+  ["12 G 0.5",null,null,null,11.3],
+  ["12 X 0.5",null,null,null,11.3],
+  ["18 G 0.5",null,null,null,13.3],
+  ["25 G 0.5",null,null,null,15.2],
+  ["30 G 0.5",null,null,null,16.1],
+  ["40 G 0.5",null,null,null,18.2],
+  ["2 X 0.75",null,null,null,7.4],
+  ["3 G 0.75",null,null,null,7.9],
+  ["3 X 0.75",null,null,null,7.9],
+  ["4 G 0.75",null,null,null,8.4],
+  ["4 X 0.75",null,null,null,8.4],
+  ["5 G 0.75",null,null,null,8.9],
+  ["5 X 0.75",null,null,null,8.9],
+  ["7 G 0.75",null,null,null,9.7],
+  ["7 X 0.75",null,null,null,9.7],
+  ["12 G 0.75",null,null,null,12.3],
+  ["12 X 0.75",null,null,null,12.3],
+  ["18 G 0.75",null,null,null,14.5],
+  ["18 X 0.75",null,null,null,14.5],
+  ["25 G 0.75",null,null,null,16.6],
+  ["34 G 0.75",null,null,null,18.9],
+  ["40 X 0.75",null,null,null,20.5],
+  ["41 G 0.75",null,null,null,20.6],
+  ["2 X 1.0",null,null,null,7.9],
+  ["3 G 1.0",null,null,null,8.2],
+  ["3 X 1.0",null,null,null,8.2],
+  ["4 G 1.0",null,null,null,8.7],
+  ["4 X 1.0",null,null,null,8.7],
+  ["5 G 1.0",null,null,null,9.5],
+  ["7 G 1.0",null,null,null,10.2],
+  ["12 G 1.0",null,null,null,13.3],
+  ["16 G 1.0",null,null,null,14.6],
+  ["18 G 1.0",null,null,null,15.5],
+  ["25 G 1.0",null,null,null,17.5],
+  ["34 G 1.0",null,null,null,20.3],
+  ["41 G 1.0",null,null,null,22.0],
+  ["50 G 1.0",null,null,null,23.8],
+  ["2 X 1.5",null,null,null,8.5],
+  ["3 G 1.5",null,null,null,8.9],
+  ["3 X 1.5",null,null,null,8.9],
+  ["4 G 1.5",null,null,null,9.6],
+  ["4 X 1.5",null,null,null,9.6],
+  ["5 G 1.5",null,null,null,10.3],
+  ["5 X 1.5",null,null,null,10.3],
+  ["7 G 1.5",null,null,null,11.3],
+  ["7 X 1.5",null,null,null,11.3],
+  ["12 G 1.5",null,null,null,14.8],
+  ["18 G 1.5",null,null,null,17.2],
+  ["25 G 1.5",null,null,null,20.1],
+  ["34 G 1.5",null,null,null,22.8],
+  ["41 G 1.5",null,null,null,24.7],
+  ["50 G 1.5",null,null,null,27.1],
+  ["2 X 2.5",null,null,null,9.9],
+  ["3 G 2.5",null,null,null,10.3],
+  ["4 G 2.5",null,null,null,11.3],
+  ["5 G 2.5",null,null,null,12.6],
+  ["7 G 2.5",null,null,null,13.9],
+  ["12 G 2.5",null,null,null,17.6],
+  ["2 X 4.0",null,null,null,11.4],
+  ["4 G 4.0",null,null,null,13.4],
+  ["5 G 4.0",null,null,null,14.7],
+  ["2 X 6.0",null,null,null,13.6],
+  ["4 G 6.0",null,null,null,15.8],
+  ["5 G 6.0",null,null,null,17.3],
+  ["7 G 6.0",null,null,null,18.8],
+  ["2 X 10.0",null,null,null,16.4],
+  ["3 G 10.0",null,null,null,17.4],
+  ["4 G 10.0",null,null,null,19.0],
+  ["5 G 10.0",null,null,null,21.3],
+  ["7 G 10.0",null,null,null,23.2],
+  ["2 X 16.0",null,null,null,18.6],
+  ["4 G 16.0",null,null,null,22.2],
+  ["5 G 16.0",null,null,null,24.4],
+  ["4 G 25.0",null,null,null,26.9],
+  ["5 G 25.0",null,null,null,30.0],
+  ["4 G 35.0",null,null,null,30.2]
+];
+
+// ── Pressacavo lookup ──────────────────────────────────────────────────────
+// [resina, materiale, filettatura, codice, gMin, gMax, gStr, cMin, cMax, cStr]
+const LOOKUP = [
+  ["Resinabile","Ottone Nichelato","NPT","PMAX1NB-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX1IB-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX1NB-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX1IB-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX1NB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX1IB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX2NB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX2IB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX2NB-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX2IB-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX2NB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX2IB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX3NB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX3IB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX3NB-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX3IB-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX3NB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX3IB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX4NB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX4IB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX4NB-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX4IB-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX4NB-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX4IB-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX5NB-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX5IB-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX5NB-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX5IB-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX5NB-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX5IB-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX5NB-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX5IB-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX5NB-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX5IB-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX6NB-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX6IB-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX6NB-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX6IB-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Resinabile","Ottone Nichelato","NPT","PMAX6NB-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMAX6IB-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Resinabile","Inox","NPT","PMAX1NS-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Resinabile","Inox","Metrico","PMAX1IS-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Resinabile","Inox","NPT","PMAX1NS-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Resinabile","Inox","Metrico","PMAX1IS-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Resinabile","Inox","NPT","PMAX1NS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","Metrico","PMAX1IS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","NPT","PMAX2NS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","Metrico","PMAX2IS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","NPT","PMAX2NS-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","Metrico","PMAX2IS-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Resinabile","Inox","NPT","PMAX2NS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Inox","Metrico","PMAX2IS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Inox","NPT","PMAX3NS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Inox","Metrico","PMAX3IS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Resinabile","Inox","NPT","PMAX3NS-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Resinabile","Inox","Metrico","PMAX3IS-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Resinabile","Inox","NPT","PMAX3NS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Inox","Metrico","PMAX3IS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Inox","NPT","PMAX4NS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Inox","Metrico","PMAX4IS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Resinabile","Inox","NPT","PMAX4NS-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Resinabile","Inox","Metrico","PMAX4IS-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Resinabile","Inox","NPT","PMAX4NS-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Resinabile","Inox","Metrico","PMAX4IS-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Resinabile","Inox","NPT","PMAX5NS-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Resinabile","Inox","Metrico","PMAX5IS-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Resinabile","Inox","NPT","PMAX5NS-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Resinabile","Inox","Metrico","PMAX5IS-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Resinabile","Inox","NPT","PMAX5NS-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Resinabile","Inox","Metrico","PMAX5IS-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Resinabile","Inox","NPT","PMAX5NS-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Resinabile","Inox","Metrico","PMAX5IS-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Resinabile","Inox","NPT","PMAX5NS-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Resinabile","Inox","Metrico","PMAX5IS-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Resinabile","Inox","NPT","PMAX6NS-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Resinabile","Inox","Metrico","PMAX6IS-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Resinabile","Inox","NPT","PMAX6NS-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Resinabile","Inox","Metrico","PMAX6IS-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Resinabile","Inox","NPT","PMAX6NS-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Resinabile","Inox","Metrico","PMAX6IS-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA1NB-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA1IB-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA1NB-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA1IB-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA1NB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA1IB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA2NB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA2IB-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA2NB-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA2IB-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA2NB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA2IB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA3NB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA3IB-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA3NB-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA3IB-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA3NB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA3IB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA4NB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA4IB-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA4NB-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA4IB-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA4NB-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA4IB-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA5NB-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA5IB-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA5NB-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA5IB-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA5NB-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA5IB-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA5NB-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA5IB-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA5NB-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA5IB-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA6NB-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA6IB-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA6NB-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA6IB-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PMA6NB-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PMA6IB-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Non Resinabile","Inox","NPT","PMA1N710S",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Non Resinabile","Inox","Metrico","PMA1IS-KIT",4,7,"4 ÷ 7",6,10,"6 ÷ 10"],
+  ["Non Resinabile","Inox","NPT","PMA1N710S",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Non Resinabile","Inox","Metrico","PMA1IS-KIT",7,9.5,"7 ÷ 9.5",10,13,"10 ÷ 13"],
+  ["Non Resinabile","Inox","NPT","PMA1N710S",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","Metrico","PMA1IS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","NPT","PMA2NS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","Metrico","PMA2IS-KIT",9,12,"9 ÷ 12",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","NPT","PMA2NS-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","Metrico","PMA2IS-KIT",12,14.5,"12 ÷ 14.5",13,18,"13 ÷ 18"],
+  ["Non Resinabile","Inox","NPT","PMA2NS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Inox","Metrico","PMA2IS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Inox","NPT","PMA3NS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Inox","Metrico","PMA3IS-KIT",14,17,"14 ÷ 17",18,23,"18 ÷ 23"],
+  ["Non Resinabile","Inox","NPT","PMA3NS-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Non Resinabile","Inox","Metrico","PMA3IS-KIT",17,20,"17 ÷ 20",21,26,"21 ÷ 26"],
+  ["Non Resinabile","Inox","NPT","PMA3NS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Inox","Metrico","PMA3IS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Inox","NPT","PMA4NS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Inox","Metrico","PMA4IS-KIT",20,23,"20 ÷ 23",24,30,"24 ÷ 30"],
+  ["Non Resinabile","Inox","NPT","PMA4NS-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Inox","Metrico","PMA4IS-KIT",23,26,"23 ÷ 26",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Inox","NPT","PMA4NS-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Inox","Metrico","PMA4IS-KIT",26,29,"26 ÷ 29",29,35,"29 ÷ 35"],
+  ["Non Resinabile","Inox","NPT","PMA5NS-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Non Resinabile","Inox","Metrico","PMA5IS-KIT",20,23,"20 ÷ 23",26,31,"26 ÷ 31"],
+  ["Non Resinabile","Inox","NPT","PMA5NS-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Inox","Metrico","PMA5IS-KIT",23,26,"23 ÷ 26",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Inox","NPT","PMA5NS-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Inox","Metrico","PMA5IS-KIT",26,29,"26 ÷ 29",31,37,"31 ÷ 37"],
+  ["Non Resinabile","Inox","NPT","PMA5NS-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Inox","Metrico","PMA5IS-KIT",29,32,"29 ÷ 32",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Inox","NPT","PMA5NS-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Inox","Metrico","PMA5IS-KIT",32,35,"32 ÷ 35",36,43,"36 ÷ 43"],
+  ["Non Resinabile","Inox","NPT","PMA6NS-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Non Resinabile","Inox","Metrico","PMA6IS-KIT",35,39,"35 ÷ 39",42,46,"42 ÷ 46"],
+  ["Non Resinabile","Inox","NPT","PMA6NS-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Non Resinabile","Inox","Metrico","PMA6IS-KIT",39,42,"39 ÷ 42",45,49,"45 ÷ 49"],
+  ["Non Resinabile","Inox","NPT","PMA6NS-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+  ["Non Resinabile","Inox","Metrico","PMA6IS-KIT",42,45,"42 ÷ 45",48,52,"48 ÷ 52"],
+];
+
+// ── Coelbo PMX (Resinabile) e PM (Non Resinabile) ─────────────────────────
+// [resina, materiale, filettatura, codice, cMin, cMax, cStr, gi]
+// Criterio: solo diametro esterno cavo (ød cavo)
+const LOOKUP_COELBO = [
+  ["Resinabile","Ottone Nichelato","NPT","PMX1NB-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX1IB-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX1NB-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX1IB-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX1NB-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX1IB-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX2NB",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX2IB-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX2NB",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX2IB-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX2NB",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX2IB-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX3NB",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX3IB-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX3NB",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX3IB-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX3NB",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX3IB-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX4NB-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX4IB-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX4NB-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX4IB-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX4NB-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX4IB-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX5NB-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX5IB-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX5NB-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX5IB-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX5NB-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX5IB-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX5NB-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX5IB-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX5NB-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX5IB-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX6NB-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX6IB-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX6NB-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX6IB-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Resinabile","Ottone Nichelato","NPT","PMX6NB-KIT",42.0,45.0,"42 ÷ 45","6GI3"],
+  ["Resinabile","Ottone Nichelato","Metrico","PMX6IB-KIT",42.0,45.0,"42 ÷ 45","6GI3"],
+  ["Resinabile","Inox","NPT","PMX1NS-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Resinabile","Inox","Metrico","PMX1S-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Resinabile","Inox","NPT","PMX1NS-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Resinabile","Inox","Metrico","PMX1S-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Resinabile","Inox","NPT","PMX1NS-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Resinabile","Inox","Metrico","PMX1S-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Resinabile","Inox","NPT","PMX2NS-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Resinabile","Inox","Metrico","PMX2IS-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Resinabile","Inox","NPT","PMX2NS-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Resinabile","Inox","Metrico","PMX2IS-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Resinabile","Inox","NPT","PMX2NS-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Resinabile","Inox","Metrico","PMX2IS-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Resinabile","Inox","NPT","PMX3NS-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Resinabile","Inox","Metrico","PMX3IS-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Resinabile","Inox","NPT","PMX3NS-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Resinabile","Inox","Metrico","PMX3IS-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Resinabile","Inox","NPT","PMX3NS-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Resinabile","Inox","Metrico","PMX3IS-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Resinabile","Inox","NPT","PMX4NS-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Resinabile","Inox","Metrico","PMX4IS-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Resinabile","Inox","NPT","PMX4NS-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Resinabile","Inox","Metrico","PMX4IS-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Resinabile","Inox","NPT","PMX4NS-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Resinabile","Inox","Metrico","PMX4IS-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Resinabile","Inox","NPT","PMX5NS-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Resinabile","Inox","Metrico","PMX5IS-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Resinabile","Inox","NPT","PMX5NS-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Resinabile","Inox","Metrico","PMX5IS-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Resinabile","Inox","NPT","PMX5NS-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Resinabile","Inox","Metrico","PMX5IS-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Resinabile","Inox","NPT","PMX5NS-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Resinabile","Inox","Metrico","PMX5IS-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Resinabile","Inox","NPT","PMX5NS-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Resinabile","Inox","Metrico","PMX5IS-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Resinabile","Inox","NPT","PMX6NS-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Resinabile","Inox","Metrico","PMX6IS-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Resinabile","Inox","NPT","PMX6NS-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Resinabile","Inox","Metrico","PMX6IS-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM1NB-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM1IB-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM1NB-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM1IB-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM1NB-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM1IB-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM2NB-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM2IB-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM2NB-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM2IB-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM2NB-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM2IB-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM3NB-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM3IB-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM3NB-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM3IB-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM3NB-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM3IB-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM4NB-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM4IB-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM4NB-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM4IB-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM4NB-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM4IB-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM5NB-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM5IB-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM5NB-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM5IB-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM5NB-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM5IB-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM5NB-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM5IB-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM5NB-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM5IB-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM6NB-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM6IB-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM6NB-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM6IB-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Non Resinabile","Ottone Nichelato","NPT","PM6NB-KIT",42.0,45.0,"42 ÷ 45","6GI3"],
+  ["Non Resinabile","Ottone Nichelato","Metrico","PM6IB-KIT",42.0,45.0,"42 ÷ 45","6GI3"],
+  ["Non Resinabile","Inox","NPT","PM1NS-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Non Resinabile","Inox","Metrico","PM1I7S-KIT",4.0,7.0,"4 ÷ 7","1GI1"],
+  ["Non Resinabile","Inox","NPT","PM1NS-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Non Resinabile","Inox","Metrico","PM1I7S-KIT",7.0,9.5,"7 ÷ 9,5","1GI2"],
+  ["Non Resinabile","Inox","NPT","PM1NS-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Non Resinabile","Inox","Metrico","PM1I7S-KIT",9.0,12.0,"9 ÷ 12","1GI3"],
+  ["Non Resinabile","Inox","NPT","PM2NS-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Non Resinabile","Inox","Metrico","PM2IS-KIT",9.0,12.0,"9 ÷ 12","2GI1"],
+  ["Non Resinabile","Inox","NPT","PM2NS-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Non Resinabile","Inox","Metrico","PM2IS-KIT",12.0,14.5,"12 ÷ 14,5","2GI2"],
+  ["Non Resinabile","Inox","NPT","PM2NS-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Non Resinabile","Inox","Metrico","PM2IS-KIT",14.0,17.0,"14 ÷ 17","2GI3"],
+  ["Non Resinabile","Inox","NPT","PM3NS-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Non Resinabile","Inox","Metrico","PM3IS-KIT",14.0,17.0,"14 ÷ 17","3GI1"],
+  ["Non Resinabile","Inox","NPT","PM3NS-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Non Resinabile","Inox","Metrico","PM3IS-KIT",17.0,20.0,"17 ÷ 20","3GI2"],
+  ["Non Resinabile","Inox","NPT","PM3NS-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Non Resinabile","Inox","Metrico","PM3IS-KIT",20.0,23.0,"20 ÷ 23","3GI3"],
+  ["Non Resinabile","Inox","NPT","PM4NS-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Non Resinabile","Inox","Metrico","PM4IS-KIT",20.0,23.0,"20 ÷ 23","4GI1"],
+  ["Non Resinabile","Inox","NPT","PM4NS-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Non Resinabile","Inox","Metrico","PM4IS-KIT",23.0,26.0,"23 ÷ 26","4GI2"],
+  ["Non Resinabile","Inox","NPT","PM4NS-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Non Resinabile","Inox","Metrico","PM4IS-KIT",26.0,29.0,"26 ÷ 29","4GI3"],
+  ["Non Resinabile","Inox","NPT","PM5NS-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Non Resinabile","Inox","Metrico","PM5IS-KIT",20.0,23.0,"20 ÷ 23","5GI1"],
+  ["Non Resinabile","Inox","NPT","PM5NS-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Non Resinabile","Inox","Metrico","PM5IS-KIT",23.0,26.0,"23 ÷ 26","5GI2"],
+  ["Non Resinabile","Inox","NPT","PM5NS-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Non Resinabile","Inox","Metrico","PM5IS-KIT",26.0,29.0,"26 ÷ 29","5GI3"],
+  ["Non Resinabile","Inox","NPT","PM5NS-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Non Resinabile","Inox","Metrico","PM5IS-KIT",29.0,32.0,"29 ÷ 32","5GI4"],
+  ["Non Resinabile","Inox","NPT","PM5NS-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Non Resinabile","Inox","Metrico","PM5IS-KIT",32.0,35.0,"32 ÷ 35","5GI5"],
+  ["Non Resinabile","Inox","NPT","PM6NS-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Non Resinabile","Inox","Metrico","PM6IS-KIT",35.0,39.0,"35 ÷ 39","6GI1"],
+  ["Non Resinabile","Inox","NPT","PM6NS-KIT",39.0,42.0,"39 ÷ 42","6GI2"],
+  ["Non Resinabile","Inox","Metrico","PM6IS-KIT",39.0,42.0,"39 ÷ 42","6GI2"]
+];
+
+// ── LAPP SKINTOP® MS-SC-M ─────────────────────────────────────────────────
+// [codice, filettatura, cMin, cMax, cStr, SW]
+// Solo Metrico – nessuna distinzione materiale (unico prodotto)
+const LOOKUP_LAPP = [
+  ["53112610","M20x1,5",3.5,7.0,"3,5 ÷ 7","16"],
+  ["53112620","M16x1,5",4.5,10.0,"4,5 ÷ 10","20"],
+  ["53112630","M20x1,5",7.0,13.0,"7 ÷ 13","24"],
+  ["53112640","M25x1,5",9.0,17.0,"9 ÷ 17","29"],
+  ["53112650","M32x1,5",11.0,21.0,"11 ÷ 21","36"],
+  ["53112660","M40x1,5",19.0,28.0,"19 ÷ 28","45"],
+  ["53112670","M50x1,5",27.0,35.0,"27 ÷ 35","54"]
+];
+
+function onMarcaChange() {
+  const marca = document.getElementById("marca").value;
+  const isLapp = marca === "LAPP Schermati";
+  // LAPP: nascondi Tipo di pressacavo, forza Metrico e Ottone Nichelato
+  document.getElementById("field_resina").style.display = isLapp ? "none" : "";
+  const filSel = document.getElementById("filettatura");
+  const nptOpt = filSel.querySelector('option[value="NPT"], option:last-child');
+  if (isLapp) {
+    document.getElementById("resina").value = "";
+    document.getElementById("materiale").value = "Ottone Nichelato";
+    filSel.value = "Metrico";
+    // Disabilita NPT
+    filSel.querySelectorAll("option").forEach(o => {
+      if (o.textContent === "NPT") o.disabled = true;
+    });
+  } else {
+    // Riabilita NPT
+    filSel.querySelectorAll("option").forEach(o => { o.disabled = false; });
+  }
+  compute();
+}
+
+function onMaterialeChange() {
+  // Se LAPP Schermati è selezionato, Inox non è disponibile → ripristina Ottone Nichelato
+  if (document.getElementById("marca").value === "LAPP Schermati" &&
+      document.getElementById("materiale").value === "Inox") {
+    document.getElementById("materiale").value = "Ottone Nichelato";
+  }
+  compute();
+}
+
+function onTipologiaChange() {
+  const tip = document.getElementById("tipologia").value;
+  const sel = document.getElementById("specifica");
+  sel.innerHTML = '<option value="">— Seleziona —</option>';
+  const data = tip === "Potenza A +S" ? POTENZA : tip === "Strumentazione A +S" ? STRUM : tip === "Solo schermati" ? SOLO_SCHERMATI : tip === "Lapp FG16 Schermati" ? LAPP_FG16 : [];
+  data.forEach(r => {
+    const o = document.createElement("option");
+    o.value = r[0]; o.textContent = r[0]; sel.appendChild(o);
+  });
+  document.getElementById("diam_int").textContent = "—";
+  document.getElementById("diam_ext").textContent = "—";
+  const isSoloSchermati = tip === "Solo schermati" || tip === "Lapp FG16 Schermati";
+  // Nascondi il diametro interno per i cavi solo schermati
+  document.getElementById("field_diam_int").style.display = isSoloSchermati ? "none" : "";
+  // Mostra/nascondi il campo Marca pressacavo
+  document.getElementById("field_marca_row").style.display = isSoloSchermati ? "" : "none";
+  if (!isSoloSchermati) {
+    document.getElementById("marca").value = "";
+    // Ripristina Tipo di pressacavo e filettatura NPT se erano nascosti/disabilitati per LAPP
+    document.getElementById("field_resina").style.display = "";
+    document.getElementById("filettatura").querySelectorAll("option").forEach(o => { o.disabled = false; });
+  }
+  compute();
+}
+
+function onSpecificaChange() {
+  const tip  = document.getElementById("tipologia").value;
+  const spec = document.getElementById("specifica").value;
+  const data = tip === "Potenza A +S" ? POTENZA : tip === "Strumentazione A +S" ? STRUM : tip === "Lapp FG16 Schermati" ? LAPP_FG16 : SOLO_SCHERMATI;
+  const row  = data.find(r => r[0] === spec);
+  if (row) {
+    document.getElementById("diam_int").textContent = row[3] !== null ? row[3] + " mm" : "—";
+    document.getElementById("diam_ext").textContent = row[4] !== null ? row[4] + " mm" : "—";
+  } else {
+    document.getElementById("diam_int").textContent = "—";
+    document.getElementById("diam_ext").textContent = "—";
+  }
+  compute();
+}
+
+function compute() {
+  const tip   = document.getElementById("tipologia").value;
+  const spec  = document.getElementById("specifica").value;
+  const res   = document.getElementById("resina").value;
+  const fil   = document.getElementById("filettatura").value;
+  const mat   = document.getElementById("materiale").value;
+  const marca = document.getElementById("marca").value;
+  const ra    = document.getElementById("result_area");
+
+  const isSoloSchermati = tip === "Solo schermati" || tip === "Lapp FG16 Schermati";
+
+  const data = tip === "Potenza A +S" ? POTENZA : tip === "Strumentazione A +S" ? STRUM : tip === "Lapp FG16 Schermati" ? LAPP_FG16 : SOLO_SCHERMATI;
+  const row  = data.find(r => r[0] === spec);
+
+  // Resina non richiesta per LAPP Schermati (non ha resinabile/non resinabile)
+  const needsResina = !(isSoloSchermati && marca === "LAPP Schermati");
+  if (!spec || (needsResina && !res) || !fil || !mat || !row || (isSoloSchermati && !marca)) {
+    ra.className = "result-area empty";
+    ra.innerHTML = '<div class="hint">Completa tutte le selezioni per vedere il pressacavo consigliato</div>';
+    return;
+  }
+
+  const di = row[3], de = row[4];
+
+  // ── Coelbo: usa LOOKUP_COELBO (PMX resinabile / PM non resinabile)
+  //    criterio: solo diametro esterno cavo (de)
+  if (isSoloSchermati && marca === "Coelbo") {
+    if (de === null) {
+      ra.className = "result-area error";
+      ra.innerHTML = `<div class="result-code error">Diametro esterno non disponibile per questo cavo</div>`;
+      return;
+    }
+    const mc = LOOKUP_COELBO.find(e =>
+      e[0] === res && e[1] === mat && e[2] === fil &&
+      e[4] <= de && de <= e[5]
+    );
+    if (mc) {
+      const threadSize = getThreadSize(mc[3], fil);
+      ra.className = "result-area";
+      ra.innerHTML = `
+        <div class="result-label">Pressacavo consigliato – Coelbo</div>
+        <div class="result-code">${mc[3]}</div>
+        <div class="result-dims">
+          <div class="dim-chip green">
+            <div class="dim-label">Filettatura</div>
+            <div class="dim-value">${threadSize}</div>
+          </div>
+          <div class="dim-chip">
+            <div class="dim-label">Anello GI</div>
+            <div class="dim-value">${mc[7]}</div>
+          </div>
+          <div class="dim-chip">
+            <div class="dim-label">øe cavo</div>
+            <div class="dim-value">${mc[6]} mm</div>
+          </div>
+        </div>`;
+    } else {
+      ra.className = "result-area error";
+      ra.innerHTML = `<div class="result-code error">Nessun pressacavo trovato<br><small style="font-size:13px;font-weight:normal">øe cavo = ${de} mm</small></div>`;
+    }
+    return;
+  }
+
+  // ── LAPP Schermati: usa LOOKUP_LAPP (SKINTOP® MS-SC-M, solo Metrico)
+  //    criterio: solo diametro esterno cavo (de)
+  if (isSoloSchermati && marca === "LAPP Schermati") {
+    if (de === null) {
+      ra.className = "result-area error";
+      ra.innerHTML = `<div class="result-code error">Diametro esterno non disponibile per questo cavo</div>`;
+      return;
+    }
+    const ml = LOOKUP_LAPP.find(e => e[2] <= de && de <= e[3]);
+    if (ml) {
+      ra.className = "result-area";
+      ra.innerHTML = `
+        <div class="result-label">Pressacavo consigliato – LAPP SKINTOP® MS-SC-M</div>
+        <div class="result-code">${ml[0]}</div>
+        <div class="result-dims">
+          <div class="dim-chip green">
+            <div class="dim-label">Filettatura</div>
+            <div class="dim-value">${ml[1]}</div>
+          </div>
+          <div class="dim-chip">
+            <div class="dim-label">øe cavo</div>
+            <div class="dim-value">${ml[4]} mm</div>
+          </div>
+          <div class="dim-chip">
+            <div class="dim-label">Chiave SW</div>
+            <div class="dim-value">${ml[5]} mm</div>
+          </div>
+        </div>`;
+    } else {
+      ra.className = "result-area error";
+      ra.innerHTML = `<div class="result-code error">Nessun pressacavo LAPP trovato<br><small style="font-size:13px;font-weight:normal">øe cavo = ${de} mm</small></div>`;
+    }
+    return;
+  }
+
+  // ── Potenza A+S / Strumentazione: usa LOOKUP standard (PMAX / PMA)
+  const match = LOOKUP.find(e =>
+    e[0] === res && e[1] === mat && e[2] === fil &&
+    e[4] <= di && di <= e[5] &&
+    e[7] <= de && de <= e[8]
+  );
+
+  if (match) {
+    const threadSize = getThreadSize(match[3], fil);
+    ra.className = "result-area";
+    ra.innerHTML = `
+      <div class="result-label">Pressacavo consigliato</div>
+      <div class="result-code">${match[3]}</div>
+      <div class="result-dims">
+        <div class="dim-chip green">
+          <div class="dim-label">Filettatura</div>
+          <div class="dim-value">${threadSize}</div>
+        </div>
+        <div class="dim-chip">
+          <div class="dim-label">ød guaina</div>
+          <div class="dim-value">${match[6]} mm</div>
+        </div>
+        <div class="dim-chip">
+          <div class="dim-label">øe cavo</div>
+          <div class="dim-value">${match[9]} mm</div>
+        </div>
+      </div>`;
+  } else {
+    ra.className = "result-area error";
+    ra.innerHTML = `<div class="result-code error">Nessun pressacavo trovato<br><small style="font-size:13px;font-weight:normal">per i diametri: int=${di}mm / ext=${de}mm</small></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════════════════
+function switchTab(n) {
+  document.querySelectorAll(".tab-btn").forEach((b, i) => b.classList.toggle("active", i === n - 1));
+  document.querySelectorAll(".tab-panel").forEach((p, i) => p.classList.toggle("active", i === n - 1));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OPZIONE 2 — BATCH EXCEL
+// ═══════════════════════════════════════════════════════════════════════════
+
+let batchResultData = null; // tiene il workbook risultato pronto per il download
+
+// ── Drag & drop ─────────────────────────────────────────────────────────────
+const dz = document.getElementById ? document.getElementById("dropZone") : null;
+document.addEventListener("DOMContentLoaded", () => {
+  const dz = document.getElementById("dropZone");
+  dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("dragover"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+  dz.addEventListener("drop", e => {
+    e.preventDefault(); dz.classList.remove("dragover");
+    const f = e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+});
+
+function onFileSelected(event) {
+  const f = event.target.files[0];
+  if (f) loadFile(f);
+}
+
+function loadFile(file) {
+  document.getElementById("dzFileName").textContent = "📄 " + file.name;
+  document.getElementById("btnProcess").disabled = false;
+  document.getElementById("btnProcess").dataset.file = "";
+  // Salva il file per dopo
+  const reader = new FileReader();
+  reader.onload = e => { window._batchFileData = e.target.result; };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Template download ────────────────────────────────────────────────────────
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const templateRows = [
+    ["Tipologia","Specifica","Tipo pressacavo","Filettatura","Materiale","Marca"],
+    ["Potenza A +S","3 G 2.5","Resinabile","Metrico","Inox",""],
+    ["Potenza A +S","4 G 1.5","Non Resinabile","NPT","Ottone Nichelato",""],
+    ["Strumentazione A +S","4 pairs x 0.75","Resinabile","Metrico","Inox",""],
+    ["Solo schermati","3 G 2.5","Resinabile","Metrico","Ottone Nichelato","Coelbo"],
+    ["Solo schermati","4 G 1.5","","Metrico","Ottone Nichelato","LAPP Schermati"],
+    ["Lapp FG16 Schermati","3 G 1.5","Non Resinabile","NPT","Inox","Coelbo"]
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(templateRows);
+  ws["!cols"] = [18,20,18,12,18,16].map(w => ({wch: w}));
+  XLSX.utils.book_append_sheet(wb, ws, "Input");
+  XLSX.writeFile(wb, "template_pressacavi.xlsx");
+}
+
+// ── Funzione di lookup pura (senza DOM) ─────────────────────────────────────
+function computeRow(tip, spec, res, fil, mat, marca) {
+  const isSch = tip === "Solo schermati" || tip === "Lapp FG16 Schermati";
+  const data  = tip === "Potenza A +S" ? POTENZA
+              : tip === "Strumentazione A +S" ? STRUM
+              : tip === "Lapp FG16 Schermati" ? LAPP_FG16
+              : SOLO_SCHERMATI;
+
+  const row = data.find(r => r[0] === spec);
+  if (!row) return { ok: false, msg: "Specifica non trovata" };
+
+  const di = row[3], de = row[4];
+
+  // Schermati — Coelbo
+  if (isSch && marca === "Coelbo") {
+    if (de === null) return { ok: false, msg: "øe non disponibile" };
+    const mc = LOOKUP_COELBO.find(e =>
+      e[0] === res && e[1] === mat && e[2] === fil &&
+      e[4] <= de && de <= e[5]
+    );
+    if (!mc) return { ok: false, msg: `Nessun risultato (øe=${de})` };
+    return { ok: true, codice: mc[3], filettatura: getThreadSize(mc[3], fil),
+             range: mc[6] + " mm", extra: "GI: " + mc[7] };
+  }
+
+  // Schermati — LAPP
+  if (isSch && marca === "LAPP Schermati") {
+    if (de === null) return { ok: false, msg: "øe non disponibile" };
+    const ml = LOOKUP_LAPP.find(e => e[2] <= de && de <= e[3]);
+    if (!ml) return { ok: false, msg: `Nessun risultato LAPP (øe=${de})` };
+    return { ok: true, codice: ml[0], filettatura: ml[1],
+             range: ml[4] + " mm", extra: "SW: " + ml[5] + " mm" };
+  }
+
+  // Standard — Potenza / Strumentazione
+  if (!isSch) {
+    const match = LOOKUP.find(e =>
+      e[0] === res && e[1] === mat && e[2] === fil &&
+      e[4] <= di && di <= e[5] &&
+      e[7] <= de && de <= e[8]
+    );
+    if (!match) return { ok: false, msg: `Nessun risultato (øi=${di}, øe=${de})` };
+    return { ok: true, codice: match[3], filettatura: getThreadSize(match[3], fil),
+             range: `ød ${match[6]} / øe ${match[9]} mm`, extra: "" };
+  }
+
+  return { ok: false, msg: "Combinazione non valida" };
+}
+
+// ── Elaborazione batch ───────────────────────────────────────────────────────
+function processBatch() {
+  if (!window._batchFileData) return;
+
+  const wb_in = XLSX.read(window._batchFileData, { type: "arraybuffer" });
+  const ws_in = wb_in.Sheets[wb_in.SheetNames[0]];
+  const rows  = XLSX.utils.sheet_to_json(ws_in, { header: 1 });
+
+  if (rows.length < 2) { alert("Il file è vuoto o mancano i dati."); return; }
+
+  const cleanHdr = h => String(h || "").replace(/\*/g,"").replace(/\n/g," ").trim().toLowerCase();
+
+  let hdrRowIdx = -1, hdr = [];
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const candidate = (rows[i] || []).map(cleanHdr);
+    if (candidate.some(h => h.includes("tipologia"))) { hdrRowIdx = i; hdr = candidate; break; }
+  }
+  if (hdrRowIdx === -1) { alert("Intestazione non trovata. Assicurati che il file abbia una colonna 'Tipologia'."); return; }
+
+  const col = name => hdr.findIndex(h => h.includes(name.toLowerCase()));
+  const C_TIP = col("tipologia"), C_SPEC = col("specifica"), C_RES = col("tipo pressacavo");
+  const C_FIL = col("filettatura"), C_MAT = col("materiale"), C_MAR = col("marca");
+
+  if ([C_TIP, C_SPEC, C_FIL, C_MAT].some(c => c === -1)) {
+    alert("Colonne mancanti. Assicurati che il file abbia: Tipologia, Specifica, Filettatura, Materiale."); return;
+  }
+
+  let nOk = 0, nErr = 0;
+  const previewData = [];
+  const TIPOLOGIE_VALIDE = ["Potenza A +S","Strumentazione A +S","Solo schermati","Lapp FG16 Schermati"];
+
+  for (let i = hdrRowIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => !c)) continue;
+    const tip  = String(r[C_TIP]  || "").trim();
+    const spec = String(r[C_SPEC] || "").trim();
+    if (tip && !TIPOLOGIE_VALIDE.includes(tip)) continue;
+    const res = C_RES >= 0 ? String(r[C_RES] || "").trim() : "";
+    const fil = String(r[C_FIL] || "").trim();
+    const mat = String(r[C_MAT] || "").trim();
+    const mar = C_MAR >= 0 ? String(r[C_MAR] || "").trim() : "";
+    const result = computeRow(tip, spec, res, fil, mat, mar);
+    if (result.ok) nOk++; else nErr++;
+    previewData.push({ tip, spec, res, fil, mat, result });
+  }
+
+  batchResultData = previewData; // salva per download
+
+  renderPreview(previewData);
+  document.getElementById("batchSummary").style.display = "";
+  document.getElementById("batchSummary").innerHTML =
+    `Elaborate <span>${previewData.length}</span> righe — ` +
+    `<span style="color:#2E7D0C">${nOk} trovati</span> · ` +
+    `<span style="color:#CC0000">${nErr} non trovati</span>`;
+  document.getElementById("btnDownload").disabled = false;
+}
+
+function renderPreview(data) {
+  document.getElementById("batchPreviewWrap").style.display = "";
+  let html = `<table><thead><tr>
+    <th>Specifica</th><th>Tipo</th><th>Filettatura</th><th>Materiale</th>
+    <th>Codice pressacavo</th><th>Filettatura eff.</th><th>Range dim.</th><th>Stato</th>
+  </tr></thead><tbody>`;
+  for (const d of data) {
+    const ok = d.result.ok;
+    html += `<tr>
+      <td>${d.spec}</td><td>${d.res||"—"}</td><td>${d.fil}</td><td>${d.mat}</td>
+      <td><strong>${ok ? d.result.codice : "—"}</strong></td>
+      <td>${ok ? d.result.filettatura : "—"}</td>
+      <td>${ok ? d.result.range : "—"}</td>
+      <td><span class="${ok?"badge-ok":"badge-err"}">${ok?"OK":d.result.msg}</span></td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  document.getElementById("batchPreview").innerHTML = html;
+}
+
+async function downloadResult() {
+  if (!batchResultData || !batchResultData.length) return;
+
+  const ExcelJS = window.ExcelJS;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Selezione Pressacavi";
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet("Risultato Pressacavi", {
+    views: [{ state: "frozen", ySplit: 4 }]
+  });
+
+  // ── Palette colori ──────────────────────────────────────────────────────
+  const C_DARK  = "0D1B2A";   // navy scuro (come allegato)
+  const C_TEAL  = "007B8A";   // teal (come allegato)
+  const C_MID   = "1F3864";   // blu medio
+  const C_LIGHT = "E8F4F6";   // teal chiarissimo per righe pari
+  const C_WHITE = "FFFFFF";
+  const C_GREEN = "E8F5E0";
+  const C_RED   = "FFF0F0";
+  const C_GREENTX = "1B5E20";
+  const C_REDTX   = "B71C1C";
+
+  // ── Larghezze colonne ───────────────────────────────────────────────────
+  ws.columns = [
+    { key:"spec", width: 22 },
+    { key:"res",  width: 18 },
+    { key:"fil",  width: 13 },
+    { key:"mat",  width: 20 },
+    { key:"cod",  width: 22 },
+    { key:"filEff",width: 18 },
+    { key:"range", width: 26 },
+    { key:"stato", width: 14 },
+  ];
+
+  // ── Righe 1-2: Header con logo ──────────────────────────────────────────
+  const now = new Date();
+  ws.getRow(1).height = 48;
+  ws.getRow(2).height = 22;
+
+  if (_logoB64) {
+    // Con logo: colonne A-B per logo, C-H per testo
+    for (let ri = 1; ri <= 2; ri++) {
+      for (let ci = 1; ci <= 8; ci++) {
+        ws.getRow(ri).getCell(ci).fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_DARK } };
+      }
+    }
+    const logoId = wb.addImage({ base64: _logoB64, extension: "png" });
+    ws.addImage(logoId, { tl: { col: 0, row: 0 }, br: { col: 2.4, row: 2 }, editAs: "oneCell" });
+
+    ws.mergeCells("C1:H1");
+    const t = ws.getCell("C1");
+    t.value = "SELEZIONE PRESSACAVI — RISULTATO ELABORAZIONE";
+    t.font  = { name:"Arial", bold:true, size:14, color:{ argb:"FF"+C_WHITE } };
+    t.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_DARK } };
+    t.alignment = { horizontal:"center", vertical:"bottom" };
+
+    ws.mergeCells("C2:H2");
+    const s = ws.getCell("C2");
+    s.value = `Elaborato il ${now.toLocaleDateString("it-IT")} alle ${now.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}   |   Righe: ${batchResultData.length}`;
+    s.font  = { name:"Arial", italic:true, size:10, color:{ argb:"FFB0D8E0" } };
+    s.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_DARK } };
+    s.alignment = { horizontal:"center", vertical:"top" };
+
+  } else {
+    // Senza logo: header full-width
+    ws.mergeCells("A1:H1");
+    const bannerCell = ws.getCell("A1");
+    bannerCell.value = "SELEZIONE PRESSACAVI — RISULTATO ELABORAZIONE";
+    bannerCell.font  = { name:"Arial", bold:true, size:14, color:{ argb:"FF"+C_WHITE } };
+    bannerCell.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_DARK } };
+    bannerCell.alignment = { horizontal:"center", vertical:"middle" };
+
+    ws.mergeCells("A2:H2");
+    const subCell = ws.getCell("A2");
+    subCell.value = `Elaborato il ${now.toLocaleDateString("it-IT")} alle ${now.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}   |   Righe elaborate: ${batchResultData.length}`;
+    subCell.font  = { name:"Arial", italic:true, size:10, color:{ argb:"FFB0D8E0" } };
+    subCell.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_TEAL } };
+    subCell.alignment = { horizontal:"center", vertical:"middle" };
+  }
+
+  // ── Riga 3: separatore teal ─────────────────────────────────────────────
+  ws.mergeCells("A3:H3");
+  ws.getCell("A3").fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_TEAL } };
+  ws.getRow(3).height = 5;
+
+  // ── Riga 4: Header colonne ──────────────────────────────────────────────
+  const hdrLabels = ["Specifica cavo","Tipo pressacavo","Filettatura","Materiale",
+                     "Codice pressacavo","Filettatura effettiva","Range dimensioni","Stato"];
+  const hdrRow = ws.getRow(4);
+  hdrRow.height = 28;
+  hdrLabels.forEach((lbl, i) => {
+    const c = hdrRow.getCell(i+1);
+    c.value = lbl;
+    c.font  = { name:"Arial", bold:true, size:10, color:{ argb:"FF"+C_WHITE } };
+    c.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_MID } };
+    c.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+    c.border = {
+      bottom: { style:"medium", color:{ argb:"FF"+C_TEAL } },
+      right:  { style:"thin",   color:{ argb:"FF2E5590" } }
+    };
+  });
+
+  // ── Righe dati ──────────────────────────────────────────────────────────
+  const borderThin = {
+    left:   { style:"thin", color:{ argb:"FFD0DCF0" } },
+    right:  { style:"thin", color:{ argb:"FFD0DCF0" } },
+    top:    { style:"thin", color:{ argb:"FFD0DCF0" } },
+    bottom: { style:"thin", color:{ argb:"FFD0DCF0" } }
+  };
+
+  batchResultData.forEach((d, idx) => {
+    const rowNum = idx + 5;
+    const ok = d.result.ok;
+    const isEven = idx % 2 === 0;
+    const rowBg = isEven ? C_WHITE : C_LIGHT;
+
+    const row = ws.getRow(rowNum);
+    row.height = 18;
+
+    const vals = [
+      d.spec,
+      d.res || "—",
+      d.fil,
+      d.mat,
+      ok ? d.result.codice : "—",
+      ok ? d.result.filettatura : "—",
+      ok ? d.result.range : "—",
+      ok ? "OK" : d.result.msg
+    ];
+
+    vals.forEach((v, ci) => {
+      const c = row.getCell(ci + 1);
+      c.value = v;
+      c.border = borderThin;
+      const isCode = ci === 4;
+      const isStato = ci === 7;
+      let fg = C_DARK, bgCell = rowBg, bold = false;
+
+      if (isCode && ok)  { bold = true; fg = C_TEAL; }
+      if (isStato && ok) { bgCell = C_GREEN; fg = C_GREENTX; bold = true; }
+      if (isStato && !ok){ bgCell = C_RED;   fg = C_REDTX;   bold = true; }
+
+      c.font  = { name:"Arial", size:10, bold, color:{ argb:"FF"+fg } };
+      c.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+bgCell } };
+      c.alignment = {
+        horizontal: (ci === 1 || ci === 0) ? "left" : "center",
+        vertical: "middle"
+      };
+    });
+  });
+
+  // ── Riga finale: sommario ───────────────────────────────────────────────
+  const sumRow = batchResultData.length + 5;
+  ws.mergeCells(`A${sumRow}:H${sumRow}`);
+  const nOk  = batchResultData.filter(d => d.result.ok).length;
+  const nErr = batchResultData.length - nOk;
+  const sumCell = ws.getCell(`A${sumRow}`);
+  sumCell.value = `Totale righe: ${batchResultData.length}   |   Trovati: ${nOk}   |   Non trovati: ${nErr}`;
+  sumCell.font  = { name:"Arial", bold:true, size:10, color:{ argb:"FF"+C_WHITE } };
+  sumCell.fill  = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+C_DARK } };
+  sumCell.alignment = { horizontal:"center", vertical:"middle" };
+  ws.getRow(sumRow).height = 22;
+
+  // ── Download ─────────────────────────────────────────────────────────────
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement("a");
+  a.href = url; a.download = "pressacavi_risultato.xlsx";
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function resetBatch() {
+  window._batchFileData = null;
+  batchResultData = null;
+  document.getElementById("fileInput").value = "";
+  document.getElementById("dzFileName").textContent = "";
+  document.getElementById("btnProcess").disabled  = true;
+  document.getElementById("btnDownload").disabled = true;
+  document.getElementById("batchSummary").style.display    = "none";
+  document.getElementById("batchSummary").innerHTML        = "";
+  document.getElementById("batchPreviewWrap").style.display = "none";
+  document.getElementById("batchPreview").innerHTML        = "";
+}
+
+// ── Gestione logo ────────────────────────────────────────────────────────────
+let _logoB64 = null;
+
+function onLogoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    _logoB64 = dataUrl.split(",")[1]; // solo la parte base64
+    // Mostra anteprima
+    const prev = document.getElementById("logoPreview");
+    prev.innerHTML = `<img src="${dataUrl}" style="max-width:120px; max-height:40px; object-fit:contain;">`;
+    document.getElementById("btnRemoveLogo").style.display = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+  _logoB64 = null;
+  document.getElementById("logoInput").value = "";
+  document.getElementById("logoPreview").innerHTML = `<span style="font-size:11px;color:#888;">Nessun logo</span>`;
+  document.getElementById("btnRemoveLogo").style.display = "none";
+}
+</script>
+</body>
+</html>
