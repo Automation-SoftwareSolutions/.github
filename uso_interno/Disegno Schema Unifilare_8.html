@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disegno Schema Unifilare</title>
+<style>
+  :root{
+    --bg:#eef1f5; --panel:#fff; --ink:#1e2430; --muted:#6a7486; --line:#d9dfe7;
+    --accent:#0b6bcb; --accent-soft:#e7f0fc; --ok:#1b8a5a; --danger:#c0392b; --field:#fbfcfe;
+    --sidebar:#12233b; --sidebar-ink:#c9d6e6; --sidebar-active:#0b6bcb;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+  .app{display:flex;height:100vh;overflow:hidden}
+
+  /* Sidebar */
+  .sidebar{width:210px;background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .brand .logo{width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+  .brand b{font-size:13.5px;color:#fff;line-height:1.1}
+  .brand small{display:block;color:#7f93ad;font-size:10.5px;font-weight:600}
+  nav{padding:8px;overflow:auto;flex:1}
+  nav .navbtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;color:var(--sidebar-ink);padding:9px 11px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;margin-bottom:2px}
+  nav .navbtn:hover{background:rgba(255,255,255,.06);color:#fff}
+  nav .navbtn.active{background:var(--sidebar-active);color:#fff}
+  nav .navbtn .ico{width:18px;text-align:center;font-size:14px}
+  nav .navbtn .n{margin-left:auto;background:rgba(255,255,255,.14);border-radius:10px;font-size:10px;padding:1px 7px;font-weight:700}
+  .sidebar .foot{padding:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px}
+  .sidebar .foot button{border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--sidebar-ink);padding:7px;border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:600}
+  .sidebar .foot button:hover{background:rgba(255,255,255,.08);color:#fff}
+  .sidebar .foot .row{display:flex;gap:6px}
+  .sidebar .foot .row button{flex:1}
+
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--line);padding:11px 20px;display:flex;align-items:center;gap:12px}
+  .topbar h2{margin:0;font-size:16px}
+  .topbar .sub{color:var(--muted);font-size:12px}
+  .topbar .sp{margin-left:auto;display:flex;gap:7px}
+  .content{flex:1;overflow:auto;padding:20px}
+  .sheet{display:none;max-width:1200px}
+  .sheet.active{display:block}
+
+  button.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  button.btn:hover{background:var(--accent-soft);border-color:var(--accent)}
+  button.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.btn.primary:hover{filter:brightness(1.06)}
+  button.btn.ghost{background:transparent}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .card h3{margin:0 0 12px;font-size:13.5px;color:var(--accent)}
+  .grid{display:grid;gap:11px 14px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+  label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);font-weight:600}
+  label.f input,label.f select,label.f textarea{border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:12.5px;background:var(--field);color:var(--ink);width:100%}
+  label.f input:focus,label.f select:focus,label.f textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+
+  .tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .tools .spacer{flex:1}
+  .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  table.grid-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+  table.grid-tbl th{background:#f1f5fa;border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:7px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);position:sticky;top:0;white-space:nowrap;text-align:left}
+  table.grid-tbl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}
+  table.grid-tbl td input,table.grid-tbl td select{border:none;background:transparent;width:100%;padding:6px 6px;font-size:11.5px;color:var(--ink)}
+  table.grid-tbl td input:focus,table.grid-tbl td select:focus{outline:2px solid var(--accent-soft);background:#fff}
+  table.grid-tbl td.rowh{background:#f7f9fc;text-align:center;color:var(--muted);font-weight:700;width:30px}
+  table.grid-tbl td.act{white-space:nowrap;text-align:center;width:74px;background:#fafbfd}
+  .rowbtn{border:none;background:transparent;cursor:pointer;font-weight:700;font-size:13px;padding:3px 5px;color:var(--muted)}
+  .rowbtn.del{color:var(--danger)}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:12.5px}
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.55}
+  .placeholder-box{border:2px dashed var(--line);border-radius:12px;padding:40px;text-align:center;color:var(--muted);background:#fff}
+  .placeholder-box .big{font-size:34px;margin-bottom:8px}
+
+  /* Schema */
+  .schema-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  #schemaCanvas{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:auto;padding:16px}
+  #schemaCanvas svg{background:#fff;display:block;margin:0 auto;box-shadow:0 1px 8px rgba(0,0,0,.08)}
+
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12233b;color:#fff;padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
+  .toast.show{opacity:1}
+  .pill{font-size:10px;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:2px 7px;font-weight:700}
+
+  @media print{
+    .sidebar,.topbar,.schema-toolbar{display:none!important}
+    .app,.main,.content{display:block;height:auto;overflow:visible}
+    .content{padding:0}
+    .sheet{display:none!important}
+    .sheet.active{display:block!important}
+    #schemaCanvas,#schemaMonoCanvas,#schemaDCCanvas,#schemaPLCCanvas{border:none;padding:0}
+    #schemaCanvas svg,#schemaMonoCanvas svg,#schemaDCCanvas svg,#schemaPLCCanvas svg{box-shadow:none;width:100%!important;height:auto!important}
+    @page{size:A3 landscape;margin:8mm}
+    /* Fascicolo completo: stampa solo #printArea, in ordine */
+    body.printing .app{display:none!important}
+    body.printing #printArea{display:block!important}
+    body.printing .print-page{page-break-after:always;break-after:page;overflow:hidden}
+    body.printing .print-page:last-child{page-break-after:auto;break-after:auto}
+    /* Ogni schema sta in una sola pagina: SVG con viewBox scalato per rientrare (larghezza+altezza) */
+    body.printing .print-page svg{display:block;width:100%!important;height:260mm!important}
+  }
+  #printArea{display:none}
+  #printArea .print-page{padding:0 0 6mm}
+  #printArea .print-h{font-size:16px;margin:0 0 8px;color:#111}
+  #printArea .dg-tbl{border-collapse:collapse;width:100%;font-size:12px}
+  #printArea .dg-tbl td{border:1px solid #999;padding:6px 8px}
+  #printArea .dg-tbl td.k{background:#f0f3f7;font-weight:700;width:180px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div><b>Disegno Schema Unifilare</b><small>App disegnatore · v2</small></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="foot">
+      <div class="row">
+        <button id="btnSave">Salva</button>
+        <button id="btnOpen">Apri</button>
+      </div>
+      <button id="btnExample">Carica esempio</button>
+      <button id="btnNew">Nuovo progetto</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="sheetTitle">Dati generali</h2>
+        <div class="sub" id="sheetSub"></div>
+      </div>
+      <div class="sp" id="topActions"></div>
+    </div>
+    <div class="content" id="content"><!-- sheets injected --></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="application/json" style="display:none">
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   MODELLO DATI
+   ========================================================= */
+function emptyProject(){
+  return {
+    meta:{impianto:"",cliente:"",quadro:"",commessa:"",disegnatore:"",data:"",rev:"Rev.00",foglio:"1 di 1",note:""},
+    quadri:[],
+    sbarre:[],
+    componenti:[],
+    partenze:[],
+    sbarreMono:[],
+    partenzeMono:[],
+    sbarreDC:[],
+    partenzeDC:[],
+    plcModuli:[],
+    plcIO:[],
+    sicModuli:[],
+    sicIO:[],
+    plc:{note:"", io:[]}
+  };
+}
+let project = emptyProject();
+let schemaOrient = "V";   // layout schema classico (partenze verso il basso); la pagina di stampa è landscape
+let uidC = 1;
+function uid(){ return "id"+(uidC++)+"_"+Math.floor(performance.now()); }
+
+/* =========================================================
+   DEFINIZIONE FOGLI
+   ========================================================= */
+const SHEETS = [
+  {id:"generali", label:"Dati generali", ico:"📋", sub:"Intestazione e cartiglio del disegno"},
+  {id:"componenti",label:"Componenti",   ico:"🔧", sub:"Libreria componenti (con Tipo componente)", coll:"componenti"},
+  {id:"quadri",   label:"Quadri",        ico:"🗄️", sub:"Elenco dei quadri dell'impianto", coll:"quadri"},
+  {id:"sbarre",   label:"Sbarre trifase", ico:"➖", sub:"Sbarre trifase di distribuzione per quadro", coll:"sbarre"},
+  {id:"partenze", label:"Partenze trifase", ico:"⬇️", sub:"Circuiti trifase in partenza dai quadri", coll:"partenze"},
+  {id:"sbarreMono",label:"Sbarre Monofase",ico:"➖", sub:"Sbarre monofase (generale = trasformatore, con protezione)", coll:"sbarreMono"},
+  {id:"partenzeMono",label:"Partenze Monofase",ico:"⬇️", sub:"Circuiti monofase in partenza dalle sbarre monofase", coll:"partenzeMono"},
+  {id:"sbarreDC", label:"Sbarre DC",     ico:"➖", sub:"Sbarre DC (generale = alimentatore, con protezione)", coll:"sbarreDC"},
+  {id:"partenzeDC",label:"Partenze DC",  ico:"⬇️", sub:"Circuiti DC in partenza dalle sbarre DC", coll:"partenzeDC"},
+  {id:"plcModuli",label:"PLC Moduli",    ico:"🖧", sub:"Moduli/rack del PLC (CPU, DI/DO/AI/AO, bus)", coll:"plcModuli"},
+  {id:"plcIO",    label:"PLC I/O",       ico:"🔌", sub:"Lista segnali I/O del PLC", coll:"plcIO"},
+  {id:"sicModuli",label:"Sicurezza Moduli",ico:"🛡️", sub:"Moduli di sicurezza (relè/F-CPU/F-DI/F-DO)", coll:"sicModuli"},
+  {id:"sicIO",    label:"Sicurezza I/O", ico:"🛑", sub:"Catena di sicurezza: emergenze, ripari, reset…", coll:"sicIO"},
+  {id:"schema",   label:"Schema trifasico", ico:"📐", sub:"Schema unifilare trifase"},
+  {id:"schemaMono",label:"Schema Monofase",ico:"📐", sub:"Schema unifilare monofase"},
+  {id:"schemaDC", label:"Schema DC",     ico:"📐", sub:"Schema unifilare DC"},
+  {id:"schemaPLC",label:"Schema PLC",    ico:"📐", sub:"Schema I/O del PLC"},
+  {id:"schemaSic",label:"Schema Sicurezza",ico:"📐", sub:"Schema della catena di sicurezza"},
+  {id:"export",   label:"Export",        ico:"📤", sub:"Esporta PDF, SVG e DXF"}
+];
+
+/* =========================================================
+   COLONNE DELLE TABELLE
+   opts: array | funzione(row)->array. type: text|num|select
+   ========================================================= */
+const POLI=["1P","1P+N","2P","3P","3P+N","4P"];
+const CURVA=["","B","C","D","K","Z"];
+const SN=["no","sì"];
+const TIPOMOD=["CPU","Alimentatore","DI","DO","DI/DO","AI","AO","AI/AO","RTD","TC","Bus/Nodo","Comunicazione"];
+const TIPOSEG=["DI","DO","AI","AO","RTD","TC"];
+/* Sicurezza */
+const TIPOSIC=["Relè sicurezza","CPU F","Modulo base","F-DI","F-DO","F-DI/DO","Barriera/Light curtain","Bus/Nodo","Altro"];
+const TIPOSEGSIC=["F-DI","F-DO","Reset","Feedback/EDM"];
+const FUNZSIC=["Emergenza","Riparo/Cancello","Barriera fotoelettrica","Fune a strappo","Reset","Feedback/EDM","Consenso","Muting","Altro"];
+function moduloOptsFor(row){          // PLC I/O -> moduli dello stesso quadro
+  const q=row.quadro;
+  const list=project.plcModuli.filter(m=>!q||m.quadro===q).map(m=>m.sigla).filter(Boolean);
+  return [""].concat(list.length?list:project.plcModuli.map(m=>m.sigla).filter(Boolean));
+}
+function moduloSicOptsFor(row){       // Sicurezza I/O -> moduli di sicurezza dello stesso quadro
+  const q=row.quadro;
+  const list=project.sicModuli.filter(m=>!q||m.quadro===q).map(m=>m.sigla).filter(Boolean);
+  return [""].concat(list.length?list:project.sicModuli.map(m=>m.sigla).filter(Boolean));
+}
+/* PLC I/O: numero di canali di un modulo per il tipo di segnale (DI/DO/AI/AO).
+   Interpreta stringhe come "16", "16DI/16DO", "6DI/4DO/2AI", "4AI/2AO". 0 = sconosciuto. */
+function channelCapacity(mod, tipoSeg){
+  if(!mod) return 0;
+  const s=String(mod.canali||"");
+  const m=s.match(new RegExp("(\\d+)\\s*"+tipoSeg,"i"));
+  if(m) return +m[1];
+  if(/^\d+$/.test(s.trim())){
+    const t=String(mod.tipo||"").toUpperCase();
+    if(t===tipoSeg || t.indexOf(tipoSeg)>=0) return +s.trim();
+  }
+  return 0;
+}
+/* PLC I/O: indirizzamento Siemens a gruppi di 8 bit.
+   indice 0..7 -> "a.0".."a.7", 8..15 -> "b.0".."b.7", ecc. */
+function chLabel(n){
+  const g=Math.floor(n/8);
+  const letter=String.fromCharCode(97+g); // 97 = 'a'
+  return letter+"."+(n%8);
+}
+function chIndex(label){
+  const m=String(label||"").trim().toLowerCase().match(/^([a-z])\.(\d+)$/);
+  if(m) return (m[1].charCodeAt(0)-97)*8 + (+m[2]);
+  const n=parseInt(label,10);          // retrocompatibilità: canale scritto come numero
+  return isNaN(n)?NaN:n;
+}
+/* PLC I/O: primo indice canale libero (0-based) per lo stesso modulo e tipo segnale. */
+function firstFreeChannel(coll,i){
+  const r=project[coll][i];
+  if(!r.modulo || !r.tipoSeg) return null;
+  const used=new Set();
+  project[coll].forEach((o,j)=>{
+    if(j===i) return;
+    if(o.modulo===r.modulo && o.tipoSeg===r.tipoSeg){
+      const n=chIndex(o.canale);
+      if(!isNaN(n)) used.add(n);
+    }
+  });
+  let n=0; while(used.has(n)) n++;
+  return n;
+}
+/* Libreria interna codici moduli PLC (autocompilazione offline).
+   Si può ampliare: quando serve un codice nuovo, chiedimi e lo cerco online e lo aggiungo qui. */
+const MODLIB={
+  "6ES7211-1AE40":{tipo:"CPU",marca:"SIEMENS",canali:"6DI/4DO/2AI",descr:"SIMATIC S7-1200 CPU 1211C DC/DC/DC"},
+  "6ES7212-1AE40":{tipo:"CPU",marca:"SIEMENS",canali:"8DI/6DO/2AI",descr:"SIMATIC S7-1200 CPU 1212C DC/DC/DC"},
+  "6ES7214-1AG40":{tipo:"CPU",marca:"SIEMENS",canali:"14DI/10DO/2AI",descr:"SIMATIC S7-1200 CPU 1214C DC/DC/DC"},
+  "6ES7214-1BG40":{tipo:"CPU",marca:"SIEMENS",canali:"14DI/10DO/2AI",descr:"SIMATIC S7-1200 CPU 1214C AC/DC/Relè"},
+  "6ES7214-1HG40":{tipo:"CPU",marca:"SIEMENS",canali:"14DI/10DO/2AI",descr:"SIMATIC S7-1200 CPU 1214C DC/DC/Relè"},
+  "6ES7215-1AG40":{tipo:"CPU",marca:"SIEMENS",canali:"14DI/10DO/2AI",descr:"SIMATIC S7-1200 CPU 1215C DC/DC/DC"},
+  "6ES7221-1BF32":{tipo:"DI",marca:"SIEMENS",canali:"8",descr:"SIMATIC S7-1200 SM 1221, 8 DI 24VDC"},
+  "6ES7221-1BH32":{tipo:"DI",marca:"SIEMENS",canali:"16",descr:"SIMATIC S7-1200 SM 1221, 16 DI 24VDC"},
+  "6ES7222-1BF32":{tipo:"DO",marca:"SIEMENS",canali:"8",descr:"SIMATIC S7-1200 SM 1222, 8 DQ 24VDC"},
+  "6ES7222-1BH32":{tipo:"DO",marca:"SIEMENS",canali:"16",descr:"SIMATIC S7-1200 SM 1222, 16 DQ 24VDC 0,5A"},
+  "6ES7222-1HH32":{tipo:"DO",marca:"SIEMENS",canali:"16",descr:"SIMATIC S7-1200 SM 1222, 16 DQ relè"},
+  "6ES7223-1BH32":{tipo:"DI/DO",marca:"SIEMENS",canali:"8DI/8DO",descr:"SIMATIC S7-1200 SM 1223, 8 DI/8 DQ 24VDC 0,5A"},
+  "6ES7223-1BL32":{tipo:"DI/DO",marca:"SIEMENS",canali:"16DI/16DO",descr:"SIMATIC S7-1200 SM 1223, 16 DI/16 DQ 24VDC"},
+  "6ES7223-1PL32":{tipo:"DI/DO",marca:"SIEMENS",canali:"16DI/16DO",descr:"SIMATIC S7-1200 SM 1223, 16 DI/16 DQ relè"},
+  "6ES7231-4HD32":{tipo:"AI",marca:"SIEMENS",canali:"4",descr:"SIMATIC S7-1200 SM 1231, 4 AI"},
+  "6ES7231-4HF32":{tipo:"AI",marca:"SIEMENS",canali:"8",descr:"SIMATIC S7-1200 SM 1231, 8 AI"},
+  "6ES7232-4HB32":{tipo:"AO",marca:"SIEMENS",canali:"2",descr:"SIMATIC S7-1200 SM 1232, 2 AO"},
+  "6ES7232-4HD32":{tipo:"AO",marca:"SIEMENS",canali:"4",descr:"SIMATIC S7-1200 SM 1232, 4 AO"},
+  "6ES7234-4HE32":{tipo:"AI/AO",marca:"SIEMENS",canali:"4AI/2AO",descr:"SIMATIC S7-1200 SM 1234, 4 AI/2 AO"},
+  "6EP1332-1SH43":{tipo:"Alimentatore",marca:"SIEMENS",canali:"",descr:"LOGO! Power 24V/2,5A"},
+  "6EP3333-8SB00":{tipo:"Alimentatore",marca:"SIEMENS",canali:"",descr:"SITOP PSU100S 24V/5A"}
+};
+/* Libreria personale dell'utente: cresce con il pulsante 💾 e resta salvata nel browser. */
+let MYLIB={};
+try{ MYLIB=JSON.parse(localStorage.getItem("schemaMyLib")||"{}")||{}; }catch(e){ MYLIB={}; }
+function saveMyLib(){ try{ localStorage.setItem("schemaMyLib",JSON.stringify(MYLIB)); }catch(e){} }
+function lookupModule(code){
+  // Confronto ignorando trattini e spazi (i codici Siemens si scrivono con o senza "-")
+  const norm=s=>String(s||"").toUpperCase().replace(/[\s-]/g,"");
+  const c=norm(code);
+  if(!c)return null;
+  const find=lib=>{ for(const k in lib){ const kn=norm(k); if(c===kn || c.startsWith(kn) || (c.length>=11 && kn.startsWith(c))) return lib[k]; } return null; };
+  return find(MYLIB) || find(MODLIB);   // prima la tua libreria personale, poi quella interna
+}
+/* Libreria interna codici moduli di SICUREZZA (autocompilazione offline).
+   Si amplia come per il PLC: mandami un codice nuovo e lo verifico e aggiungo qui. */
+const SICLIB={
+  "3SK1111-1AB30":{tipo:"Relè sicurezza",marca:"SIEMENS",contattiNO:"3",contattiNC:"1",canali:"3F-DO/1DO",descr:"SIRIUS 3SK1 base, 24V AC/DC, 3 NO + 1 segnalazione"},
+  "3SK1112-1BB40":{tipo:"Relè sicurezza",marca:"SIEMENS",contattiNO:"2",contattiNC:"0",canali:"2F-DO",descr:"SIRIUS 3SK1 standard, uscite elettroniche, 24V DC"},
+  "3SK1112-2BB40":{tipo:"Relè sicurezza",marca:"SIEMENS",contattiNO:"3",contattiNC:"1",canali:"3F-DO/1DO",descr:"SIRIUS 3SK1 standard, uscite a relè, 24V DC"},
+  "3SK1211-1BB40":{tipo:"Relè sicurezza",marca:"SIEMENS",contattiNO:"2",contattiNC:"0",canali:"2F-DO",descr:"SIRIUS 3SK1 advanced, uscite elettroniche, 24V DC"},
+  "3SK1220-1AB40":{tipo:"Modulo base",marca:"SIEMENS",contattiNO:"",contattiNC:"",canali:"",descr:"SIRIUS 3SK1 modulo di espansione uscite"},
+  /* Pilz PNOZ (codice = order number) */
+  "750103":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"2",contattiNC:"0",canali:"2F-DO",descr:"PNOZ s3, 24V DC, 2 contatti di sicurezza (NO)"},
+  "750104":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"3",contattiNC:"1",canali:"3F-DO/1DO",descr:"PNOZ s4, 24V DC, 3 NO + 1 NC segnalazione"},
+  "750105":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"",contattiNC:"",canali:"con ritardo",descr:"PNOZ s5, 24V DC, uscite con ritardo + istantanee"},
+  "750107":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"4",contattiNC:"0",canali:"4F-DO",descr:"PNOZ s7, 24V DC, 4 contatti di sicurezza (NO)"},
+  "751107":{tipo:"Modulo base",marca:"PILZ",contattiNO:"4",contattiNC:"0",canali:"4F-DO",descr:"PNOZ s7.1 modulo di espansione contatti"},
+  "774310":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"3",contattiNC:"1",canali:"3F-DO/1DO",descr:"PNOZ X3, 24V AC/DC, 3 NO + 1 NC + 1 segnalazione"},
+  "774300":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"3",contattiNC:"1",canali:"3F-DO/1DO",descr:"PNOZ X2.8P, 24V AC/DC, 3 NO + 1 NC"},
+  "774056":{tipo:"Relè sicurezza",marca:"PILZ",contattiNO:"2",contattiNC:"0",canali:"2F-DO",descr:"PNOZ X7, 230V AC, 2 contatti di sicurezza (NO)"}
+};
+function lookupSafety(code){
+  const norm=s=>String(s||"").toUpperCase().replace(/[\s-]/g,"");
+  const c=norm(code);
+  if(!c)return null;
+  const find=lib=>{ for(const k in lib){ const kn=norm(k); if(c===kn || c.startsWith(kn) || (c.length>=11 && kn.startsWith(c))) return lib[k]; } return null; };
+  return find(MYLIB) || find(SICLIB);   // prima la tua libreria personale, poi quella interna sicurezza
+}
+
+function quadroOpts(){ return [""].concat(project.quadri.map(q=>q.sigla).filter(Boolean)); }
+function sbarraOptsFor(row){          // Partenze trifase -> sbarre trifase
+  const q=row.quadro;
+  const list=project.sbarre.filter(s=>!q||s.quadro===q).map(s=>s.sigla).filter(Boolean);
+  return [""].concat(list.length?list:project.sbarre.map(s=>s.sigla).filter(Boolean));
+}
+function sbarraMonoOptsFor(row){      // Partenze monofase -> sbarre monofase
+  const q=row.quadro;
+  const list=project.sbarreMono.filter(s=>!q||s.quadro===q).map(s=>s.sigla).filter(Boolean);
+  return [""].concat(list.length?list:project.sbarreMono.map(s=>s.sigla).filter(Boolean));
+}
+function sbarraDCOptsFor(row){        // Partenze DC -> sbarre DC
+  const q=row.quadro;
+  const list=project.sbarreDC.filter(s=>!q||s.quadro===q).map(s=>s.sigla).filter(Boolean);
+  return [""].concat(list.length?list:project.sbarreDC.map(s=>s.sigla).filter(Boolean));
+}
+// Alimentatori dai componenti (generale delle sbarre DC)
+function alimOptsFor(){
+  let comps=project.componenti.filter(c=>symbolFor(c)==="alimentatore");
+  if(comps.length===0) comps=project.componenti;
+  return [{v:"",l:"—"}].concat(comps.map(c=>({v:c._id,l:`${c.tipo||"Alim."}${c.descr?(" — "+c.descr):""}${c.codice?(" ["+c.codice+"]"):""}`.trim()})));
+}
+function tipoCompOpts(){
+  const set=[...new Set(project.componenti.map(c=>c.tipo).filter(Boolean))];
+  return [""].concat(set);
+}
+// Trasformatori dai componenti (generale delle sbarre monofase)
+function trafoOptsFor(){
+  let comps=project.componenti.filter(c=>symbolFor(c)==="trasformatore");
+  if(comps.length===0) comps=project.componenti;
+  return [{v:"",l:"—"}].concat(comps.map(c=>({v:c._id,l:`${c.tipo||"Trasf."}${c.descr?(" — "+c.descr):""}${c.codice?(" ["+c.codice+"]"):""}`.trim()})));
+}
+// Componente di protezione dai componenti
+function protOptsFor(){
+  return [{v:"",l:"—"}].concat(project.componenti.map(c=>({v:c._id,l:`${c.tipo||"?"}${c.codice?(" "+c.codice):""}${c.descr?(" — "+c.descr):""}`.trim()})));
+}
+function codiceOptsFor(row){
+  let comps=project.componenti.filter(c=>c.codice);
+  if(row.tipoComp) comps=comps.filter(c=>c.tipo===row.tipoComp);
+  const arr=comps.map(c=>({v:c.codice, l:`${c.codice} — ${c.descr||""}${c.marca?(" · "+c.marca):""}`.trim()}));
+  return [{v:"",l:"—"}].concat(arr);
+}
+const SIMBOLI=["Auto","Interruttore","Salvamotore","Termica","Differenziale","Sezionatore","Fusibile","Sbarra","Morsetti","Motore","Contattore","Softstarter","Inverter","Presa","Lampada","Quadro","Trasformatore","Alimentatore","PLC","Modulo Sicurezza","Utenza generica"];
+function caricoOptsFor(){
+  // Elenco dei componenti selezionabili come "carico" a valle della partenza.
+  const arr=project.componenti.map(c=>({v:c._id, l:`${c.tipo||"?"}${c.descr?(" — "+c.descr):""}${c.codice?(" ["+c.codice+"]"):""}`.trim()}));
+  return [{v:"",l:"—"}].concat(arr);
+}
+function avvOptsFor(){
+  // Dispositivo di comando/avviamento in serie (softstarter, contattore, inverter…).
+  const arr=project.componenti.map(c=>({v:c._id, l:`${c.tipo||"?"}${c.descr?(" — "+c.descr):""}`.trim()}));
+  return [{v:"",l:"—"}].concat(arr);
+}
+function genCodiceOptsFor(row){
+  // Codici del componente scelto come interruttore/sezionatore generale della sbarra.
+  let comps=project.componenti.filter(c=>c.codice);
+  if(row.genTipo) comps=comps.filter(c=>c.tipo===row.genTipo);
+  return [{v:"",l:"—"}].concat(comps.map(c=>({v:c.codice,l:`${c.codice} — ${c.descr||""}`.trim()})));
+}
+
+const COLS = {
+  quadri:[
+    {key:"sigla",label:"Sigla",w:70},
+    {key:"descr",label:"Descrizione",w:220},
+    {key:"ubic",label:"Ubicazione",w:150},
+    {key:"parent",label:"Alimentato da",w:120,type:"select",opts:quadroOpts},
+    {key:"note",label:"Note",w:160}
+  ],
+  sbarre:[
+    {key:"sigla",label:"Sigla",w:80},
+    {key:"quadro",label:"Quadro",w:90,type:"select",opts:quadroOpts},
+    {key:"tipoComp",label:"Tipo componente",w:150,type:"select",opts:tipoCompOpts},
+    {key:"tipo",label:"Tipo/Sistema",w:120},
+    {key:"marca",label:"Marca",w:110},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"in",label:"In (A)",w:60},
+    {key:"genTipo",label:"Generale (tipo)",w:140,type:"select",opts:tipoCompOpts},
+    {key:"genCodice",label:"Generale codice",w:120,type:"select",opts:genCodiceOptsFor},
+    {key:"note",label:"Note",w:140}
+  ],
+  componenti:[
+    {key:"tipo",label:"Tipo componente",w:150},
+    {key:"marca",label:"Marca",w:100},
+    {key:"codice",label:"Codice",w:120},
+    {key:"descr",label:"Descrizione",w:180},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"in",label:"In (A)",w:56},
+    {key:"curva",label:"Curva",w:60,type:"select",opts:CURVA},
+    {key:"kA",label:"kA",w:48},
+    {key:"idn",label:"IΔn (mA)",w:66},
+    {key:"simbolo",label:"Simbolo",w:110,type:"select",opts:SIMBOLI}
+  ],
+  partenze:[
+    {key:"sigla",label:"Sigla",w:60},
+    {key:"quadro",label:"Quadro",w:85,type:"select",opts:quadroOpts},
+    {key:"sbarra",label:"Sbarra",w:85,type:"select",opts:sbarraOptsFor},
+    {key:"descr",label:"Utenza / Descrizione",w:170},
+    {key:"tipoComp",label:"Tipo componente",w:140,type:"select",opts:tipoCompOpts},
+    {key:"codice",label:"Codice",w:120,type:"select",opts:codiceOptsFor},
+    {key:"avv",label:"Comando (SS/cont./INV)",w:170,type:"select",opts:avvOptsFor},
+    {key:"carico",label:"Carico (a valle)",w:170,type:"select",opts:caricoOptsFor},
+    {key:"in",label:"In (A)",w:54},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"diff",label:"Diff",w:56,type:"select",opts:SN},
+    {key:"idn",label:"IΔn",w:52},
+    {key:"note",label:"Note",w:120}
+  ],
+  sbarreMono:[
+    {key:"sigla",label:"Sigla",w:80},
+    {key:"quadro",label:"Quadro",w:90,type:"select",opts:quadroOpts},
+    {key:"trafo",label:"Trasformatore (generale)",w:190,type:"select",opts:trafoOptsFor},
+    {key:"prot",label:"Protezione",w:180,type:"select",opts:protOptsFor},
+    {key:"tipo",label:"Tipo/Sistema",w:120},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"in",label:"In (A)",w:60},
+    {key:"note",label:"Note",w:140}
+  ],
+  partenzeMono:[
+    {key:"sigla",label:"Sigla",w:60},
+    {key:"quadro",label:"Quadro",w:85,type:"select",opts:quadroOpts},
+    {key:"sbarra",label:"Sbarra monofase",w:110,type:"select",opts:sbarraMonoOptsFor},
+    {key:"descr",label:"Utenza / Descrizione",w:170},
+    {key:"tipoComp",label:"Tipo componente",w:140,type:"select",opts:tipoCompOpts},
+    {key:"codice",label:"Codice",w:120,type:"select",opts:codiceOptsFor},
+    {key:"avv",label:"Comando (SS/cont./INV)",w:170,type:"select",opts:avvOptsFor},
+    {key:"carico",label:"Carico (a valle)",w:170,type:"select",opts:caricoOptsFor},
+    {key:"in",label:"In (A)",w:54},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"diff",label:"Diff",w:56,type:"select",opts:SN},
+    {key:"idn",label:"IΔn",w:52},
+    {key:"note",label:"Note",w:120}
+  ],
+  sbarreDC:[
+    {key:"sigla",label:"Sigla",w:80},
+    {key:"quadro",label:"Quadro",w:90,type:"select",opts:quadroOpts},
+    {key:"alim",label:"Alimentatore (generale)",w:190,type:"select",opts:alimOptsFor},
+    {key:"prot",label:"Protezione",w:180,type:"select",opts:protOptsFor},
+    {key:"tipo",label:"Tipo/Sistema",w:120},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"in",label:"In (A)",w:60},
+    {key:"note",label:"Note",w:140}
+  ],
+  partenzeDC:[
+    {key:"sigla",label:"Sigla",w:60},
+    {key:"quadro",label:"Quadro",w:85,type:"select",opts:quadroOpts},
+    {key:"sbarra",label:"Sbarra DC",w:110,type:"select",opts:sbarraDCOptsFor},
+    {key:"descr",label:"Utenza / Descrizione",w:170},
+    {key:"tipoComp",label:"Tipo componente",w:140,type:"select",opts:tipoCompOpts},
+    {key:"codice",label:"Codice",w:120,type:"select",opts:codiceOptsFor},
+    {key:"avv",label:"Comando (SS/cont./INV)",w:170,type:"select",opts:avvOptsFor},
+    {key:"carico",label:"Carico (a valle)",w:170,type:"select",opts:caricoOptsFor},
+    {key:"in",label:"In (A)",w:54},
+    {key:"poli",label:"Poli",w:70,type:"select",opts:POLI},
+    {key:"diff",label:"Diff",w:56,type:"select",opts:SN},
+    {key:"idn",label:"IΔn",w:52},
+    {key:"note",label:"Note",w:120}
+  ],
+  plcModuli:[
+    {key:"sigla",label:"Sigla",w:80},
+    {key:"quadro",label:"Quadro",w:90,type:"select",opts:quadroOpts},
+    {key:"tipo",label:"Tipo",w:110,type:"select",opts:TIPOMOD},
+    {key:"marca",label:"Marca",w:100},
+    {key:"codice",label:"Codice",w:130},
+    {key:"slot",label:"Slot",w:55},
+    {key:"canali",label:"Canali",w:60},
+    {key:"descr",label:"Descrizione",w:170},
+    {key:"note",label:"Note",w:120}
+  ],
+  plcIO:[
+    {key:"tag",label:"Tag / Sigla",w:90},
+    {key:"quadro",label:"Quadro",w:85,type:"select",opts:quadroOpts},
+    {key:"modulo",label:"Modulo",w:90,type:"select",opts:moduloOptsFor},
+    {key:"tipoSeg",label:"Tipo",w:60,type:"select",opts:TIPOSEG},
+    {key:"canale",label:"Canale",w:60},
+    {key:"indirizzo",label:"Indirizzo",w:80},
+    {key:"morsetto",label:"Morsetto",w:75},
+    {key:"descr",label:"Descrizione",w:200},
+    {key:"note",label:"Note",w:120}
+  ],
+  sicModuli:[
+    {key:"sigla",label:"Sigla",w:80},
+    {key:"quadro",label:"Quadro",w:90,type:"select",opts:quadroOpts},
+    {key:"tipo",label:"Tipo",w:130,type:"select",opts:TIPOSIC},
+    {key:"marca",label:"Marca",w:100},
+    {key:"codice",label:"Codice",w:140},
+    {key:"reset",label:"Reset (n.)",w:70},
+    {key:"contattiNO",label:"Contatti NO",w:85},
+    {key:"contattiNC",label:"Contatti NC",w:85},
+    {key:"canali",label:"Canali",w:110}
+  ],
+  sicIO:[
+    {key:"tag",label:"Tag / Sigla",w:90},
+    {key:"quadro",label:"Quadro",w:85,type:"select",opts:quadroOpts},
+    {key:"modulo",label:"Modulo",w:90,type:"select",opts:moduloSicOptsFor},
+    {key:"tipoSeg",label:"Tipo",w:90,type:"select",opts:TIPOSEGSIC},
+    {key:"funzione",label:"Funzione",w:150,type:"select",opts:FUNZSIC},
+    {key:"canale",label:"Canale",w:60},
+    {key:"morsetto",label:"Morsetto",w:75},
+    {key:"descr",label:"Componente / Descrizione",w:220},
+    {key:"note",label:"Note",w:140}
+  ]
+};
+function emptyRow(coll){
+  const r={_id:uid()};
+  COLS[coll].forEach(c=>{ r[c.key]= (c.type==="select" && Array.isArray(c.opts))? (c.opts[0]||"") : ""; });
+  if(coll==="partenze"){r.diff="no";r.poli="1P+N";}
+  if(coll==="partenzeMono"){r.diff="no";r.poli="1P+N";}
+  if(coll==="partenzeDC"){r.diff="no";r.poli="2P";}
+  if(coll==="componenti"){r.poli="1P+N";r.simbolo="Auto";}
+  if(coll==="sbarreMono"){r.poli="1P+N";}
+  if(coll==="sbarreDC"){r.poli="2P";}
+  if(coll==="sbarre"){r.poli="4P";}
+  if(coll==="plcModuli"){r.tipo="DI";}
+  if(coll==="plcIO"){r.tipoSeg="DI";}
+  if(coll==="sicModuli"){r.tipo="Relè sicurezza";}
+  if(coll==="sicIO"){r.tipoSeg="F-DI";r.funzione="Emergenza";}
+  return r;
+}
+
+/* =========================================================
+   NAVIGAZIONE
+   ========================================================= */
+let activeSheet="generali";
+const nav=document.getElementById("nav");
+const content=document.getElementById("content");
+function buildNav(){
+  nav.innerHTML="";
+  SHEETS.forEach(s=>{
+    const b=document.createElement("button");
+    b.className="navbtn"+(s.id===activeSheet?" active":"");
+    const count = s.coll? `<span class="n">${project[s.coll].length}</span>`:"";
+    b.innerHTML=`<span class="ico">${s.ico}</span><span>${s.label}</span>${count}`;
+    b.onclick=()=>go(s.id);
+    nav.appendChild(b);
+  });
+}
+function go(id){
+  activeSheet=id;
+  document.querySelectorAll(".sheet").forEach(el=>el.classList.remove("active"));
+  const el=document.getElementById("sheet-"+id);
+  if(el)el.classList.add("active");
+  const meta=SHEETS.find(s=>s.id===id);
+  document.getElementById("sheetTitle").textContent=meta.label;
+  document.getElementById("sheetSub").textContent=meta.sub;
+  buildNav();
+  buildTopActions(id);
+  // Ridisegna la tabella del foglio così le tendine collegate (Tipo componente,
+  // Quadro, Sbarra, Cavo) si ricaricano sempre con i dati aggiornati degli altri fogli.
+  if(meta.coll)renderGrid(meta.coll);
+  if(id==="schema")renderSchema();
+  if(id==="schemaMono")renderSchemaMono();
+  if(id==="schemaDC")renderSchemaDC();
+  if(id==="schemaPLC")renderSchemaPLC();
+  if(id==="schemaSic")renderSchemaSic();
+}
+function buildTopActions(id){
+  const ta=document.getElementById("topActions");
+  ta.innerHTML="";
+  const coll=SHEETS.find(s=>s.id===id)?.coll;
+  if(coll){
+    const add=document.createElement("button");add.className="btn primary";add.textContent="+ Aggiungi riga";
+    add.onclick=()=>{project[coll].push(emptyRow(coll));renderGrid(coll);buildNav();save();};
+    ta.appendChild(add);
+  }
+  if(id==="schema"){
+    const p=document.createElement("button");p.className="btn";p.textContent="Aggiorna";p.onclick=renderSchema;ta.appendChild(p);
+  }
+  if(id==="schemaMono"){
+    const p=document.createElement("button");p.className="btn";p.textContent="Aggiorna";p.onclick=renderSchemaMono;ta.appendChild(p);
+  }
+  if(id==="schemaDC"){
+    const p=document.createElement("button");p.className="btn";p.textContent="Aggiorna";p.onclick=renderSchemaDC;ta.appendChild(p);
+  }
+  if(id==="schemaPLC"){
+    const p=document.createElement("button");p.className="btn";p.textContent="Aggiorna";p.onclick=renderSchemaPLC;ta.appendChild(p);
+  }
+}
+
+/* =========================================================
+   COSTRUZIONE FOGLI
+   ========================================================= */
+function esc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function buildSheets(){
+  content.innerHTML="";
+  // GENERALI
+  content.appendChild(sheetGenerali());
+  // tabellari
+  ["quadri","sbarre","componenti","partenze","sbarreMono","partenzeMono","sbarreDC","partenzeDC","plcModuli","plcIO","sicModuli","sicIO"].forEach(coll=>{
+    content.appendChild(sheetTable(coll));
+  });
+  // SCHEMI: trifase, monofase, DC, PLC
+  content.appendChild(sheetSchema());
+  content.appendChild(sheetSchemaMono());
+  content.appendChild(sheetSchemaDC());
+  content.appendChild(sheetSchemaPLC());
+  content.appendChild(sheetSchemaSic());
+  // EXPORT
+  content.appendChild(sheetExport());
+}
+
+function sect(id){const d=document.createElement("section");d.className="sheet";d.id="sheet-"+id;return d;}
+
+function sheetGenerali(){
+  const d=sect("generali");
+  d.innerHTML=`
+    <div class="card">
+      <h3>Intestazione / Cartiglio</h3>
+      <div class="grid g2">
+        ${fInput("meta","impianto","Impianto / Progetto","Es. Capannone industriale")}
+        ${fInput("meta","cliente","Cliente","Ragione sociale")}
+        ${fInput("meta","quadro","Quadro principale (sigla)","Es. QE-01")}
+        ${fInput("meta","commessa","Commessa / Rif.","N. commessa")}
+        ${fInput("meta","disegnatore","Disegnatore","Nome")}
+        ${fInput("meta","data","Data","","date")}
+        ${fInput("meta","rev","Revisione","Rev.00")}
+        ${fInput("meta","foglio","Foglio","1 di 1")}
+      </div>
+      <div style="margin-top:11px">
+        ${fArea("meta","note","Note generali","Annotazioni…")}
+      </div>
+    </div>
+    <p class="hint">Questi dati compaiono nel <b>cartiglio</b> dello schema unifilare.</p>`;
+  return d;
+}
+function fInput(obj,key,label,ph,type){
+  return `<label class="f">${label}<input data-o="${obj}" data-k="${key}" type="${type||'text'}" placeholder="${ph||''}"></label>`;
+}
+function fArea(obj,key,label,ph){
+  return `<label class="f">${label}<textarea data-o="${obj}" data-k="${key}" rows="2" placeholder="${ph||''}"></textarea></label>`;
+}
+
+function sheetTable(coll){
+  const d=sect(coll);
+  d.innerHTML=`
+    <div class="tools">
+      <button class="btn primary" data-add="${coll}">+ Aggiungi riga</button>
+      <button class="btn ghost" data-add5="${coll}">+ 5 righe</button>
+      ${coll==="plcIO"?'<button class="btn ghost" data-renum="plcIO" title="Converte i canali esistenti nel formato Siemens a.0 / b.0…">↻ Rinumera canali (a.0)</button>':''}
+      <div class="spacer"></div>
+      <button class="btn ghost" data-clear="${coll}">Svuota</button>
+    </div>
+    <div class="tbl-wrap"><table class="grid-tbl" id="tbl-${coll}"></table></div>
+    ${coll==="componenti"?'<p class="hint" style="margin-top:8px">Il campo <b>Tipo componente</b> è quello che verrà riportato nello schema unifilare accanto ad ogni protezione.</p>':''}
+    ${coll==="partenze"?'<p class="hint" style="margin-top:8px">Associa ogni partenza a un <b>Quadro</b>, alla sua <b>Sbarra</b> e a un <b>Tipo componente</b> (dalla libreria Componenti). Lo schema si genera da qui.</p>':''}
+    ${coll==="plcModuli"?'<p class="hint" style="margin-top:8px">Digita il <b>Codice</b> del modulo: se è in libreria (interna o tua), tipo/marca/canali/descrizione si compilano da soli. Se è un codice nuovo, compila i campi a mano e premi <b>💾</b> per salvarlo nella <b>tua libreria personale</b>: la prossima volta si compilerà da solo. Con <b>🔎</b> cerchi la scheda tecnica online (oppure chiedimi di aggiungerlo alla libreria interna verificata).</p>':''}
+    ${coll==="sicModuli"?'<p class="hint" style="margin-top:8px">Come per il PLC: digita il <b>Codice</b> del modulo di sicurezza (SIRIUS 3SK, Pilz PNOZ…) e Tipo/Marca/<b>Contatti NO</b>/<b>Contatti NC</b>/Canali si compilano dalla libreria. Il campo <b>Reset (n.)</b> lo indichi tu. Codice nuovo: compila a mano e premi <b>💾</b>, oppure <b>🔎</b> per cercarlo online / chiedimi di aggiungerlo alla libreria interna.</p>':''}
+    ${coll==="sicIO"?'<p class="hint" style="margin-top:8px">Elenca qui i componenti della <b>catena di sicurezza</b>: emergenze, ripari/cancelli, barriere, funi, il <b>Reset</b> e i feedback (EDM). Scegli il <b>Modulo</b> di sicurezza e il <b>Tipo</b> (F-DI/F-DO/Reset/Feedback): il <b>Canale</b> si assegna da solo al primo libero, e mostra <b>PIENO</b> se il modulo è saturo.</p>':''}
+  `;
+  return d;
+}
+
+function sheetPLC(){
+  const d=sect("plc");
+  d.innerHTML=`
+    <div class="placeholder-box">
+      <div class="big">🖧</div>
+      <b style="font-size:15px;color:var(--ink)">Foglio PLC — da definire</b>
+      <p class="hint" style="max-width:520px;margin:10px auto 0">
+        Questo foglio è pronto ma ancora vuoto. Definiremo insieme cosa gestire:
+        lista I/O (ingressi/uscite digitali e analogici), moduli/rack (CPU, schede DI/DO/AI/AO),
+        indirizzi e morsetti, ed eventuale rappresentazione nello schema.
+      </p>
+      <div style="margin-top:14px">
+        <label class="f" style="max-width:520px;margin:0 auto;text-align:left">Appunti provvisori PLC
+          <textarea data-o="plc" data-k="note" rows="4" placeholder="Scrivi qui note temporanee sul PLC…"></textarea>
+        </label>
+      </div>
+    </div>`;
+  return d;
+}
+
+function sheetSchema(){
+  const d=sect("schema");
+  d.innerHTML=`
+    <div class="schema-toolbar">
+      <label class="f" style="flex-direction:row;align-items:center;gap:8px">Quadro:
+        <select id="schemaQuadro" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></select>
+      </label>
+      <button class="btn" id="zOut">−</button>
+      <button class="btn" id="zIn">+</button>
+      <button class="btn ghost" id="zFit">Adatta</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="schPdf">Stampa / PDF</button>
+      <button class="btn primary" id="schDxf">DXF</button>
+      <button class="btn primary" id="schSvg">SVG</button>
+    </div>
+    <div id="schemaCanvas"><div class="empty">Inserisci quadri e partenze per generare lo schema.</div></div>`;
+  return d;
+}
+
+function sheetSchemaMono(){
+  const d=sect("schemaMono");
+  d.innerHTML=`
+    <div class="schema-toolbar">
+      <label class="f" style="flex-direction:row;align-items:center;gap:8px">Quadro:
+        <select id="schemaMonoQuadro" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></select>
+      </label>
+      <button class="btn" id="zmOut">−</button>
+      <button class="btn" id="zmIn">+</button>
+      <button class="btn ghost" id="zmFit">Adatta</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="schmPdf">Stampa / PDF</button>
+      <button class="btn primary" id="schmDxf">DXF</button>
+      <button class="btn primary" id="schmSvg">SVG</button>
+    </div>
+    <div id="schemaMonoCanvas"><div class="empty">Inserisci sbarre monofase e partenze monofase per generare lo schema.</div></div>`;
+  return d;
+}
+
+function sheetSchemaDC(){
+  const d=sect("schemaDC");
+  d.innerHTML=`
+    <div class="schema-toolbar">
+      <label class="f" style="flex-direction:row;align-items:center;gap:8px">Quadro:
+        <select id="schemaDCQuadro" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></select>
+      </label>
+      <button class="btn" id="zdOut">−</button>
+      <button class="btn" id="zdIn">+</button>
+      <button class="btn ghost" id="zdFit">Adatta</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="schdPdf">Stampa / PDF</button>
+      <button class="btn primary" id="schdDxf">DXF</button>
+      <button class="btn primary" id="schdSvg">SVG</button>
+    </div>
+    <div id="schemaDCCanvas"><div class="empty">Inserisci sbarre DC e partenze DC per generare lo schema.</div></div>`;
+  return d;
+}
+
+function sheetSchemaPLC(){
+  const d=sect("schemaPLC");
+  d.innerHTML=`
+    <div class="schema-toolbar">
+      <label class="f" style="flex-direction:row;align-items:center;gap:8px">Quadro:
+        <select id="schemaPLCQuadro" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></select>
+      </label>
+      <button class="btn" id="zpOut">−</button>
+      <button class="btn" id="zpIn">+</button>
+      <button class="btn ghost" id="zpFit">Adatta</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="schpPdf">Stampa / PDF</button>
+      <button class="btn primary" id="schpDxf">DXF</button>
+      <button class="btn primary" id="schpSvg">SVG</button>
+    </div>
+    <div id="schemaPLCCanvas"><div class="empty">Inserisci moduli (PLC Moduli) e segnali (PLC I/O) per generare lo schema.</div></div>`;
+  return d;
+}
+
+function sheetSchemaSic(){
+  const d=sect("schemaSic");
+  d.innerHTML=`
+    <div class="schema-toolbar">
+      <label class="f" style="flex-direction:row;align-items:center;gap:8px">Quadro:
+        <select id="schemaSicQuadro" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px"></select>
+      </label>
+      <button class="btn" id="zsOut">−</button>
+      <button class="btn" id="zsIn">+</button>
+      <button class="btn ghost" id="zsFit">Adatta</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="schsPdf">Stampa / PDF</button>
+      <button class="btn primary" id="schsDxf">DXF</button>
+      <button class="btn primary" id="schsSvg">SVG</button>
+    </div>
+    <div id="schemaSicCanvas"><div class="empty">Inserisci moduli (Sicurezza Moduli) e segnali (Sicurezza I/O) per generare lo schema.</div></div>`;
+  return d;
+}
+
+function sheetExport(){
+  const d=sect("export");
+  d.innerHTML=`
+    <div class="card">
+      <h3>Esporta</h3>
+      <p class="hint">Lo schema unifilare del quadro selezionato può essere esportato nei formati seguenti. Per il PDF viene usata la stampa del browser (scegli "Salva come PDF", formato A3 orizzontale consigliato).</p>
+      <div class="tools" style="margin-top:12px">
+        <button class="btn primary" id="exAllPdf">📚 Stampa fascicolo PDF (tutti i fogli)</button>
+        <button class="btn" id="exPdf">📄 Stampa solo schema trifase</button>
+        <button class="btn primary" id="exDxf">📐 Esporta DXF (CAD)</button>
+        <button class="btn primary" id="exSvg">🖼️ Esporta SVG</button>
+        <button class="btn ghost" id="exJson">💾 Salva progetto (JSON)</button>
+      </div>
+      <p class="hint" style="margin-top:8px">Il <b>fascicolo PDF</b> stampa in ordine: Dati generali, Schema trifasico, Monofase, DC, PLC e Sicurezza. Gli schemi senza dati vengono saltati. Nella finestra di stampa scegli "Salva come PDF" (A3 orizzontale).</p>
+    </div>
+    <div class="card">
+      <h3>Riepilogo progetto</h3>
+      <div id="exSummary" class="hint"></div>
+    </div>`;
+  return d;
+}
+
+/* =========================================================
+   RENDER GRID (tabellari)
+   ========================================================= */
+function optionsFor(col,row){
+  let o = typeof col.opts==="function"? col.opts(row) : col.opts;
+  return o||[];
+}
+function applyCompToFeeder(r,comp){
+  // Copia nei campi della partenza i dati del componente selezionato.
+  if(comp.poli) r.poli=comp.poli;   // Poli si aggiorna dal componente
+  if(comp.in)   r.in=comp.in;       // In (A) si aggiorna dal componente
+}
+function renderGrid(coll){
+  const tbl=document.getElementById("tbl-"+coll);
+  if(!tbl)return;
+  const cols=COLS[coll];
+  let head="<thead><tr><th></th>"+cols.map(c=>`<th style="min-width:${c.w}px">${c.label}</th>`).join("")+"<th></th></tr></thead>";
+  const rows=project[coll];
+  let body="<tbody>";
+  if(rows.length===0){
+    body+=`<tr><td colspan="${cols.length+2}"><div class="empty">Nessuna riga. Usa "+ Aggiungi riga".</div></td></tr>`;
+  }else{
+    rows.forEach((r,i)=>{
+      body+=`<tr data-i="${i}"><td class="rowh">${i+1}</td>`;
+      cols.forEach(c=>{
+        if(c.type==="select"){
+          const opts=optionsFor(c,r).map(o=> (typeof o==="object")? o : {v:o, l:(o===""?"—":o)});
+          const cur=r[c.key]??"";
+          const optHtml=opts.map(o=>`<option value="${esc(o.v)}" ${o.v===cur?"selected":""}>${esc(o.l)}</option>`).join("");
+          // se il valore corrente non è tra le opzioni, aggiungilo comunque
+          const extra = (cur!=="" && !opts.some(o=>o.v===cur))? `<option value="${esc(cur)}" selected>${esc(cur)}</option>`:"";
+          body+=`<td><select data-k="${c.key}">${extra}${optHtml}</select></td>`;
+        }else{
+          body+=`<td><input data-k="${c.key}" value="${esc(r[c.key])}"></td>`;
+        }
+      });
+      const srchBtn = (coll==="plcModuli"||coll==="sicModuli") ? `<button class="rowbtn savelib" title="Salva questo modulo nella tua libreria personale">💾</button><button class="rowbtn srch" title="Cerca online il codice">🔎</button>` : "";
+      body+=`<td class="act">
+        ${srchBtn}
+        <button class="rowbtn up" title="Su">▲</button>
+        <button class="rowbtn dn" title="Giù">▼</button>
+        <button class="rowbtn del" title="Elimina">✕</button>
+      </td></tr>`;
+    });
+  }
+  body+="</tbody>";
+  tbl.innerHTML=head+body;
+  // PLC I/O e Sicurezza I/O: evidenzia in rosso la scritta PIENO nel campo Canale
+  if(coll==="plcIO"||coll==="sicIO"){
+    tbl.querySelectorAll('tbody tr[data-i] [data-k="canale"]').forEach(inp=>{
+      const full = String(inp.value).trim().toUpperCase()==="PIENO";
+      inp.style.color = full? "#d32f2f" : "";
+      inp.style.fontWeight = full? "700" : "";
+    });
+  }
+  // eventi
+  tbl.querySelectorAll("tbody tr[data-i]").forEach(tr=>{
+    const i=+tr.dataset.i;
+    tr.querySelectorAll("[data-k]").forEach(inp=>{
+      inp.addEventListener("input",()=>{
+        project[coll][i][inp.dataset.k]=inp.value;
+        // Partenze: gestione dipendenze Tipo componente / Codice e auto-compilazione Poli e In.
+        if(coll==="partenze" && (inp.dataset.k==="tipoComp"||inp.dataset.k==="codice")){
+          const r2=project[coll][i];
+          if(inp.dataset.k==="tipoComp"){
+            // azzera il Codice se non appartiene più al tipo scelto
+            const ok=project.componenti.some(c=>c.tipo===r2.tipoComp && c.codice===r2.codice);
+            if(!ok)r2.codice="";
+            // se quel tipo ha un solo componente, adottalo
+            const matches=project.componenti.filter(c=>c.tipo===r2.tipoComp);
+            if(matches.length===1){ if(matches[0].codice)r2.codice=matches[0].codice; applyCompToFeeder(r2,matches[0]); }
+          }
+          if(inp.dataset.k==="codice" && r2.codice){
+            const comp=project.componenti.find(c=>c.codice===r2.codice && (!r2.tipoComp||c.tipo===r2.tipoComp))
+                    || project.componenti.find(c=>c.codice===r2.codice);
+            if(comp)applyCompToFeeder(r2,comp);
+          }
+        }
+        // PLC I/O e Sicurezza I/O: colora in rosso PIENO mentre si digita nel campo Canale.
+        if((coll==="plcIO"||coll==="sicIO") && inp.dataset.k==="canale"){
+          const full=String(inp.value).trim().toUpperCase()==="PIENO";
+          inp.style.color=full?"#d32f2f":""; inp.style.fontWeight=full?"700":"";
+        }
+        // PLC I/O: scelto Modulo + Tipo segnale, compila il primo canale libero (formato Siemens a.0).
+        if(coll==="plcIO" && (inp.dataset.k==="modulo"||inp.dataset.k==="tipoSeg")){
+          const r2=project[coll][i];
+          if(r2.modulo && r2.tipoSeg){
+            const ch=firstFreeChannel(coll,i);
+            if(ch!==null){
+              const mod=project.plcModuli.find(m=>m.sigla===r2.modulo);
+              const cap=channelCapacity(mod,r2.tipoSeg);
+              if(cap>0 && ch>=cap){ r2.canale="PIENO"; toast("Modulo "+r2.modulo+" pieno ("+r2.tipoSeg+" "+chLabel(0)+"–"+chLabel(cap-1)+")"); }
+              else { r2.canale=chLabel(ch); toast("Canale "+chLabel(ch)+" (primo libero)"); }
+            }
+          }
+        }
+        // Sicurezza I/O: scelto Modulo + Tipo, compila il primo canale libero (numerazione semplice 1,2,3…).
+        if(coll==="sicIO" && (inp.dataset.k==="modulo"||inp.dataset.k==="tipoSeg")){
+          const r2=project[coll][i];
+          if(r2.modulo && r2.tipoSeg){
+            const used=new Set();
+            project.sicIO.forEach((o,j)=>{ if(j===i)return; if(o.modulo===r2.modulo && o.tipoSeg===r2.tipoSeg){ const n=parseInt(o.canale,10); if(!isNaN(n))used.add(n); } });
+            let n=1; while(used.has(n)) n++;
+            const mod=project.sicModuli.find(m=>m.sigla===r2.modulo);
+            const cap=channelCapacity(mod,r2.tipoSeg);
+            if(cap>0 && n>cap){ r2.canale="PIENO"; toast("Modulo "+r2.modulo+" pieno ("+r2.tipoSeg+" 1–"+cap+")"); }
+            else { r2.canale=String(n); toast("Canale "+n+" (primo libero)"); }
+          }
+        }
+        // Sbarre: se cambio il Tipo del generale, azzero il codice se non è più coerente.
+        if(coll==="sbarre" && inp.dataset.k==="genTipo"){
+          const r2=project[coll][i];
+          const ok=project.componenti.some(c=>c.tipo===r2.genTipo && c.codice===r2.genCodice);
+          if(!ok)r2.genCodice="";
+        }
+        save();
+        // Se cambia una tendina, ridisegna la tabella così le colonne dipendenti
+        // (es. Codice filtrato per Tipo componente, Sbarra filtrata per Quadro) si aggiornano subito.
+        if(inp.tagName==="SELECT"){ renderGrid(coll); }
+        if(activeSheet==="schema")renderSchema();
+      });
+    });
+    // PLC/Sicurezza Moduli: autocompilazione dalla libreria quando si finisce di digitare il codice
+    if(coll==="plcModuli"||coll==="sicModuli"){
+      const codeInp=tr.querySelector('[data-k="codice"]');
+      if(codeInp)codeInp.addEventListener("change",()=>{
+        const r2=project[coll][i];
+        const m=(coll==="sicModuli")?lookupSafety(r2.codice):lookupModule(r2.codice);
+        if(m){ Object.keys(m).forEach(k=>{ if(m[k]!==undefined) r2[k]=m[k]; }); save(); renderGrid(coll); toast("Dati modulo compilati dalla libreria"); }
+      });
+      const sb=tr.querySelector(".srch");
+      if(sb)sb.onclick=()=>{ const code=project[coll][i].codice||""; window.open("https://www.google.com/search?q="+encodeURIComponent(code+" datasheet"),"_blank"); };
+      const sv=tr.querySelector(".savelib");
+      if(sv)sv.onclick=()=>{
+        const r=project[coll][i];
+        const code=String(r.codice||"").trim();
+        if(!code){ toast("Inserisci prima il Codice del modulo"); return; }
+        MYLIB[code]={tipo:r.tipo||"",marca:r.marca||"",canali:r.canali||"",descr:r.descr||""};
+        saveMyLib();
+        toast("Modulo "+code+" salvato nella tua libreria");
+      };
+    }
+    tr.querySelector(".del").onclick=()=>{project[coll].splice(i,1);renderGrid(coll);buildNav();save();};
+    tr.querySelector(".up").onclick=()=>{if(i>0){[project[coll][i-1],project[coll][i]]=[project[coll][i],project[coll][i-1]];renderGrid(coll);save();}};
+    tr.querySelector(".dn").onclick=()=>{if(i<project[coll].length-1){[project[coll][i+1],project[coll][i]]=[project[coll][i],project[coll][i+1]];renderGrid(coll);save();}};
+  });
+}
+function renderAllGrids(){ ["quadri","sbarre","componenti","partenze","sbarreMono","partenzeMono","sbarreDC","partenzeDC","plcModuli","plcIO","sicModuli","sicIO"].forEach(renderGrid); }
+
+/* =========================================================
+   BINDING campi semplici (meta, plc)
+   ========================================================= */
+function bindSimpleInputs(){
+  document.querySelectorAll("[data-o][data-k]").forEach(el=>{
+    el.addEventListener("input",()=>{
+      const o=el.dataset.o,k=el.dataset.k;
+      if(!project[o])project[o]={};
+      project[o][k]=el.value;save();
+    });
+  });
+}
+function fillSimpleInputs(){
+  document.querySelectorAll("[data-o][data-k]").forEach(el=>{
+    const o=el.dataset.o,k=el.dataset.k;
+    el.value=(project[o]&&project[o][k]!=null)?project[o][k]:"";
+  });
+}
+
+/* =========================================================
+   MOTORE DISEGNO  (SVG + DXF)
+   ========================================================= */
+class Drawing{
+  constructor(){this.e=[];this.minX=1e9;this.minY=1e9;this.maxX=-1e9;this.maxY=-1e9;}
+  _b(x,y){if(x<this.minX)this.minX=x;if(y<this.minY)this.minY=y;if(x>this.maxX)this.maxX=x;if(y>this.maxY)this.maxY=y;}
+  line(x1,y1,x2,y2,l="0"){this.e.push({t:"line",x1,y1,x2,y2,l});this._b(x1,y1);this._b(x2,y2);return this;}
+  circle(cx,cy,r,l="0"){this.e.push({t:"circle",cx,cy,r,l});this._b(cx-r,cy-r);this._b(cx+r,cy+r);return this;}
+  rect(x,y,w,h,l="0"){this.line(x,y,x+w,y,l).line(x+w,y,x+w,y+h,l).line(x+w,y+h,x,y+h,l).line(x,y+h,x,y,l);return this;}
+  poly(p,l="0"){for(let i=0;i<p.length-1;i++)this.line(p[i][0],p[i][1],p[i+1][0],p[i+1][1],l);return this;}
+  text(x,y,s,size=3,anchor="start",rot=0,l="TESTI"){
+    s=String(s);
+    this.e.push({t:"text",x,y,s,size,anchor,rot,l});
+    const w=s.length*size*0.62;                       // stima larghezza testo
+    const r=((rot||0)%360+360)%360;
+    if(r===90||r===270){                              // testo verticale
+      this._b(x-size,y);this._b(x+size,y);
+      this._b(x,y-w);this._b(x,y+w);
+    }else{                                            // testo orizzontale
+      this._b(x,y-size);this._b(x,y+size*0.35);
+      if(anchor==="middle"){this._b(x-w/2,y);this._b(x+w/2,y);}
+      else if(anchor==="end"){this._b(x-w,y);}
+      else {this._b(x+w,y);}
+    }
+    return this;
+  }
+  toSVG(pad=18){
+    const w=(this.maxX-this.minX)+pad*2,h=(this.maxY-this.minY)+pad*2;
+    const ox=-this.minX+pad,oy=-this.minY+pad;
+    let o=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w.toFixed(1)} ${h.toFixed(1)}" font-family="Arial,Helvetica,sans-serif">`;
+    o+=`<rect x="0" y="0" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="#fff"/>`;
+    for(const el of this.e){
+      if(el.t==="line")o+=`<line x1="${(el.x1+ox).toFixed(2)}" y1="${(el.y1+oy).toFixed(2)}" x2="${(el.x2+ox).toFixed(2)}" y2="${(el.y2+oy).toFixed(2)}" stroke="#111" stroke-width="0.5"/>`;
+      else if(el.t==="circle")o+=`<circle cx="${(el.cx+ox).toFixed(2)}" cy="${(el.cy+oy).toFixed(2)}" r="${el.r.toFixed(2)}" fill="none" stroke="#111" stroke-width="0.5"/>`;
+      else if(el.t==="text"){
+        const a=el.anchor==="middle"?"middle":el.anchor==="end"?"end":"start";
+        const tr=el.rot?` transform="rotate(${-el.rot} ${(el.x+ox).toFixed(2)} ${(el.y+oy).toFixed(2)})"`:"";
+        o+=`<text x="${(el.x+ox).toFixed(2)}" y="${(el.y+oy).toFixed(2)}" font-size="${el.size}" text-anchor="${a}" fill="#111"${tr}>${esc(el.s)}</text>`;
+      }
+    }
+    o+="</svg>";return{svg:o,w,h};
+  }
+  toDXF(){
+    const fy=y=>(this.maxY-y);const H=[];const p=(c,v)=>{H.push(c);H.push(v);};
+    p(0,"SECTION");p(2,"HEADER");p(9,"$INSUNITS");p(70,4);p(0,"ENDSEC");
+    p(0,"SECTION");p(2,"TABLES");p(0,"TABLE");p(2,"LAYER");p(70,3);
+    const L=(n,c)=>{p(0,"LAYER");p(2,n);p(70,0);p(62,c);p(6,"CONTINUOUS");};
+    L("0",7);L("TESTI",3);L("SBARRA",1);p(0,"ENDTAB");p(0,"ENDSEC");
+    p(0,"SECTION");p(2,"ENTITIES");
+    for(const el of this.e){
+      if(el.t==="line"){p(0,"LINE");p(8,el.l);p(10,el.x1.toFixed(3));p(20,fy(el.y1).toFixed(3));p(30,"0.0");p(11,el.x2.toFixed(3));p(21,fy(el.y2).toFixed(3));p(31,"0.0");}
+      else if(el.t==="circle"){p(0,"CIRCLE");p(8,el.l);p(10,el.cx.toFixed(3));p(20,fy(el.cy).toFixed(3));p(30,"0.0");p(40,el.r.toFixed(3));}
+      else if(el.t==="text"){const ha=el.anchor==="middle"?1:el.anchor==="end"?2:0;p(0,"TEXT");p(8,el.l);p(10,el.x.toFixed(3));p(20,fy(el.y).toFixed(3));p(30,"0.0");p(40,el.size.toFixed(3));p(1,el.s);p(50,(el.rot||0).toFixed(3));if(ha>0){p(72,ha);p(11,el.x.toFixed(3));p(21,fy(el.y).toFixed(3));p(31,"0.0");}}
+    }
+    p(0,"ENDSEC");p(0,"EOF");
+    let s="";for(let i=0;i<H.length;i+=2)s+=H[i]+"\r\n"+H[i+1]+"\r\n";return s;
+  }
+}
+/* ---- Pen: disegna in coordinate (a = lungo la partenza dalla sbarra, p = laterale).
+   orient 'V' = partenze verso il basso, orient 'H' = partenze verso destra. ---- */
+function feederPen(d,orient,bx,by){
+  const T = orient==='H' ? (a,p)=>[bx+a,by+p] : (a,p)=>[bx+p,by+a];
+  return {
+    orient,
+    at:(a,p)=>T(a,p),
+    line:(a1,p1,a2,p2,l)=>{const A=T(a1,p1),B=T(a2,p2);d.line(A[0],A[1],B[0],B[1],l);},
+    circle:(a,p,r,l)=>{const A=T(a,p);d.circle(A[0],A[1],r,l);},
+    rect:(a,p,wa,wp,l)=>{const A=T(a,p),B=T(a+wa,p),C=T(a+wa,p+wp),D=T(a,p+wp);d.line(A[0],A[1],B[0],B[1],l);d.line(B[0],B[1],C[0],C[1],l);d.line(C[0],C[1],D[0],D[1],l);d.line(D[0],D[1],A[0],A[1],l);},
+    poly:(pts,l)=>{d.poly(pts.map(pt=>T(pt[0],pt[1])),l);},
+    text:(a,p,s,size,anchor,rot,l)=>{const A=T(a,p);d.text(A[0],A[1],s,size,anchor||"start",rot||0,l);}
+  };
+}
+function arcAP(ca,cp,r,d1,d2,steps){const out=[];steps=steps||14;for(let i=0;i<=steps;i++){const t=(d1+(d2-d1)*i/steps)*Math.PI/180;out.push([ca+r*Math.sin(t),cp+r*Math.cos(t)]);}return out;}
+// Sinusoide: al variare di p (laterale) oscilla a (lungo la partenza). Un periodo.
+function sinePtsAP(cA,p1,p2,amp,steps){const out=[];steps=steps||18;for(let i=0;i<=steps;i++){const t=i/steps;out.push([cA+amp*Math.sin(t*2*Math.PI),p1+(p2-p1)*t]);}return out;}
+
+/* Tipo di protezione da disegnare in cima alla partenza (o "nessuno" se il
+   componente non è una protezione: quadro, sbarra, morsetti, motore, ecc.) */
+function protKind(comp, tipoTxt){
+  const s=(comp&&comp.simbolo&&comp.simbolo!=="Auto")?comp.simbolo.toLowerCase():"";
+  const t=((tipoTxt||"")+" "+(comp?((comp.tipo||"")+" "+(comp.descr||"")):"")).toLowerCase();
+  if(s==="salvamotore"||/salvamot|guardamot|mpcb/.test(t))return "salvamotore";
+  if(s==="termica"|| (/termic/.test(t)&&!/magneto/.test(t)))return "termica";
+  if(s==="sezionatore"||/sezion/.test(t))return "sezionatore";
+  if(s==="fusibile"||/fusib/.test(t))return "fusibile";
+  if(s==="interruttore"||s==="differenziale"||/interr|magnet|scatol|mccb|mcb|differ/.test(t))return "interruttore";
+  // simboli non di protezione -> nessun interruttore in cima
+  if(["quadro","sbarra","morsetti","motore","presa","lampada","trasformatore","alimentatore","plc","modulo sicurezza","sicurezza","inverter","softstarter","utenza generica"].includes(s))return "nessuno";
+  return "interruttore";
+}
+/* simboli (in coordinate a/p, con offset di partenza a0) */
+function symBreakerP(pen,a0,kind){
+  if(kind==="nessuno"){ pen.line(a0,0,a0+20,0); return a0+20; }   // solo conduttore
+  if(kind==="termica"){                                            // relè termico (senza sezionamento)
+    pen.line(a0,0,a0+5,0);
+    pen.rect(a0+5,-3.5,9,7);
+    pen.line(a0+7,-2,a0+7,2); pen.line(a0+7,2,a0+10,2);           // elemento bimetallico (gancio)
+    pen.line(a0+14,0,a0+20,0);
+    return a0+20;
+  }
+  if(kind==="salvamotore"){
+    // Salvamotore (MPCB): manettino con "x" + riquadro termico/magnetico a due celle
+    pen.line(a0,0,a0+9,0);                       // conduttore fino al riquadro
+    pen.line(a0+2,0,a0+6.5,-4.2);                // lama interruttore (obliqua)
+    pen.rect(a0+4.6,-3.4,2,2);                   // manettino
+    pen.rect(a0+9,-3.2,11,6.4);                  // riquadro protezione
+    pen.line(a0+14.5,-3.2,a0+14.5,3.2);          // divisione fra le due celle
+    pen.poly([[a0+11,1.6],[a0+11,-1.6],[a0+13,-1.6]]);   // termico (cella alta)
+    pen.poly([[a0+18,-1.6],[a0+18,1.6],[a0+16,1.6]]);    // magnetico (cella bassa)
+    pen.line(a0+20,0,a0+22,0);                   // conduttore uscita
+    return a0+22;
+  }
+  pen.line(a0,0,a0+2,0);
+  pen.circle(a0+2.6,0,0.9);              // perno (uno solo)
+  pen.line(a0+2.6,0,a0+8,5);             // lama
+  pen.line(a0+8,0,a0+10,0);
+  if(kind==="sezionatore"){ pen.line(a0+10,0,a0+18,0); }
+  else if(kind==="fusibile"){ pen.rect(a0+10,-2,7,4); pen.line(a0+10,0,a0+17,0); }
+  else { pen.rect(a0+10,-2.4,8,4.8); pen.line(a0+18,0,a0+20,0); }  // interruttore
+  return a0+20;
+}
+// Numero di poli da mostrare accanto al trattino obliquo (es. 3P->"3", 3P+N->"3+N").
+function poleMark(poli){
+  const s=String(poli||"").toUpperCase().replace(/\s/g,"");
+  if(!s)return "";
+  const m=s.match(/(\d)/);const n=m?m[1]:"";
+  return s.includes("+N")?(n+"+N"):n;
+}
+// Trattino obliquo con numero di poli sul conduttore (convenzione unifilare).
+function polesTickP(pen,a,poli){
+  pen.line(a+1.6,-2.6,a-1.6,2.6);
+  const mk=poleMark(poli);
+  if(mk)pen.text(a-0.4,3.4,mk,2.3,"start",0);
+}
+// Numero di conduttori/poli (per i trattini trasversali): 3P=3, 3P+N=4, 1P+N=2, 4P=4...
+function poleConductors(poli){
+  const s=String(poli||"").toUpperCase().replace(/\s/g,"");
+  let n=0;const m=s.match(/(\d)\s*P/);if(m)n=parseInt(m[1],10);else{const m2=s.match(/^(\d)/);if(m2)n=parseInt(m2[1],10);}
+  if(s.includes("+N"))n+=1;
+  return n>0?n:1;
+}
+function symDiffP(pen,a0){ pen.rect(a0,-3,6,6); pen.line(a0+6,-3,a0,3); pen.line(a0+6,0,a0+8,0); return a0+8; }
+// Deduce il tipo di simbolo del carico dal componente selezionato.
+function symbolFor(comp){
+  if(!comp)return "generic";
+  let s=(comp.simbolo||"Auto");
+  if(s==="Auto"||s===""){
+    const t=((comp.tipo||"")+" "+(comp.descr||"")).toLowerCase();
+    if(/morsett|terminal/.test(t))return "morsetti";
+    if(/termic/.test(t)&&!/magneto/.test(t))return "termica";
+    if(/contatt|teleru/.test(t))return "contattore";
+    if(/soft|avviat/.test(t))return "softstarter";
+    if(/invert|vfd|frequenz|drive/.test(t))return "inverter";
+    if(/mot/.test(t))return "motore";
+    if(/pres|cee|spina|socket/.test(t))return "presa";
+    if(/lamp|illum|luce|faro|plafon|led/.test(t))return "lampada";
+    if(/modulo.?sicur|sicurezz|safety|emergenz|e-?stop/.test(t))return "sicurezza";
+    if(/\bplc\b|controllore|cpu|siemens.?s7|logo!/.test(t))return "plc";
+    if(/quadr|sottoquadr|panel/.test(t))return "quadro";
+    if(/aliment|power.?sup|vdc|24\s?v/.test(t))return "alimentatore";
+    if(/trasf|traf/.test(t))return "trasformatore";
+    if(/sbarr|busbar/.test(t))return "sbarra";
+    if(/interr|magnet|scatol|mccb|mcb|sezion|fus|diff/.test(t))return "protezione";
+    return "generic";
+  }
+  s=s.toLowerCase();
+  if(/sicurezz/.test(s))return "sicurezza";
+  if(s==="modulo sicurezza")return "sicurezza";
+  return s;
+}
+// Disegna il simbolo del carico dalla posizione a0 lungo la partenza. Ritorna la nuova a.
+function drawLoadP(pen,a0,kind){
+  switch(kind){
+    case "motore":
+      pen.circle(a0+5,0,5);pen.text(a0+6.3,0,"M",4,"middle",0);return a0+10;
+    case "presa":
+      pen.poly(arcAP(a0+1,0,4,0,180,14));pen.line(a0+1,-4,a0+1,4);return a0+7;
+    case "lampada":
+      pen.circle(a0+5,0,5);pen.line(a0+1.5,-3.5,a0+8.5,3.5);pen.line(a0+1.5,3.5,a0+8.5,-3.5);return a0+10;
+    case "quadro":
+      pen.rect(a0,-6,12,12);pen.line(a0+2,-6,a0+2,6);return a0+12;
+    case "morsetti":
+      pen.rect(a0,-5,4,10);pen.circle(a0+2,-3,1);pen.circle(a0+2,0,1);pen.circle(a0+2,3,1);return a0+4;
+    case "softstarter":
+      pen.rect(a0,-6,12,12);pen.poly([[a0+9,-4],[a0+9,-1],[a0+3,4]]);return a0+12;
+    case "inverter":
+      pen.rect(a0,-6,12,12);pen.text(a0+5,0,"=",3,"middle",0);pen.text(a0+10,0,"~",3,"middle",0);return a0+12;
+    case "contattore":
+      pen.line(a0,0,a0+1,0);pen.line(a0+1,0,a0+6,3.5);pen.poly(arcAP(a0+6.5,0,1.5,0,180,8));pen.line(a0+6.5,0,a0+8,0);return a0+8;
+    case "termica":
+      pen.rect(a0,-3.5,9,7);pen.line(a0+2,-2,a0+2,2);pen.line(a0+2,2,a0+5,2);return a0+9;
+    case "trasformatore":
+      pen.circle(a0+4,0,4);pen.circle(a0+8,0,4);return a0+12;
+    case "alimentatore":
+      pen.rect(a0,-6,13,12);pen.line(a0+13,-6,a0,6);                       // quadrato + diagonale
+      pen.poly(sinePtsAP(a0+3.5,-5,-1,1.4,18));                           // sinusoide (AC) in alto a sx
+      pen.line(a0+8.6,1.3,a0+8.6,4.7);                                     // DC: linea piena
+      pen.line(a0+10,1.3,a0+10,2.6);pen.line(a0+10,3.4,a0+10,4.7);         // DC: linea tratteggiata
+      return a0+13;
+    case "plc":
+      pen.rect(a0,-6.5,14,13);pen.text(a0+7,1.2,"PLC",3.6,"middle",0);return a0+14;
+    case "sicurezza":
+      pen.rect(a0,-7,15,14);pen.rect(a0+1.6,-5.4,11.8,10.8);pen.text(a0+7.5,1.2,"SIC",3,"middle",0);return a0+15;
+    case "protezione":
+      pen.rect(a0,-2.4,8,4.8);return a0+8;
+    case "sbarra":
+      pen.line(a0+2,-6,a0+2,6);pen.line(a0+3,-6,a0+3,6);return a0+4;
+    default:
+      pen.circle(a0+5,0,5);return a0+10; // utenza generica
+  }
+}
+// Dispositivo IN SERIE (comando/avviamento) tra protezione e carico: il conduttore prosegue.
+function symDeviceP(pen,a0,kind){
+  switch(kind){
+    case "softstarter":
+      pen.rect(a0,-4,10,8);pen.poly([[a0+2.5,3],[a0+4.5,3],[a0+8,-3]]);return a0+10;
+    case "inverter":
+      pen.rect(a0,-4,10,8);pen.line(a0+2.5,2.5,a0+7.5,-2.5);pen.text(a0+5,3.4,"~",2.4,"middle",0);return a0+10;
+    case "contattore":
+      pen.line(a0,0,a0+1,0);pen.line(a0+1,0,a0+6,3.5);pen.poly(arcAP(a0+6.5,0,1.5,0,180,8));pen.line(a0+6.5,0,a0+8,0);return a0+8;
+    case "termica":
+      pen.rect(a0,-3.5,9,7);pen.line(a0+2,-2,a0+2,2);pen.line(a0+2,2,a0+5,2);return a0+9;
+    case "trasformatore":
+      pen.circle(a0+4,0,4);pen.circle(a0+8,0,4);return a0+12;
+    case "alimentatore":
+      pen.rect(a0,-6,13,12);pen.line(a0+13,-6,a0,6);                       // quadrato + diagonale
+      pen.poly(sinePtsAP(a0+3.5,-5,-1,1.4,18));                           // sinusoide (AC) in alto a sx
+      pen.line(a0+8.6,1.3,a0+8.6,4.7);                                     // DC: linea piena
+      pen.line(a0+10,1.3,a0+10,2.6);pen.line(a0+10,3.4,a0+10,4.7);         // DC: linea tratteggiata
+      return a0+13;
+    default:
+      pen.rect(a0,-3.5,8,7);return a0+8;   // dispositivo generico
+  }
+}
+
+/* ---- Una partenza (funzione condivisa a livello modulo) ---- */
+function drawFeederInto(d,f,i,bx,by){
+  const P=project; const H=(schemaOrient==='H');
+  const pen=feederPen(d,schemaOrient,bx,by);
+  const comp=(f.codice && P.componenti.find(c=>c.codice===f.codice)) || P.componenti.find(c=>c.tipo===f.tipoComp);
+  const tipoTxt=f.tipoComp||"";
+  pen.line(0,0,3,0);
+  polesTickP(pen,3,f.poli);
+  const aB0=5;
+  let a=symBreakerP(pen,aB0,protKind(comp,tipoTxt));
+  const aBmid=(aB0+a)/2;
+  if(f.diff==="sì"){ a=symDiffP(pen,a+1); }
+  const avvComp=P.componenti.find(c=>c._id===f.avv);
+  let aCmid=null;
+  if(avvComp){
+    pen.line(a,0,a+2,0); a+=2;
+    const aC0=a;
+    const dk=symbolFor(avvComp);
+    a=symDeviceP(pen,a,["softstarter","inverter","contattore","termica"].includes(dk)?dk:"box");
+    aCmid=(aC0+a)/2;
+  }
+  const nc=poleConductors(f.poli);
+  const seg=Math.max(9,nc*2+4);
+  pen.line(a,0,a+seg,0);
+  for(let k=0;k<nc;k++){const ta=a+3+k*2;pen.line(ta+1.1,-2.2,ta-1.1,2.2);}
+  a+=seg;
+  const carico=P.componenti.find(c=>c._id===f.carico);
+  const kind=carico?symbolFor(carico):"generic";
+  const aL0=a;
+  const aEnd=drawLoadP(pen,a,kind);
+  const aLmid=(aL0+aEnd)/2;
+  const lp=7;
+  const put=(am,txt,sz)=>{ if(txt) pen.text(am,lp,txt,sz||2.4,"start",0); };
+  if(f.codice) put(aBmid, f.codice);                                                          // CODICE
+  if(avvComp && aCmid!=null) put(aCmid, (avvComp.tipo||"")+(avvComp.codice?(" "+avvComp.codice):"")); // COMANDO
+  if(carico) put(aLmid, (carico.tipo||"")+(carico.codice?(" "+carico.codice):(carico.descr?(" "+carico.descr):""))); // CARICO
+  const loadLabel=f.descr || "";
+  if(loadLabel){
+    if(H) pen.text(aEnd+2,0,loadLabel,2.6,"start",0);
+    else  pen.text(aEnd,-7,loadLabel,2.6,"start",90);
+  }
+}
+/* ---- Generale monofase (trasformatore + protezione), livello modulo ---- */
+function drawMonoGeneralInto(d,gx,attachY,tComp,pComp,poli){
+  const gTop=attachY-48;
+  const pen=feederPen(d,'V',gx,gTop);
+  d.line(gx,gTop-6,gx,gTop-1);d.poly([[gx-2,gTop-4],[gx,gTop-1],[gx+2,gTop-4]]);   // arrivo
+  pen.line(0,0,1,0); pen.circle(4,0,3.5); pen.circle(8.5,0,3.5); pen.line(12,0,14,0);   // trasformatore
+  d.text(gx+7,gTop+3,"Trasf: "+((tComp&&tComp.tipo)||"Trasformatore")+((tComp&&tComp.codice)?(" "+tComp.codice):""),2.4,"start",0);
+  polesTickP(pen,15.5,poli);
+  const a=symBreakerP(pen,17,protKind(pComp,pComp?pComp.tipo:""));
+  d.text(gx+7,gTop+20,"Prot: "+((pComp&&pComp.tipo)||"")+((pComp&&pComp.codice)?(" "+pComp.codice):""),2.4,"start",0);
+  d.line(gx,gTop+a,gx,attachY);
+}
+/* ---- Generale DC (alimentatore + protezione), livello modulo ---- */
+function drawDCGeneralInto(d,gx,attachY,aComp,pComp,poli){
+  const gTop=attachY-56;
+  const pen=feederPen(d,'V',gx,gTop);
+  d.line(gx,gTop-6,gx,gTop-1);d.poly([[gx-2,gTop-4],[gx,gTop-1],[gx+2,gTop-4]]);   // arrivo AC
+  const aA=drawLoadP(pen,0,"alimentatore");                                        // simbolo alimentatore (0..13)
+  d.text(gx+9,gTop+5,"Alim: "+((aComp&&aComp.tipo)||"Alimentatore")+((aComp&&aComp.codice)?(" "+aComp.codice):""),2.4,"start",0);
+  pen.line(aA,0,aA+2,0);
+  polesTickP(pen,aA+3,poli);
+  const a=symBreakerP(pen,aA+4,protKind(pComp,pComp?pComp.tipo:""));
+  d.text(gx+9,gTop+aA+7,"Prot: "+((pComp&&pComp.tipo)||"")+((pComp&&pComp.codice)?(" "+pComp.codice):""),2.4,"start",0);
+  d.line(gx,gTop+a,gx,attachY);
+}
+
+/* ============ SCHEMA TRIFASE (principale) ============ */
+function buildSchema(quadroSigla){
+  const d=new Drawing();
+  const P=project;
+  const q=P.quadri.find(q=>q.sigla===quadroSigla);
+  const allFeeders=P.partenze.filter(f=>!quadroSigla || f.quadro===quadroSigla);
+  let sbList=P.sbarre.filter(s=>!quadroSigla || s.quadro===quadroSigla);
+  if(sbList.length===0) sbList=[{sigla:"",quadro:quadroSigla,poli:""}];   // fallback: una sbarra generica
+  const sigleSet=new Set(sbList.map(s=>s.sigla).filter(Boolean));
+  const hasAnyGen = sbList.some(s=>s.genTipo);
+
+  const titleX=30;
+  d.text(titleX,8,(quadroSigla||P.meta.quadro||"Quadro"),4,"start",0);
+  if(q&&q.descr)d.text(titleX,13,q.descr,2.8,"start",0);
+
+  function genCompOf(sb){ return sb.genTipo?(P.componenti.find(c=>c.codice===sb.genCodice)||P.componenti.find(c=>c.tipo===sb.genTipo)):null; }
+  function sbLabel(sb){
+    const sc=P.componenti.find(c=>c.tipo===sb.tipoComp);
+    const tipoTxt=sb.tipoComp||sb.tipo||"";
+    const marca=sb.marca||(sc&&sc.marca)||"";
+    const inA=sb.in||(sc&&sc.in)||"";
+    return `Sbarra ${sb.sigla||""} ${tipoTxt?("· "+tipoTxt):""} ${sb.poli?("· "+sb.poli):""} ${inA?("· "+inA+"A"):""} ${marca?("· "+marca):""}`.trim();
+  }
+  function drawGeneral(sb,genComp,gx,attachY){
+    const gTop=attachY-34;
+    const pen=feederPen(d,'V',gx,gTop);
+    d.line(gx,gTop-8,gx,gTop-2);d.poly([[gx-2,gTop-5],[gx,gTop-2],[gx+2,gTop-5]]);
+    d.line(gx,gTop-2,gx,gTop);
+    const genPoli=(genComp&&genComp.poli)||sb.poli;
+    polesTickP(pen,1,genPoli);
+    const a=symBreakerP(pen,3,protKind(genComp,sb.genTipo||""));
+    d.line(gx,gTop+a,gx,attachY);
+    let ay=gTop+3;
+    const gput=(s,sz)=>{if(s){d.text(gx+7,ay,s,sz,"start",0);ay+=sz+1.2;}};
+    gput("Generale: "+(sb.genTipo||""),2.7);
+    gput(`${genPoli||""} ${(genComp&&genComp.in)?("In "+genComp.in+"A"):(sb.in?("In "+sb.in+"A"):"")} ${(genComp&&genComp.curva)?("cr."+genComp.curva):""}`.trim(),2.3);
+    gput(`${(genComp&&genComp.kA)?("Icu "+genComp.kA+"kA"):""} ${(genComp&&genComp.marca)||""} ${(genComp&&genComp.codice)||sb.genCodice||""}`.trim(),2.3);
+  }
+  // feeder assegnati a una sbarra (i non assegnati / non riconosciuti vanno sulla prima)
+  function feedersOf(sb,isFirst){ return allFeeders.filter(f=> f.sbarra===sb.sigla || (isFirst && !sigleSet.has(f.sbarra)) ); }
+
+  const x0=30, colW=48;
+  const busY = hasAnyGen ? 84 : 48;
+  let sx=x0;
+  sbList.forEach((sb,si)=>{
+    const genComp=genCompOf(sb);
+    const hasGen=!!sb.genTipo;
+    const feds=feedersOf(sb, si===0);
+    const nn=Math.max(feds.length,1);
+    const right=sx+Math.max((nn-1)*colW,20);
+    if(hasGen) drawGeneral(sb,genComp,sx,busY);
+    else { d.line(sx,busY-8,sx,busY);d.poly([[sx-2,busY-5],[sx,busY-2],[sx+2,busY-5]]); }
+    d.line(sx,busY,right,busY,"SBARRA");
+    d.text(sx,busY-2.5,sbLabel(sb),2.6,"start",0);
+    feds.forEach((f,i)=>drawFeederInto(d,f,i,sx+i*colW,busY));
+    sx=right+60;   // spazio tra una sbarra e l'altra
+  });
+  return d;
+}
+
+/* ============ SCHEMA MONOFASE (separato) ============ */
+function buildSchemaMono(quadroSigla){
+  const d=new Drawing();
+  const P=project;
+  const monoList=P.sbarreMono.filter(s=>!quadroSigla || s.quadro===quadroSigla);
+  const q=P.quadri.find(q=>q.sigla===quadroSigla);
+  const x0=30, colW=48, busY=100;
+  d.text(x0,8,(quadroSigla||P.meta.quadro||"Quadro")+" — Monofase",4,"start",0);
+  if(q&&q.descr)d.text(x0,13,q.descr,2.8,"start",0);
+  if(monoList.length===0){ d.text(x0,60,"Nessuna sbarra monofase per questo quadro.",3,"start",0); return d; }
+  let sx=x0;
+  monoList.forEach(mb=>{
+    const mbFeeders=P.partenzeMono.filter(f=>f.sbarra===mb.sigla && (!quadroSigla || f.quadro===quadroSigla));
+    const nn=Math.max(mbFeeders.length,1);
+    const mRight=sx+Math.max((nn-1)*colW,20);
+    const tComp=P.componenti.find(c=>c._id===mb.trafo);
+    const pComp=P.componenti.find(c=>c._id===mb.prot);
+    drawMonoGeneralInto(d,sx,busY,tComp,pComp,mb.poli);
+    d.line(sx,busY,mRight,busY,"SBARRA");
+    d.text(sx,busY-2.5,`Sbarra monofase ${mb.sigla||""} ${mb.tipo?("· "+mb.tipo):""} ${mb.poli?("· "+mb.poli):""} ${mb.in?("· "+mb.in+"A"):""}`.trim(),2.6,"start",0);
+    mbFeeders.forEach((f,i)=>drawFeederInto(d,f,i,sx+i*colW,busY));
+    sx=mRight+55;
+  });
+  return d;
+}
+
+/* ============ SCHEMA DC (separato) ============ */
+function buildSchemaDC(quadroSigla){
+  const d=new Drawing();
+  const P=project;
+  const dcList=P.sbarreDC.filter(s=>!quadroSigla || s.quadro===quadroSigla);
+  const q=P.quadri.find(q=>q.sigla===quadroSigla);
+  const x0=30, colW=48, busY=112;
+  d.text(x0,8,(quadroSigla||P.meta.quadro||"Quadro")+" — DC",4,"start",0);
+  if(q&&q.descr)d.text(x0,13,q.descr,2.8,"start",0);
+  if(dcList.length===0){ d.text(x0,60,"Nessuna sbarra DC per questo quadro.",3,"start",0); return d; }
+  let sx=x0;
+  dcList.forEach(mb=>{
+    const mbFeeders=P.partenzeDC.filter(f=>f.sbarra===mb.sigla && (!quadroSigla || f.quadro===quadroSigla));
+    const nn=Math.max(mbFeeders.length,1);
+    const mRight=sx+Math.max((nn-1)*colW,20);
+    const aComp=P.componenti.find(c=>c._id===mb.alim);
+    const pComp=P.componenti.find(c=>c._id===mb.prot);
+    drawDCGeneralInto(d,sx,busY,aComp,pComp,mb.poli);
+    d.line(sx,busY,mRight,busY,"SBARRA");
+    d.text(sx,busY-2.5,`Sbarra DC ${mb.sigla||""} ${mb.tipo?("· "+mb.tipo):""} ${mb.poli?("· "+mb.poli):""} ${mb.in?("· "+mb.in+"A"):""}`.trim(),2.6,"start",0);
+    mbFeeders.forEach((f,i)=>drawFeederInto(d,f,i,sx+i*colW,busY));
+    sx=mRight+55;
+  });
+  return d;
+}
+
+/* ============ SCHEMA PLC (I/O) ============ */
+function buildSchemaPLC(quadroSigla){
+  const d=new Drawing();
+  const P=project;
+  const q=P.quadri.find(q=>q.sigla===quadroSigla);
+  const mods=P.plcModuli.filter(m=>!quadroSigla || m.quadro===quadroSigla);
+  d.text(30,8,(quadroSigla||P.meta.quadro||"Quadro")+" — PLC",4,"start",0);
+  if(q&&q.descr)d.text(30,13,q.descr,2.8,"start",0);
+  if(mods.length===0){ d.text(30,60,"Nessun modulo PLC per questo quadro (aggiungi in PLC Moduli).",3,"start",0); return d; }
+  let y=28;
+  mods.forEach(m=>{
+    const sigs=P.plcIO.filter(io=>io.modulo===m.sigla && (!quadroSigla || io.quadro===quadroSigla));
+    const anyNote=sigs.some(io=>String(io.note||"").trim());
+    const sh=anyNote?9:6;            // passo verticale per segnale (più alto se ci sono note)
+    const rowH=Math.max(20, sigs.length*sh+8);
+    // riquadro modulo (a sinistra)
+    d.rect(30,y,44,rowH);
+    d.text(33,y+6,(m.sigla||m.tipo||"Modulo"),3.4,"start",0);
+    d.text(33,y+11,(m.tipo||""),2.6,"start",0);
+    d.text(33,y+15.5,((m.marca?m.marca+" ":"")+(m.codice||"")).trim(),2.3,"start",0);
+    if(m.slot)d.text(33,y+19,"slot "+m.slot,2.2,"start",0);
+    // segnali (a destra), ognuno con morsetto e sigla
+    sigs.forEach((io,k)=>{
+      const yy=y+5+k*sh;
+      d.line(74,yy,82,yy);            // conduttore dal modulo
+      d.circle(83,yy,1);             // morsetto/terminale
+      const lab=`${io.tipoSeg||""} ${io.canale?("ch"+io.canale+" "):""}${io.tag?(io.tag+" "):""}${io.indirizzo?("("+io.indirizzo+") "):""}${io.morsetto?("["+io.morsetto+"] "):""}${io.descr||""}`.trim();
+      d.text(86,yy+1,lab,2.4,"start",0);
+      const note=String(io.note||"").trim();
+      if(note)d.text(86,yy+4.2,note,2.1,"start",0);   // 2ª riga: Note
+    });
+    if(sigs.length){ d.line(74,y+5,74,y+5+(sigs.length-1)*sh); }  // montante segnali
+    y+=rowH+8;
+  });
+  return d;
+}
+function buildSchemaSic(quadroSigla){
+  const d=new Drawing();
+  const P=project;
+  const q=P.quadri.find(q=>q.sigla===quadroSigla);
+  const mods=P.sicModuli.filter(m=>!quadroSigla || m.quadro===quadroSigla);
+  d.text(30,8,(quadroSigla||P.meta.quadro||"Quadro")+" — SICUREZZA",4,"start",0);
+  if(q&&q.descr)d.text(30,13,q.descr,2.8,"start",0);
+  if(mods.length===0){ d.text(30,60,"Nessun modulo di sicurezza per questo quadro (aggiungi in Sicurezza Moduli).",3,"start",0); return d; }
+  let y=28;
+  mods.forEach(m=>{
+    const sigs=P.sicIO.filter(io=>io.modulo===m.sigla && (!quadroSigla || io.quadro===quadroSigla));
+    const anyNote=sigs.some(io=>String(io.note||"").trim());
+    const sh=anyNote?9:6;
+    const rowH=Math.max(20, sigs.length*sh+8);
+    // riquadro modulo (a sinistra)
+    d.rect(30,y,44,rowH);
+    d.text(33,y+6,(m.sigla||m.tipo||"Modulo"),3.4,"start",0);
+    d.text(33,y+11,(m.tipo||""),2.6,"start",0);
+    d.text(33,y+15.5,((m.marca?m.marca+" ":"")+(m.codice||"")).trim(),2.3,"start",0);
+    const cinfo=[m.contattiNO?("NO:"+m.contattiNO):"",m.contattiNC?("NC:"+m.contattiNC):"",m.reset?("Reset:"+m.reset):""].filter(Boolean).join("  ");
+    if(cinfo)d.text(33,y+19,cinfo,2.2,"start",0);
+    // segnali della catena di sicurezza (a destra)
+    sigs.forEach((io,k)=>{
+      const yy=y+5+k*sh;
+      d.line(74,yy,82,yy);
+      d.circle(83,yy,1);
+      const lab=`${io.tipoSeg||""} ${io.canale?("ch"+io.canale+" "):""}${io.tag?(io.tag+" "):""}${io.funzione?(io.funzione+" "):""}${io.morsetto?("["+io.morsetto+"] "):""}${io.descr||""}`.trim();
+      d.text(86,yy+1,lab,2.4,"start",0);
+      const note=String(io.note||"").trim();
+      if(note)d.text(86,yy+4.2,note,2.1,"start",0);   // 2ª riga: Note
+    });
+    if(sigs.length){ d.line(74,y+5,74,y+5+(sigs.length-1)*sh); }
+    y+=rowH+8;
+  });
+  return d;
+}
+function drawTitleBlock(d,rightRef,P){
+  const bw=112,bh=32,y0=(d.maxY||120)+16,x0=Math.max(rightRef-bw+18,30);
+  d.rect(x0,y0,bw,bh);
+  d.line(x0,y0+8,x0+bw,y0+8);d.line(x0,y0+16,x0+bw,y0+16);d.line(x0,y0+24,x0+bw,y0+24);d.line(x0+70,y0,x0+70,y0+bh);
+  const t=(x,y,s,sz=2.5)=>d.text(x,y,s,sz,"start",0);
+  t(x0+2,y0+5.5,(P.meta.impianto||"Impianto"),3);
+  t(x0+2,y0+13.5,"Cliente: "+(P.meta.cliente||"—"));
+  t(x0+2,y0+21.5,"Quadro: "+(P.meta.quadro||"—")+"  Comm.: "+(P.meta.commessa||"—"));
+  t(x0+2,y0+29.5,"Dis.: "+(P.meta.disegnatore||"—"));
+  t(x0+72,y0+5.5,"SCHEMA UNIFILARE",2.6);
+  t(x0+72,y0+13.5,"Data: "+(P.meta.data||"—"));
+  t(x0+72,y0+21.5,(P.meta.rev||"Rev.00"));
+  t(x0+72,y0+29.5,"Foglio "+(P.meta.foglio||"1 di 1"));
+}
+
+/* =========================================================
+   RENDER SCHEMA (foglio)
+   ========================================================= */
+let currentZoom=1, lastDrawing=null;
+function refreshQuadroSelect(){
+  const sel=document.getElementById("schemaQuadro");if(!sel)return;
+  const prev=sel.value;
+  const list=project.quadri.map(q=>q.sigla).filter(Boolean);
+  sel.innerHTML=(list.length?list:["(tutte le partenze)"]).map(q=>`<option>${esc(q)}</option>`).join("");
+  if(list.includes(prev))sel.value=prev;
+}
+function renderSchema(){
+  refreshQuadroSelect();
+  const sel=document.getElementById("schemaQuadro");
+  const qs=(sel&&project.quadri.length)?sel.value:null;
+  const canvas=document.getElementById("schemaCanvas");
+  if(project.partenze.length===0){canvas.innerHTML='<div class="empty">Inserisci partenze (foglio Partenze) per generare lo schema.</div>';return;}
+  const d=buildSchema(qs);lastDrawing=d;
+  const {svg,w}=d.toSVG();
+  canvas.innerHTML=svg;
+  const el=canvas.querySelector("svg");
+  el.style.width=(w*currentZoom*2.0)+"px";el.style.height="auto";
+}
+function zoom(f){currentZoom=Math.min(Math.max(currentZoom*f,.3),6);const el=document.querySelector("#schemaCanvas svg");if(el){const w=el.viewBox.baseVal.width;el.style.width=(w*currentZoom*2.0)+"px";}}
+
+/* ---- Schema Monofase (foglio separato) ---- */
+let currentZoomMono=1, lastDrawingMono=null;
+function refreshQuadroSelectMono(){
+  const sel=document.getElementById("schemaMonoQuadro");if(!sel)return;
+  const prev=sel.value;
+  const list=project.quadri.map(q=>q.sigla).filter(Boolean);
+  sel.innerHTML=(list.length?list:["(tutte)"]).map(q=>`<option>${esc(q)}</option>`).join("");
+  if(list.includes(prev))sel.value=prev;
+}
+function renderSchemaMono(){
+  refreshQuadroSelectMono();
+  const sel=document.getElementById("schemaMonoQuadro");
+  const qs=(sel&&project.quadri.length)?sel.value:null;
+  const canvas=document.getElementById("schemaMonoCanvas");
+  if(project.sbarreMono.length===0){canvas.innerHTML='<div class="empty">Inserisci sbarre monofase (foglio Sbarre Monofase) per generare lo schema monofase.</div>';return;}
+  const d=buildSchemaMono(qs);lastDrawingMono=d;
+  const {svg,w}=d.toSVG();
+  canvas.innerHTML=svg;
+  const el=canvas.querySelector("svg");
+  el.style.width=(w*currentZoomMono*2.0)+"px";el.style.height="auto";
+}
+function zoomMono(f){currentZoomMono=Math.min(Math.max(currentZoomMono*f,.3),6);const el=document.querySelector("#schemaMonoCanvas svg");if(el){const w=el.viewBox.baseVal.width;el.style.width=(w*currentZoomMono*2.0)+"px";}}
+
+/* ---- Schema DC (foglio separato) ---- */
+let currentZoomDC=1, lastDrawingDC=null;
+function refreshQuadroSelectDC(){
+  const sel=document.getElementById("schemaDCQuadro");if(!sel)return;
+  const prev=sel.value;
+  const list=project.quadri.map(q=>q.sigla).filter(Boolean);
+  sel.innerHTML=(list.length?list:["(tutte)"]).map(q=>`<option>${esc(q)}</option>`).join("");
+  if(list.includes(prev))sel.value=prev;
+}
+function renderSchemaDC(){
+  refreshQuadroSelectDC();
+  const sel=document.getElementById("schemaDCQuadro");
+  const qs=(sel&&project.quadri.length)?sel.value:null;
+  const canvas=document.getElementById("schemaDCCanvas");
+  if(project.sbarreDC.length===0){canvas.innerHTML='<div class="empty">Inserisci sbarre DC (foglio Sbarre DC) per generare lo schema DC.</div>';return;}
+  const d=buildSchemaDC(qs);lastDrawingDC=d;
+  const {svg,w}=d.toSVG();
+  canvas.innerHTML=svg;
+  const el=canvas.querySelector("svg");
+  el.style.width=(w*currentZoomDC*2.0)+"px";el.style.height="auto";
+}
+function zoomDC(f){currentZoomDC=Math.min(Math.max(currentZoomDC*f,.3),6);const el=document.querySelector("#schemaDCCanvas svg");if(el){const w=el.viewBox.baseVal.width;el.style.width=(w*currentZoomDC*2.0)+"px";}}
+
+/* ---- Schema PLC (foglio separato) ---- */
+let currentZoomPLC=1, lastDrawingPLC=null;
+function refreshQuadroSelectPLC(){
+  const sel=document.getElementById("schemaPLCQuadro");if(!sel)return;
+  const prev=sel.value;
+  const list=project.quadri.map(q=>q.sigla).filter(Boolean);
+  sel.innerHTML=(list.length?list:["(tutte)"]).map(q=>`<option>${esc(q)}</option>`).join("");
+  if(list.includes(prev))sel.value=prev;
+}
+function renderSchemaPLC(){
+  refreshQuadroSelectPLC();
+  const sel=document.getElementById("schemaPLCQuadro");
+  const qs=(sel&&project.quadri.length)?sel.value:null;
+  const canvas=document.getElementById("schemaPLCCanvas");
+  if(project.plcModuli.length===0){canvas.innerHTML='<div class="empty">Inserisci moduli (foglio PLC Moduli) per generare lo schema PLC.</div>';return;}
+  const d=buildSchemaPLC(qs);lastDrawingPLC=d;
+  const {svg,w}=d.toSVG();
+  canvas.innerHTML=svg;
+  const el=canvas.querySelector("svg");
+  el.style.width=(w*currentZoomPLC*2.0)+"px";el.style.height="auto";
+}
+function zoomPLC(f){currentZoomPLC=Math.min(Math.max(currentZoomPLC*f,.3),6);const el=document.querySelector("#schemaPLCCanvas svg");if(el){const w=el.viewBox.baseVal.width;el.style.width=(w*currentZoomPLC*2.0)+"px";}}
+
+/* ---- Schema Sicurezza (foglio separato) ---- */
+let currentZoomSic=1, lastDrawingSic=null;
+function refreshQuadroSelectSic(){
+  const sel=document.getElementById("schemaSicQuadro");if(!sel)return;
+  const prev=sel.value;
+  const list=project.quadri.map(q=>q.sigla).filter(Boolean);
+  sel.innerHTML=(list.length?list:["(tutte)"]).map(q=>`<option>${esc(q)}</option>`).join("");
+  if(list.includes(prev))sel.value=prev;
+}
+function renderSchemaSic(){
+  refreshQuadroSelectSic();
+  const sel=document.getElementById("schemaSicQuadro");
+  const qs=(sel&&project.quadri.length)?sel.value:null;
+  const canvas=document.getElementById("schemaSicCanvas");
+  if(project.sicModuli.length===0){canvas.innerHTML='<div class="empty">Inserisci moduli (foglio Sicurezza Moduli) per generare lo schema sicurezza.</div>';return;}
+  const d=buildSchemaSic(qs);lastDrawingSic=d;
+  const {svg,w}=d.toSVG();
+  canvas.innerHTML=svg;
+  const el=canvas.querySelector("svg");
+  el.style.width=(w*currentZoomSic*2.0)+"px";el.style.height="auto";
+}
+function zoomSic(f){currentZoomSic=Math.min(Math.max(currentZoomSic*f,.3),6);const el=document.querySelector("#schemaSicCanvas svg");if(el){const w=el.viewBox.baseVal.width;el.style.width=(w*currentZoomSic*2.0)+"px";}}
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+function download(fn,content,mime){const b=new Blob([content],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},400);}
+let toastTimer=null;
+function toast(msg){const t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2200);}
+function baseName(){return ((project.meta.quadro||"schema").replace(/[^\w\-]+/g,"_"))+"_unifilare";}
+function exportDXF(){const d=lastDrawing||buildSchema(currentQuadro());download(baseName()+".dxf",d.toDXF(),"application/dxf");toast("DXF esportato");}
+function exportSVG(){const d=lastDrawing||buildSchema(currentQuadro());download(baseName()+".svg",d.toSVG().svg,"image/svg+xml");toast("SVG esportato");}
+function currentQuadro(){const sel=document.getElementById("schemaQuadro");return (sel&&project.quadri.length)?sel.value:null;}
+function currentQuadroMono(){const sel=document.getElementById("schemaMonoQuadro");return (sel&&project.quadri.length)?sel.value:null;}
+function exportDXFMono(){const d=lastDrawingMono||buildSchemaMono(currentQuadroMono());download(baseName()+"_monofase.dxf",d.toDXF(),"application/dxf");toast("DXF monofase esportato");}
+function exportSVGMono(){const d=lastDrawingMono||buildSchemaMono(currentQuadroMono());download(baseName()+"_monofase.svg",d.toSVG().svg,"image/svg+xml");toast("SVG monofase esportato");}
+function currentQuadroDC(){const sel=document.getElementById("schemaDCQuadro");return (sel&&project.quadri.length)?sel.value:null;}
+function exportDXFDC(){const d=lastDrawingDC||buildSchemaDC(currentQuadroDC());download(baseName()+"_DC.dxf",d.toDXF(),"application/dxf");toast("DXF DC esportato");}
+function exportSVGDC(){const d=lastDrawingDC||buildSchemaDC(currentQuadroDC());download(baseName()+"_DC.svg",d.toSVG().svg,"image/svg+xml");toast("SVG DC esportato");}
+function currentQuadroPLC(){const sel=document.getElementById("schemaPLCQuadro");return (sel&&project.quadri.length)?sel.value:null;}
+function exportDXFPLC(){const d=lastDrawingPLC||buildSchemaPLC(currentQuadroPLC());download(baseName()+"_PLC.dxf",d.toDXF(),"application/dxf");toast("DXF PLC esportato");}
+function exportSVGPLC(){const d=lastDrawingPLC||buildSchemaPLC(currentQuadroPLC());download(baseName()+"_PLC.svg",d.toSVG().svg,"image/svg+xml");toast("SVG PLC esportato");}
+function currentQuadroSic(){const sel=document.getElementById("schemaSicQuadro");return (sel&&project.quadri.length)?sel.value:null;}
+function exportDXFSic(){const d=lastDrawingSic||buildSchemaSic(currentQuadroSic());download(baseName()+"_SICUREZZA.dxf",d.toDXF(),"application/dxf");toast("DXF sicurezza esportato");}
+function exportSVGSic(){const d=lastDrawingSic||buildSchemaSic(currentQuadroSic());download(baseName()+"_SICUREZZA.svg",d.toSVG().svg,"image/svg+xml");toast("SVG sicurezza esportato");}
+function exportPDF(){ go("schema"); setTimeout(()=>window.print(),200); }
+function exportPDFMono(){ go("schemaMono"); setTimeout(()=>window.print(),200); }
+function exportPDFDC(){ go("schemaDC"); setTimeout(()=>window.print(),200); }
+function exportPDFPLC(){ go("schemaPLC"); setTimeout(()=>window.print(),200); }
+function exportPDFSic(){ go("schemaSic"); setTimeout(()=>window.print(),200); }
+function sani(s){return String(s||"").trim().replace(/[^\w\-]+/g,"_").replace(/^_+|_+$/g,"");}
+function jsonBaseName(){ const parts=[project.meta.cliente,project.meta.quadro,project.meta.commessa].map(sani).filter(Boolean); return parts.length?parts.join("_"):"progetto"; }
+function exportJSON(){const out=Object.assign({},project,{_mylib:MYLIB});download(jsonBaseName()+".json",JSON.stringify(out,null,2),"application/json");toast("Progetto salvato");}
+
+/* ---- Stampa fascicolo completo in ordine (salta gli schemi vuoti) ---- */
+function datiGeneraliPrintHTML(){
+  const m=project.meta;
+  const r=(k,v)=>`<tr><td class="k">${k}</td><td>${esc(v||"—")}</td></tr>`;
+  return `<section class="print-page">
+    <h2 class="print-h">Dati generali</h2>
+    <table class="dg-tbl">
+      ${r("Impianto / Progetto",m.impianto)}
+      ${r("Cliente",m.cliente)}
+      ${r("Quadro principale",m.quadro)}
+      ${r("Commessa / Rif.",m.commessa)}
+      ${r("Disegnatore",m.disegnatore)}
+      ${r("Data",m.data)}
+      ${r("Revisione",m.rev)}
+      ${r("Foglio",m.foglio)}
+      ${r("Note",m.note)}
+    </table>
+  </section>`;
+}
+function printAll(){
+  const P=project;
+  const parts=[ datiGeneraliPrintHTML() ];
+  const add=(title,cond,d)=>{ if(cond){ parts.push(`<section class="print-page"><h2 class="print-h">${title}</h2>${d().toSVG().svg}</section>`); } };
+  add("Schema trifasico", P.partenze.length>0, ()=>buildSchema(currentQuadro()));
+  add("Schema Monofase", P.sbarreMono.length>0, ()=>buildSchemaMono(currentQuadroMono()));
+  add("Schema DC", P.sbarreDC.length>0, ()=>buildSchemaDC(currentQuadroDC()));
+  add("Schema PLC", P.plcModuli.length>0, ()=>buildSchemaPLC(currentQuadroPLC()));
+  add("Schema Sicurezza", P.sicModuli.length>0, ()=>buildSchemaSic(currentQuadroSic()));
+  const area=document.getElementById("printArea");
+  area.innerHTML=parts.join("");
+  document.body.classList.add("printing");
+  const done=()=>{ document.body.classList.remove("printing"); area.innerHTML=""; window.removeEventListener("afterprint",done); };
+  window.addEventListener("afterprint",done);
+  setTimeout(()=>window.print(),200);
+}
+
+function updateSummary(){
+  const el=document.getElementById("exSummary");if(!el)return;
+  el.innerHTML=`Impianto: <b>${esc(project.meta.impianto||"—")}</b> · Cliente: <b>${esc(project.meta.cliente||"—")}</b><br>
+    Quadri: <b>${project.quadri.length}</b> · Sbarre: <b>${project.sbarre.length}</b> · Sbarre monofase: <b>${project.sbarreMono.length}</b> · Componenti: <b>${project.componenti.length}</b> · Partenze: <b>${project.partenze.length}</b>`;
+}
+
+/* =========================================================
+   SALVA / CARICA / STORAGE
+   ========================================================= */
+function save(){try{localStorage.setItem("schemaAppProj",JSON.stringify(project));}catch(e){}updateSummary();buildNav();}
+function loadStorage(){try{const s=localStorage.getItem("schemaAppProj");if(s){project=migrate(JSON.parse(s));return true;}}catch(e){}return false;}
+function migrate(p){const base=emptyProject();const out=Object.assign(base,p);out.meta=Object.assign(base.meta,p.meta||{});out.plc=Object.assign(base.plc,p.plc||{});["quadri","sbarre","componenti","partenze","sbarreMono","partenzeMono","sbarreDC","partenzeDC","plcModuli","plcIO","sicModuli","sicIO"].forEach(c=>{out[c]=(p[c]||[]).map(r=>Object.assign({_id:uid()},r));});if(p._mylib&&typeof p._mylib==="object"){MYLIB=Object.assign(MYLIB,p._mylib);saveMyLib();}delete out._mylib;return out;}
+
+/* =========================================================
+   EVENTI GLOBALI
+   ========================================================= */
+function wire(){
+  // add/clear buttons dentro i fogli
+  content.addEventListener("click",e=>{
+    const t=e.target;
+    if(t.dataset.add){project[t.dataset.add].push(emptyRow(t.dataset.add));renderGrid(t.dataset.add);buildNav();save();}
+    if(t.dataset.add5){for(let i=0;i<5;i++)project[t.dataset.add5].push(emptyRow(t.dataset.add5));renderGrid(t.dataset.add5);buildNav();save();}
+    if(t.dataset.clear){if(confirm("Svuotare tutte le righe di questo foglio?")){project[t.dataset.clear]=[];renderGrid(t.dataset.clear);buildNav();save();}}
+    if(t.dataset.renum==="plcIO"){
+      let n=0;
+      project.plcIO.forEach(r=>{
+        const idx=chIndex(r.canale);
+        if(!isNaN(idx)){ const lbl=chLabel(idx); if(r.canale!==lbl){ r.canale=lbl; n++; } }
+      });
+      renderGrid("plcIO"); save();
+      toast(n>0? ("Canali convertiti: "+n) : "Nessun canale da convertire");
+    }
+    if(t.id==="zIn")zoom(1.2);
+    if(t.id==="zOut")zoom(1/1.2);
+    if(t.id==="zFit"){currentZoom=1;renderSchema();}
+    if(t.id==="schDxf"||t.id==="exDxf")exportDXF();
+    if(t.id==="schSvg"||t.id==="exSvg")exportSVG();
+    if(t.id==="schPdf"||t.id==="exPdf")exportPDF();
+    if(t.id==="exAllPdf")printAll();
+    if(t.id==="exJson")exportJSON();
+    // Schema monofase
+    if(t.id==="zmIn")zoomMono(1.2);
+    if(t.id==="zmOut")zoomMono(1/1.2);
+    if(t.id==="zmFit"){currentZoomMono=1;renderSchemaMono();}
+    if(t.id==="schmDxf")exportDXFMono();
+    if(t.id==="schmSvg")exportSVGMono();
+    if(t.id==="schmPdf")exportPDFMono();
+    // Schema DC
+    if(t.id==="zdIn")zoomDC(1.2);
+    if(t.id==="zdOut")zoomDC(1/1.2);
+    if(t.id==="zdFit"){currentZoomDC=1;renderSchemaDC();}
+    if(t.id==="schdDxf")exportDXFDC();
+    if(t.id==="schdSvg")exportSVGDC();
+    if(t.id==="schdPdf")exportPDFDC();
+    // Schema PLC
+    if(t.id==="zpIn")zoomPLC(1.2);
+    if(t.id==="zpOut")zoomPLC(1/1.2);
+    if(t.id==="zpFit"){currentZoomPLC=1;renderSchemaPLC();}
+    if(t.id==="schpDxf")exportDXFPLC();
+    if(t.id==="schpSvg")exportSVGPLC();
+    if(t.id==="schpPdf")exportPDFPLC();
+    // Schema Sicurezza
+    if(t.id==="zsIn")zoomSic(1.2);
+    if(t.id==="zsOut")zoomSic(1/1.2);
+    if(t.id==="zsFit"){currentZoomSic=1;renderSchemaSic();}
+    if(t.id==="schsDxf")exportDXFSic();
+    if(t.id==="schsSvg")exportSVGSic();
+    if(t.id==="schsPdf")exportPDFSic();
+  });
+  content.addEventListener("change",e=>{
+    if(e.target.id==="schemaQuadro")renderSchema();
+    if(e.target.id==="schemaMonoQuadro")renderSchemaMono();
+    if(e.target.id==="schemaDCQuadro")renderSchemaDC();
+    if(e.target.id==="schemaPLCQuadro")renderSchemaPLC();
+    if(e.target.id==="schemaSicQuadro")renderSchemaSic();
+    if(e.target.id==="schemaOrient"){schemaOrient=e.target.value;renderSchema();}
+  });
+
+  document.getElementById("btnSave").onclick=exportJSON;
+  document.getElementById("btnOpen").onclick=()=>document.getElementById("fileInput").click();
+  document.getElementById("btnNew").onclick=()=>{if(confirm("Nuovo progetto vuoto? Le modifiche non salvate andranno perse."))resetProject(emptyProject());};
+  document.getElementById("btnExample").onclick=()=>resetProject(exampleProject());
+  document.getElementById("fileInput").addEventListener("change",ev=>{
+    const f=ev.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{resetProject(migrate(JSON.parse(r.result)));toast("Progetto caricato");}catch(err){alert("File non valido: "+err.message);}};
+    r.readAsText(f);ev.target.value="";
+  });
+}
+function resetProject(p){project=p;fillSimpleInputs();renderAllGrids();buildNav();updateSummary();save();if(activeSheet==="schema")renderSchema();if(activeSheet==="schemaMono")renderSchemaMono();if(activeSheet==="schemaDC")renderSchemaDC();if(activeSheet==="schemaPLC")renderSchemaPLC();if(activeSheet==="schemaSic")renderSchemaSic();}
+
+/* =========================================================
+   ESEMPIO
+   ========================================================= */
+function exampleProject(){
+  const p=emptyProject();
+  p.meta={impianto:"Capannone Logistico",cliente:"ACME S.r.l.",quadro:"QE-01",commessa:"C-2026-014",disegnatore:"ZM Tech",data:"2026-08-27",rev:"Rev.00",foglio:"1 di 1",note:""};
+  p.quadri=[{_id:uid(),sigla:"QE-01",descr:"Quadro generale",ubic:"Locale tecnico",parent:"",note:""}];
+  p.sbarre=[{_id:uid(),sigla:"SB1",quadro:"QE-01",tipoComp:"Sbarra 60Classic",tipo:"",marca:"",poli:"4P",in:"160",genTipo:"Interruttore scatolato",genCodice:"XT1B160",note:""}];
+  const idMot=uid(), idPresa=uid(), idLuce=uid(), idSq=uid(), idSS=uid(), idTR=uid(), idMCB=uid(), idAux=uid(), idAL=uid(), idMCBdc=uid(), idPLC=uid(), idSIC=uid();
+  p.componenti=[
+    {_id:uid(),tipo:"Sbarra 60Classic",marca:"Wöhner",codice:"01.960.xx",descr:"Sistema sbarre 60mm 4P",poli:"4P",in:"160",curva:"",kA:"",idn:"",simbolo:"Sbarra"},
+    {_id:uid(),tipo:"Interruttore scatolato",marca:"ABB",codice:"XT1B160",descr:"MCCB 4P 160A",poli:"4P",in:"160",curva:"",kA:"25",idn:"",simbolo:"Interruttore"},
+    {_id:uid(),tipo:"Magnetotermico diff.",marca:"ABB",codice:"DS201 C16",descr:"MTD 1P+N 16A 30mA",poli:"1P+N",in:"16",curva:"C",kA:"6",idn:"30",simbolo:"Differenziale"},
+    {_id:uid(),tipo:"Magnetotermico",marca:"ABB",codice:"S203 C25",descr:"MT 3P 25A",poli:"3P",in:"25",curva:"C",kA:"10",idn:"",simbolo:"Interruttore"},
+    {_id:uid(),tipo:"Sezionatore",marca:"ABB",codice:"OT16",descr:"Sezionatore 4P",poli:"4P",in:"16",curva:"",kA:"",idn:"",simbolo:"Sezionatore"},
+    {_id:idMot,tipo:"Motore",marca:"",codice:"",descr:"Compressore 11kW",poli:"3P",in:"25",curva:"",kA:"",idn:"",simbolo:"Motore"},
+    {_id:idPresa,tipo:"Presa",marca:"",codice:"",descr:"Prese uffici",poli:"1P+N",in:"16",curva:"",kA:"",idn:"",simbolo:"Presa"},
+    {_id:idLuce,tipo:"Illuminazione",marca:"",codice:"",descr:"Plafoniere LED",poli:"1P+N",in:"10",curva:"",kA:"",idn:"",simbolo:"Lampada"},
+    {_id:idSq,tipo:"Sotto-quadro",marca:"",codice:"",descr:"Quadro macchina 2",poli:"3P+N",in:"32",curva:"",kA:"",idn:"",simbolo:"Quadro"},
+    {_id:idSS,tipo:"Softstarter",marca:"ABB",codice:"PSR16",descr:"Soft starter 7,5kW",poli:"3P",in:"16",curva:"",kA:"",idn:"",simbolo:"Softstarter"},
+    {_id:idTR,tipo:"Trasformatore",marca:"",codice:"TC250",descr:"400/230V 250VA",poli:"2P",in:"",curva:"",kA:"",idn:"",simbolo:"Trasformatore"},
+    {_id:idMCB,tipo:"Magnetotermico",marca:"ABB",codice:"S201 C6",descr:"MT 1P+N 6A",poli:"1P+N",in:"6",curva:"C",kA:"6",idn:"",simbolo:"Interruttore"},
+    {_id:idAux,tipo:"Utenza",marca:"",codice:"",descr:"Ausiliari 230V",poli:"1P+N",in:"",curva:"",kA:"",idn:"",simbolo:"Utenza generica"},
+    {_id:idAL,tipo:"Alimentatore",marca:"PHOENIX",codice:"QUINT-PS/24DC/10",descr:"Alim. 230VAC/24VDC 10A",poli:"1P+N",in:"",curva:"",kA:"",idn:"",simbolo:"Alimentatore"},
+    {_id:idMCBdc,tipo:"Magnetotermico",marca:"ABB",codice:"S202 C10",descr:"MT 2P 10A DC",poli:"2P",in:"10",curva:"C",kA:"6",idn:"",simbolo:"Interruttore"},
+    {_id:idPLC,tipo:"PLC",marca:"SIEMENS",codice:"S7-1200",descr:"PLC / I/O 24Vdc",poli:"2P",in:"",curva:"",kA:"",idn:"",simbolo:"PLC"},
+    {_id:idSIC,tipo:"Modulo Sicurezza",marca:"PILZ",codice:"PNOZ",descr:"Relè sicurezza",poli:"2P",in:"",curva:"",kA:"",idn:"",simbolo:"Modulo Sicurezza"}
+  ];
+  p.partenze=[
+    {_id:uid(),sigla:"Q1",quadro:"QE-01",sbarra:"SB1",descr:"Prese uffici",carico:idPresa,tipoComp:"Magnetotermico diff.",codice:"DS201 C16",in:"16",poli:"1P+N",diff:"sì",idn:"30",note:""},
+    {_id:uid(),sigla:"Q2",quadro:"QE-01",sbarra:"SB1",descr:"Illuminazione",carico:idLuce,tipoComp:"Magnetotermico diff.",codice:"DS201 C16",in:"10",poli:"1P+N",diff:"sì",idn:"30",note:""},
+    {_id:uid(),sigla:"Q3",quadro:"QE-01",sbarra:"SB1",descr:"Compressore",carico:idMot,avv:idSS,tipoComp:"Magnetotermico",codice:"S203 C25",in:"25",poli:"3P",diff:"no",idn:"",note:"Soft start"},
+    {_id:uid(),sigla:"Q4",quadro:"QE-01",sbarra:"SB1",descr:"Quadro macchina 2",carico:idSq,tipoComp:"Magnetotermico",codice:"S203 C25",in:"32",poli:"3P+N",diff:"no",idn:"",note:""},
+    {_id:uid(),sigla:"Q5",quadro:"QE-01",sbarra:"SB1",descr:"Riserva",carico:"",tipoComp:"Sezionatore",codice:"OT16",in:"16",poli:"4P",diff:"no",idn:"",note:"Spare"}
+  ];
+  p.sbarreMono=[
+    {_id:uid(),sigla:"SBM1",quadro:"QE-01",trafo:idTR,prot:idMCB,tipo:"230V ausiliari",poli:"1P+N",in:"6",note:""}
+  ];
+  p.partenzeMono=[
+    {_id:uid(),sigla:"F1",quadro:"QE-01",sbarra:"SBM1",descr:"Ausiliari 230V",carico:idAux,tipoComp:"Magnetotermico",codice:"S201 C6",avv:"",in:"6",poli:"1P+N",diff:"no",idn:"",note:""},
+    {_id:uid(),sigla:"F2",quadro:"QE-01",sbarra:"SBM1",descr:"Illuminazione quadro",carico:"",tipoComp:"Magnetotermico",codice:"S201 C6",avv:"",in:"6",poli:"1P+N",diff:"no",idn:"",note:""}
+  ];
+  p.sbarreDC=[
+    {_id:uid(),sigla:"SBDC1",quadro:"QE-01",alim:idAL,prot:idMCBdc,tipo:"24Vdc",poli:"2P",in:"10",note:""}
+  ];
+  p.partenzeDC=[
+    {_id:uid(),sigla:"D1",quadro:"QE-01",sbarra:"SBDC1",descr:"PLC 24Vdc",carico:idPLC,tipoComp:"Magnetotermico",codice:"S202 C10",avv:"",in:"10",poli:"2P",diff:"no",idn:"",note:""},
+    {_id:uid(),sigla:"D2",quadro:"QE-01",sbarra:"SBDC1",descr:"Modulo sicurezza",carico:idSIC,tipoComp:"Magnetotermico",codice:"S202 C10",avv:"",in:"6",poli:"2P",diff:"no",idn:"",note:""}
+  ];
+  p.plcModuli=[
+    {_id:uid(),sigla:"CPU",quadro:"QE-01",tipo:"CPU",marca:"SIEMENS",codice:"6ES7214-1AG40",slot:"1",canali:"14DI/10DO",descr:"S7-1200 CPU 1214C",note:""},
+    {_id:uid(),sigla:"DI1",quadro:"QE-01",tipo:"DI",marca:"SIEMENS",codice:"6ES7221-1BH32",slot:"2",canali:"16",descr:"Modulo 16 DI",note:""},
+    {_id:uid(),sigla:"DO1",quadro:"QE-01",tipo:"DO",marca:"SIEMENS",codice:"6ES7222-1BH32",slot:"3",canali:"16",descr:"Modulo 16 DO relè",note:""},
+    {_id:uid(),sigla:"AI1",quadro:"QE-01",tipo:"AI",marca:"SIEMENS",codice:"6ES7231-4HD32",slot:"4",canali:"4",descr:"Modulo 4 AI",note:""}
+  ];
+  p.plcIO=[
+    {_id:uid(),tag:"-S1",quadro:"QE-01",modulo:"DI1",tipoSeg:"DI",canale:"0",indirizzo:"I0.0",morsetto:"X1:1",descr:"Marcia impianto",note:""},
+    {_id:uid(),tag:"-S2",quadro:"QE-01",modulo:"DI1",tipoSeg:"DI",canale:"1",indirizzo:"I0.1",morsetto:"X1:2",descr:"Arresto impianto",note:""},
+    {_id:uid(),tag:"-B1",quadro:"QE-01",modulo:"DI1",tipoSeg:"DI",canale:"2",indirizzo:"I0.2",morsetto:"X1:3",descr:"Sensore livello",note:""},
+    {_id:uid(),tag:"-K1",quadro:"QE-01",modulo:"DO1",tipoSeg:"DO",canale:"0",indirizzo:"Q0.0",morsetto:"X2:1",descr:"Comando pompa 1",note:""},
+    {_id:uid(),tag:"-K2",quadro:"QE-01",modulo:"DO1",tipoSeg:"DO",canale:"1",indirizzo:"Q0.1",morsetto:"X2:2",descr:"Comando pompa 2",note:""},
+    {_id:uid(),tag:"-B10",quadro:"QE-01",modulo:"AI1",tipoSeg:"AI",canale:"0",indirizzo:"IW64",morsetto:"X3:1",descr:"Pressione 4-20mA",note:""}
+  ];
+  return p;
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function init(){
+  buildSheets();
+  bindSimpleInputs();
+  if(!loadStorage())project=emptyProject();
+  fillSimpleInputs();
+  renderAllGrids();
+  buildNav();
+  wire();
+  updateSummary();
+  go("generali");
+}
+init();
+</script>
+</body>
+</html>
