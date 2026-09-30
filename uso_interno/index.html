@@ -1465,8 +1465,8 @@
         + '<div class="doc-notes"><strong>&#128179; Condizioni di Pagamento </strong>' + v('opaga') + '</div>'
         + ((v('r-iban') || v('r-banca'))
           ? '<div class="doc-payment"><div><div class="pay-label">&#128179; Dati per il pagamento</div>'
-          + '<div class="pay-value">' + (v('r-banca') || '') + '</div>'
-          + '<div class="pay-value" style="font-size:11px;color:#a78bfa;font-family:monospace;">' + (v('r-iban') || '') + '</div></div>'
+          + '<div class="pay-value">' + (v('r-iban') || '') + '</div>'
+          + '<div class="pay-value" style="font-size:11px;color:#a78bfa;font-family:monospace;">' + (v('r-banca') || '') + '</div></div>'
           + '<div class="pay-amount">' + fmtE(c.netto) + '</div></div>'
           : '')
 
