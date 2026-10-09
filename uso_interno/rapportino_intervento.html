@@ -517,7 +517,12 @@
                 </div>
             </div>
 
-            <div class="notice">
+            <div class="grid g3" style="margin-top:10px;">
+<div><label>Pranzo</label><select id="lunch"><option value="No">No</option><option value="Si">Sì</option></select></div>
+<div><label>Cena</label><select id="dinner"><option value="No">No</option><option value="Si">Sì</option></select></div>
+<div><label>Hotel</label><select id="hotel"><option value="No">No</option><option value="Si">Sì</option></select></div>
+</div>
+<div class="notice">
                 Il costo dell'autostrada e le altre spese non vengono inseriti nel rapportino.
                 Saranno gestiti nel documento separato di consuntivo finale.
             </div>
@@ -586,7 +591,7 @@ const fields = [
     "companyName","companyAddress","companyContact","reportNumber","reportDate",
     "customerName","customerContact","siteAddress","customerPhone",
     "interventionType","technician","jobReference","subject","description",
-    "notes","resolved","temporary","pending","customerOk","travelOut","travelBack","travelKm","highway"
+    "notes","resolved","temporary","pending","customerOk","travelOut","travelBack","travelKm","highway","lunch","dinner","hotel"
 ];
 
 function setToday() {
@@ -759,7 +764,7 @@ function newReport() {
     document.getElementById("travelOut").value = "0";
     document.getElementById("travelBack").value = "0";
     document.getElementById("travelKm").value = "0";
-    document.getElementById("highway").value = "No";
+    document.getElementById("highway").value="No"; document.getElementById("lunch").value="No"; document.getElementById("dinner").value="No"; document.getElementById("hotel").value="No";
 
     document.getElementById("hoursBody").innerHTML = "";
     document.getElementById("materialsBody").innerHTML = "";
